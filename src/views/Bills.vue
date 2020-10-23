@@ -30,6 +30,8 @@ export default {
     },
     created(){
         this.$store.dispatch("getAllBills");
+        this.$store.dispatch("getCategories");
+        this.$store.dispatch("getSubcategories");
         this.$store.dispatch('getActiveMonth').then(() => {
             this.checkActiveMonth();
         });

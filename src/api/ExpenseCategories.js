@@ -145,3 +145,13 @@ const _subCategories = [
     { "id": 96, "Name": "Lodging", "CategoryId": 22 },
     { "id": 97, "Name": "Entertainment", "CategoryId": 22 }
 ]
+
+export default {
+    getCategories(cb) {
+        setTimeout(() => cb(_categories), 100);
+    },
+
+    getSubCategories(cb) {
+        setTimeout(() => cb(_subCategories), 100);
+    }
+}
