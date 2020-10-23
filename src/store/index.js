@@ -1,13 +1,16 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import BillService from '../services/BillService';
+import ExpenseCategories from '../api/ExpenseCategories';
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
     bills: [],
-    activeMonth: null
+    activeMonth: null,
+    categories: [],
+    subCategories: []
   },
   getters: {
     paidBills(state) {
@@ -18,6 +21,9 @@ export default new Vuex.Store({
     },
     billCount(state) {
       return state.bills.length;
+    },
+    getSubCategoriesByCategoryId: (state) => (categoryId) => {
+      return state.subCategories.find(subCategory => subCategory.id == categoryId);
     }
   },
   mutations: {
@@ -36,6 +42,12 @@ export default new Vuex.Store({
     },
     setActiveMonth(state, month){
       state.activeMonth = month;
+    },
+    setCategories(state, categories) {
+      state.categories = categories;
+    },
+    setSubcategories(state, subcategories) {
+      state.subCategories = subcategories;
     }
   },
   actions: {
@@ -101,6 +113,22 @@ export default new Vuex.Store({
         }).catch(err => {
           console.log("Error getting active month: ", err.response);
           reject();
+        });
+      });
+    },
+    getCategories({commit}) {
+      return new Promise((resolve) => {
+        ExpenseCategories.getCategories(categories => {
+          commit('setCategories', categories);
+          resolve();
+        });
+      });
+    },
+    getSubcategories({commit}) {
+      return new Promise((resolve) => {
+        ExpenseCategories.getSubCategories(subcategories => {
+          commit('setSubcategories', subcategories);
+          resolve();
         });
       });
     }
