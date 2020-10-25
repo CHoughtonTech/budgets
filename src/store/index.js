@@ -10,20 +10,46 @@ export default new Vuex.Store({
     bills: [],
     activeMonth: null,
     categories: [],
-    subCategories: []
+    subCategories: [],
+    createdBill: null
   },
   getters: {
     paidBills(state) {
-      return state.bills.filter(bill => bill.paid === true);
+      let filteredArray = state.bills.filter(bill => bill.paid === true);
+      return filteredArray.sort(function(a,b) {
+        let x = a.name.toLowerCase();
+        let y = b.name.toLowerCase();
+        if (x < y) { return -1 }
+        if (x > y) { return 1 }
+        return 0;
+      });
     },
     unpaidBills(state) {
-      return state.bills.filter(bill => bill.paid === false);
+      let filteredArray = state.bills.filter(bill => bill.paid === false);
+      return filteredArray.sort(function(a,b) {
+        let x = a.name.toLowerCase();
+        let y = b.name.toLowerCase();
+        if (x < y) { return -1 }
+        if (x > y) { return 1 }
+        return 0;
+      });
     },
     billCount(state) {
       return state.bills.length;
     },
     getSubCategoriesByCategoryId: (state) => (categoryId) => {
-      return state.subCategories.find(subCategory => subCategory.id == categoryId);
+      if (categoryId !== null) {
+        let filteredArray = state.subCategories.filter(subCategory => subCategory.CategoryId == categoryId);
+        return filteredArray.sort(function(a,b) { 
+          let x = a.Name.toLowerCase();
+          let y = b.Name.toLowerCase();
+          if (x < y) { return -1; }
+          if (x > y) { return 1; }
+          return 0;
+        });
+      } else {
+        return [];
+      }
     }
   },
   mutations: {
@@ -39,6 +65,9 @@ export default new Vuex.Store({
     },
     removeBill(state, index) {
       state.bills.splice(index,1);
+    },
+    setCreatedBill(state, bill) {
+      state.createdBill = bill;
     },
     setActiveMonth(state, month){
       state.activeMonth = month;
@@ -101,6 +130,17 @@ export default new Vuex.Store({
           resolve();
         }).catch(err => {
           console.log("Error deleting bill: ", err.response);
+          reject();
+        });
+      });
+    },
+    createBill({commit}, bill) {
+      return new Promise((resolve, reject) => {
+        BillService.createBill(bill).then(() => {
+          commit('setCreatedBill', bill);
+          resolve();
+        }).catch(err => {
+          console.log("Error creating bill: ", err.response);
           reject();
         });
       });

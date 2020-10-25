@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="bill-card -shadow" :class="bill.paid ? 'paid-bill' : ''" >
+        <div class="bill-card -shadow" :class="{'paid-bill' : isPaidBill, 'new-bill' : isNewBill}">
             <span @click="showBillDetails(bill)"><BaseIcon name="help-circle"></BaseIcon></span>
             <span>{{bill.name}}</span>
             <span class="delete-button" @click="deleteBill(bill)" ><BaseIcon name="x-circle"></BaseIcon></span>
@@ -15,6 +15,14 @@
 export default {
     props: {
         bill: Object
+    },
+    computed: {
+        isPaidBill() {
+            return this.bill.paid;
+        },
+        isNewBill() {
+            return this.bill.id === this.$store.state.createdBill?.id;
+        }
     },
     methods: {
         paidBill(bill) {
@@ -56,10 +64,8 @@ export default {
   text-decoration: none;
   font-weight: 100;
 }
-.priority-bill {
-    font-weight: bold;
-    background-color: orange;
-    color: whitesmoke;
+.new-bill {
+    border: 3px solid cornflowerblue;
 }
 .paid-bill {
     background-color: #39b982;
