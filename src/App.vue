@@ -253,4 +253,14 @@ select::ms-expand {
   font-size: 12px;
   color:teal;
 }
+.error-detail {
+  font-size: 12px;
+  color:crimson;
+  font-style:italic;
+  font-weight:500;
+}
+.error-detail-input {
+  border-color: crimson;
+  border-radius: 1px;
+}
 </style>

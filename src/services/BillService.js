@@ -22,5 +22,9 @@ export default {
     },
     getActiveMonth() {
         return apiClient.get('/activeMonth');
+    },
+    createBill(bill) {
+        let billPayload = JSON.stringify(bill);
+        return apiClient.post("/bills", billPayload);
     }
 }
