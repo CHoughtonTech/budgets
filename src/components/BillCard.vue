@@ -26,13 +26,9 @@ export default {
     },
     methods: {
         paidBill(bill) {
-            bill.paid = true;
-            bill.datePaid = new Date().toLocaleDateString();
             this.$emit('update-paid', bill);
         },
         undoBillPaid(bill) {
-            bill.paid = false;
-            bill.datePaid = null;
             this.$emit('update-undo-paid', bill);
         },
         deleteBill(bill) {

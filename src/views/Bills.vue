@@ -7,7 +7,7 @@
         <BillCard v-for="bill in unpaidBills" :key="bill.id" :bill="bill" @delete-bill="deleteBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" />
         <BaseIcon v-if="paidBills.length > 0" name="arrow-right-circle"><span slot="pre">Paid Bills</span></BaseIcon>
         <BillCard v-for="bill in paidBills" :key="bill.id" :bill="bill" @delete-bill="deleteBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" />
-        <BaseModal v-if="showModal">
+        <BaseModal v-if="showBillDeleteModal">
             <h3 slot="header" style="color:Teal;">Delete Bill</h3>
             <div slot="body">
                 Delete bill: <b style="color:Teal;">{{this.selectedBill.name}}</b>?
@@ -15,6 +15,19 @@
             <div slot="footer">
                 <button @click="deleteBillConfirm('confirm')">Confirm</button>
                 <button @click="deleteBillConfirm('cancel')">Cancel</button>
+            </div>
+        </BaseModal>
+        <BaseModal v-if="showBillAmountModal">
+            <h3 slot="header" style="color:Teal;">Enter Amount</h3>
+            <div slot="body">
+                <h4>Bill: {{selectedBill.name}}</h4>
+                <label for="billInputAmount">Amount</label>
+                <div v-if="validationFailed('billInputAmount')" class="error-detail">{{getErrorMessage('billInputAmount')}}</div>
+                <input type="number" v-model="selectedBill.amount" :class="{'error-detail-input': validationFailed('billInputAmount')}" />
+            </div>
+            <div slot="footer">
+                <button @click="updateBillPaidConfirm('confirm')">Confirm</button>
+                <button @click="updateBillPaidConfirm('cancel')">Cancel</button>
             </div>
         </BaseModal>
     </div>
@@ -31,8 +44,10 @@ export default {
     data() {
         return {
             selectedBill: Object,
-            showModal: false,
-            showBillModal: false
+            showBillDeleteModal: false,
+            showBillDetailModal: false,
+            showBillAmountModal: false,
+            errors: []
         }
     },
     computed: {
@@ -52,23 +67,76 @@ export default {
     methods: {
         deleteBill(bill) {
             this.selectedBill = bill;
-            this.showModal = true;
+            this.showBillDeleteModal = true;
         },
         updateBillPaid(bill) {
-            this.$store.dispatch('updateBill', bill);
+            this.selectedBill = bill;
+            if (this.selectedBill.isFixedAmount === false && this.selectedBill.isRecurring === true) {
+                this.showBillAmountModal = true;
+            } else {
+                bill.paid = true;
+                bill.datePaid = new Date().toLocaleDateString();
+                bill.paidCount++;
+                this.$store.dispatch('updateBill', bill);
+            }
+        },
+        updateBillPaidConfirm(choice) {
+            let validationPassed = this.validateAmount();
+            if (choice === 'cancel') {
+                this.showBillAmountModal = !this.showBillAmountModal;
+            } else {
+                if (validationPassed === true) {
+                    this.selectedBill.amount = parseFloat(this.selectedBill.amount).toFixed(2);
+                    this.selectedBill.paid = true;
+                    this.selectedBill.datePaid = new Date().toLocaleDateString();
+                    this.selectedBill.paidCount++;
+                    this.$store.dispatch('updateBill', this.selectedBill).then(() => {
+                        this.showBillAmountModal = !this.showBillAmountModal;
+                    });
+                }
+            }
         },
         updateBillUndoPaid(bill) {
+            bill.paid = false;
+            bill.datePaid = null;
+            bill.paidCount--;
             this.$store.dispatch('updateBill', bill);
         },
         deleteBillConfirm(choice) {
             if (choice === "confirm") {
                 this.$store.dispatch('deleteBill', this.selectedBill.id);
             }
-            this.showModal = !this.showModal;
+            this.showBillDeleteModal = !this.showBillDeleteModal;
+        },
+        validateAmount() {
+            this.errors = [];
+            //Bill Amount Validation
+            if (!this.selectedBill.amount || this.selectedBill.amount === null) {
+                this.errors.push({ message: "Amount is required", field: "billInputAmount" });
+            } else if (isNaN(this.selectedBill.amount)) {
+                this.errors.push({ message: "Amount must be a number", field: "billInputAmount" });
+            }
+            return this.errors.length === 0;
+        },
+        validationFailed(field) {
+            let found = this.errors.find(e => e.field === field) !== undefined;
+            return found
+        },
+        getErrorMessage(field) {
+            if (this.errors.length <= 0) {
+                return null;
+            } else {
+                let found = this.errors.find(err => err.field === field);
+                if (found && found !== null) {
+                    return `*${found.message}`;
+                } else {
+                    return `No errors for '${field}'`
+                }
+            }
         },
         showBillDetails(bill) {
             this.selectedBill = bill;
-            this.showBillModal = true;
+            this.showBillDetailModal = true;
             console.log("Bill Details shown for: ", this.selectedBill.name);
         }
     }
