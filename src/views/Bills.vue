@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1>{{new Date().toLocaleString('default', { month: 'long' }) + ' ' + new Date().getFullYear() }} Bills</h1>
+        <h3>{{activeMonth + ' ' + new Date().getFullYear() }} Bills</h3>
         <router-link class="add-bill" :to="{ name: 'create-bill' }"><BaseIcon name="plus-circle">Add a Bill</BaseIcon></router-link>
         <hr/>
         <BaseIcon v-if="unpaidBills.length > 0" name="arrow-right-circle"><span slot="pre">Unpaid Bills<span class="badge -fill-gradient">{{unpaidBills.length}}</span></span></BaseIcon>
@@ -28,23 +28,11 @@ export default {
         BillCard: BillCard,
         BaseModal: BaseModal
     },
-    created(){
-        this.$store.dispatch("getAllBills");
-        this.$store.dispatch("getCategories");
-        this.$store.dispatch("getSubcategories");
-        this.$store.dispatch('getActiveMonth').then(() => {
-            this.checkActiveMonth();
-        });
-    },
     data() {
         return {
             selectedBill: Object,
             showModal: false,
-            showBillModal: false,
-            currentMonth: {
-                name: new Date().toLocaleString('default', { month: 'long' }),
-                id: new Date().getMonth()
-            }
+            showBillModal: false
         }
     },
     computed: {
@@ -53,6 +41,12 @@ export default {
         },
         unpaidBills() {
             return this.$store.getters.unpaidBills;
+        },
+        activeMonth() {
+            if (this.$store.state.activeMonth && this.$store.state.activeMonth !== null) {
+                return this.$store.state.activeMonth.name;
+            }
+            return "";
         }
     },
     methods: {
@@ -61,10 +55,10 @@ export default {
             this.showModal = true;
         },
         updateBillPaid(bill) {
-            this.$store.dispatch('updateBillPaid', bill);
+            this.$store.dispatch('updateBill', bill);
         },
         updateBillUndoPaid(bill) {
-            this.$store.dispatch('updateBillUndoPaid', bill);
+            this.$store.dispatch('updateBill', bill);
         },
         deleteBillConfirm(choice) {
             if (choice === "confirm") {
@@ -76,16 +70,6 @@ export default {
             this.selectedBill = bill;
             this.showBillModal = true;
             console.log("Bill Details shown for: ", this.selectedBill.name);
-        },
-        checkActiveMonth(){
-            console.log("Active Month is: ", this.$store.state.activeMonth.name);
-            console.log(`Active Month (${this.$store.state.activeMonth.name}) is current month (${this.currentMonth.name}): `, this.$store.state.activeMonth.name === this.currentMonth.name)
-            console.log(`Active Month (${this.$store.state.activeMonth.id}) is current month (${this.currentMonth.id}): `, this.currentMonth.id === this.$store.state.activeMonth.id);
-            if (this.$store.state.activeMonth.name !== this.currentMonth.name || this.$store.state.activeMonth.id !== this.currentMonth.id) {
-                console.log("Month Update Required");
-                this.$store.dispatch("updateActiveMonth", this.currentMonth);
-                this.$store.dispatch("resetPaidBills");
-            }
         }
     }
 }

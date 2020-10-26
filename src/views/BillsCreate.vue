@@ -67,7 +67,9 @@ export default {
                 this.bill.amount = parseFloat(this.bill.amount).toFixed(2);
                 this.bill.dateCreated = new Date().toLocaleDateString();
                 this.$store.dispatch("createBill", this.bill).then(() => {
-                    this.$router.push('/bills');
+                    this.$store.dispatch("getAllBills").then(() => {
+                       this.$router.push('/bills'); 
+                    });
                 });
             }
         },

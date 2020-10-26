@@ -15,7 +15,7 @@ export default new Vuex.Store({
   },
   getters: {
     paidBills(state) {
-      let filteredArray = state.bills.filter(bill => bill.paid === true);
+      let filteredArray = state.bills.filter(bill => bill.paid === true && (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id || bill.isRecurring === true) && bill.datePaidOff === null);
       return filteredArray.sort(function(a,b) {
         let x = a.name.toLowerCase();
         let y = b.name.toLowerCase();
@@ -25,7 +25,7 @@ export default new Vuex.Store({
       });
     },
     unpaidBills(state) {
-      let filteredArray = state.bills.filter(bill => bill.paid === false);
+      let filteredArray = state.bills.filter(bill => bill.paid === false && (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id || bill.isRecurring === true) && bill.datePaidOff === null);
       return filteredArray.sort(function(a,b) {
         let x = a.name.toLowerCase();
         let y = b.name.toLowerCase();
@@ -34,8 +34,9 @@ export default new Vuex.Store({
         return 0;
       });
     },
-    billCount(state) {
-      return state.bills.length;
+    activeBillCount(state) {
+      let filteredBills = state.bills.filter(bill => new Date(bill.dateCreated).getMonth() === state.activeMonth.id && bill.datePaidOff === null)
+      return filteredBills.length;
     },
     getSubCategoriesByCategoryId: (state) => (categoryId) => {
       if (categoryId !== null) {
@@ -72,6 +73,9 @@ export default new Vuex.Store({
     setActiveMonth(state, month){
       state.activeMonth = month;
     },
+    updateActiveMonth(state, month) {
+      state.activeMonth = month;
+    },
     setCategories(state, categories) {
       state.categories = categories;
     },
@@ -91,22 +95,9 @@ export default new Vuex.Store({
         });
       });
     },
-    updateBillPaid({commit}, bill) {
+    updateBill({commit}, bill) {
       return new Promise((resolve, reject) => {
-        BillService.updateBill(bill).then(resp => {
-          console.log(resp);
-          commit('updateBill', bill);
-          resolve();
-        }).catch(err => {
-          console.log("Error updating bills: ", err.response);
-          reject();
-        });
-      });
-    },
-    updateBillUndoPaid({commit}, bill) {
-      return new Promise((resolve, reject) => {
-        BillService.updateBill(bill).then(resp => {
-          console.log(resp);
+        BillService.updateBill(bill).then(() => {
           commit('updateBill', bill);
           resolve();
         }).catch(err => {
@@ -152,6 +143,17 @@ export default new Vuex.Store({
           resolve();
         }).catch(err => {
           console.log("Error getting active month: ", err.response);
+          reject();
+        });
+      });
+    },
+    updateActiveMonth({commit}, activeMonth) {
+      return new Promise((resolve, reject) => {
+        BillService.updateActiveMonth(activeMonth).then(() => {
+          commit('updateActiveMonth', activeMonth);
+          resolve();
+        }).catch(err => {
+          console.log("Error updating activeMonth: ", err.response);
           reject();
         });
       });

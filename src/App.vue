@@ -11,6 +11,42 @@ import NavBar from "./components/NavBar";
 export default {
   components: {
     NavBar
+  },
+  created() {
+    this.$store.dispatch("getAllBills");
+    this.$store.dispatch("getCategories");
+    this.$store.dispatch("getSubcategories");
+    this.$store.dispatch("getActiveMonth").then(() => {
+      if (this.$store.state.activeMonth.name !== this.currentMonth.name || this.$store.state.activeMonth.id !== this.currentMonth.id) {
+        console.log("Month Update Required");
+        console.log(`'${this.$store.state.activeMonth.name}' needs to be updated to '${this.currentMonth.name}'`);
+        let promiseArr = [];
+        this.$store.state.bills.forEach(b => {
+          console.log("Before Cycle: ", b);
+          if (b.isRecurring && b.datePaidOff === null) {
+            b.paid = false;
+            b.datePaid = null;
+          }
+          promiseArr.push(this.$store.dispatch("updateBill", b));
+          
+          console.log("After Cycle: ", b);
+        });
+        Promise.all(promiseArr).then((values) => {
+          console.log("Bills updated: ", values);
+          this.$store.dispatch("updateActiveMonth", this.currentMonth).then(() => {
+            console.log("Active Month updated: ", this.$store.state.activeMonth);
+          });
+        });
+      }
+    });
+  },
+  data() {
+    return {
+      currentMonth: {
+          name: new Date().toLocaleString('default', { month: 'long' }),
+          id: new Date().getMonth()
+      }
+    }
   }
 }
 </script>

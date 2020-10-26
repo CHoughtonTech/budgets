@@ -13,6 +13,10 @@ export default {
     getBills() {
         return apiClient.get("/bills");
     },
+    createBill(bill) {
+        let billPayload = JSON.stringify(bill);
+        return apiClient.post("/bills", billPayload);
+    },
     updateBill(bill) {
         let billPayload = JSON.stringify(bill);
         return apiClient.put(`/bills/${bill.id}/`, billPayload);
@@ -23,8 +27,8 @@ export default {
     getActiveMonth() {
         return apiClient.get('/activeMonth');
     },
-    createBill(bill) {
-        let billPayload = JSON.stringify(bill);
-        return apiClient.post("/bills", billPayload);
+    updateActiveMonth(month) {
+        let monthPayload = JSON.stringify(month);
+        return apiClient.put(`/activeMonth`, monthPayload);
     }
 }

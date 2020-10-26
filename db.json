@@ -55,9 +55,9 @@
     {
       "id": 5,
       "name": "Comcast",
-      "paid": false,
+      "paid": true,
       "amount": 159.31,
-      "datePaid": null,
+      "datePaid": "10/25/2020",
       "dateCreated": "10/20/2020",
       "isRecurring": true,
       "paidCount": 0,
