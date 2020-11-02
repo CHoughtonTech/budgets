@@ -7,9 +7,5 @@
 </template>
 
 <script>
-export default {
-    created(){
-        console.log("Made it to the Budget-Dashboard: ", new Date().toLocaleDateString());
-    }
-}
+export default {}
 </script>

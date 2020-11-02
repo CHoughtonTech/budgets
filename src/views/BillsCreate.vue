@@ -3,7 +3,7 @@
         <h1>Add Bill</h1>
         <label for="billName">Name</label>
         <div v-if="validationFailed('billName')" class="error-detail">{{getErrorMessage('billName')}}</div>
-        <input id="billName" type="text" v-model="bill.name" placeholder="Bill Name" :class="{'error-detail-input': validationFailed('billName')}" />
+        <input id="billName" type="text" ref="billName" v-model="bill.name" placeholder="Bill Name" :class="{'error-detail-input': validationFailed('billName')}" />
         <label for="billAmount">Amount</label>
         <div v-if="validationFailed('billAmount')" class="error-detail">{{getErrorMessage('billAmount')}}</div>
         <input id="billAmount" type="number" v-model="bill.amount" placeholder="0.00" :class="{'error-detail-input': validationFailed('billAmount')}" />
@@ -26,10 +26,22 @@
             </option>
         </select>
         <button type="button" @click="createBill()">Create</button>
+        <BaseModal v-if="showCreateAnotherModal">
+            <h3 slot="header" style="color:Teal;">Bill Creation</h3>
+            <h6 slot="body">Create Another bill?</h6>
+            <div slot="footer">
+                <button @click="createAnotherConfirm('Yes')">Yes</button>
+                <button @click="createAnotherConfirm('No')">No</button>
+            </div>
+        </BaseModal>
     </div>
 </template>
 <script>
+import BaseModal from '../components/BaseModal';
 export default {
+    components: {
+        BaseModal: BaseModal
+    },
     created() {
         if (this.$store.state.categories?.length <= 0) {
             this.$router.push("/bills");
@@ -55,6 +67,7 @@ export default {
                 datePaidOff: null,
                 subCategoryId : null
             },
+            showCreateAnotherModal: false,
             selectedCategoryId: null,
             selectedSubCategoryId: null,
             errors: []
@@ -68,7 +81,7 @@ export default {
                 this.bill.dateCreated = new Date().toLocaleDateString();
                 this.$store.dispatch("createBill", this.bill).then(() => {
                     this.$store.dispatch("getAllBills").then(() => {
-                       this.$router.push('/bills'); 
+                        this.showCreateAnotherModal = true;
                     });
                 });
             }
@@ -135,6 +148,34 @@ export default {
             if (!found) {
                 this.selectedSubCategoryId = null;
                 this.bill.subCategoryId = null;
+            }
+        },
+        resetBill() {
+            this.selectedCategoryId =  null;
+            this.selectedSubCategoryId = null;
+            return {
+                id: null,
+                name: null,
+                paid: false,
+                amount:null,
+                datePaid: null,
+                dateCreated: null,
+                isRecurring: false,
+                paidCount: 0,
+                isFixedAmount: false,
+                datePaidOff: null,
+                subCategoryId : null
+            };
+        },
+        createAnotherConfirm(value) {
+            if (value === 'Yes') {
+                console.log("Create another");
+                this.bill = this.resetBill();
+                this.$refs.billName.focus();
+                this.showCreateAnotherModal = false;
+            } else {
+                console.log("Nope, back to bills");
+                this.$router.push('/bills');
             }
         }
     }
