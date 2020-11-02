@@ -51,6 +51,35 @@ export default new Vuex.Store({
       } else {
         return [];
       }
+    },
+    getSubCategoryNameById: (state) => (subCategoryId) => {
+      if (subCategoryId && subCategoryId !== null) {
+        let found = state.subCategories.find(sc => sc.id === subCategoryId);
+        if (found) {
+          return found.Name;
+        } else {
+          return "Unknown";
+        }
+      } else {
+        return "Unknown";
+      }
+    },
+    getCategoryNameById: (state) => (categoryId) => {
+      if (categoryId && categoryId !== null) {
+        let foundSubCategory = state.subCategories.find(sc => sc.id === categoryId);
+        if (foundSubCategory) {
+          let foundCategory = state.categories.find(c => c.id === foundSubCategory.CategoryId)
+          if (foundCategory) {
+            return foundCategory.Name;
+          } else {
+            return "Unknown";
+          }
+        } else {
+          return "Unknown";
+        }
+      } else {
+        return "Unknown";
+      }
     }
   },
   mutations: {

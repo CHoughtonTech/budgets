@@ -30,16 +30,35 @@
                 <button @click="updateBillPaidConfirm('cancel')">Cancel</button>
             </div>
         </BaseModal>
+        <BaseModal v-if="showBillDetailModal">
+            <h4 slot="header" style="color:Teal;">{{selectedBill.name}}</h4>
+            <div slot="body">
+                <hr/><br/>
+                <div class="bill-detail"><span class="bill-detail-label">Amount</span>{{selectedBill.amount | currency}}</div>
+                <div class="bill-detail"><span class="bill-detail-label">Created</span>{{selectedBill.dateCreated}}</div>
+                <div class="bill-detail"><span class="bill-detail-label">Recurring</span><BaseIcon :name="selectedBill.isRecurring ? 'check' : 'x'"></BaseIcon></div>
+                <div class="bill-detail"><span class="bill-detail-label">Fixed Amount</span><BaseIcon :name="selectedBill.isFixedAmount ? 'check' : 'x'"></BaseIcon></div>
+                <div class="bill-detail"><span class="bill-detail-label">Category</span>{{selectedCategory}}</div>
+                <div class="bill-detail"><span class="bill-detail-label">SubCategory</span>{{selectedSubCategory}}</div>
+                <div class="bill-detail"><span class="bill-detail-label">Paid</span><i><strong>{{selectedBill.paidCount}}</strong></i> time{{selectedBill.paidCount === 1 ? '' : 's'}}</div>
+            </div>
+            <div slot="footer">
+                <button style="float:right;" @click="showBillDetailModal = false">Ok</button>
+                <br/><br/>
+            </div>
+        </BaseModal>
     </div>
 </template>
 
 <script>
 import BillCard from "../components/BillCard";
 import BaseModal from "../components/BaseModal";
+import BaseIcon from "../components/BaseIcon";
 export default {
     components: {
         BillCard: BillCard,
-        BaseModal: BaseModal
+        BaseModal: BaseModal,
+        BaseIcon: BaseIcon
     },
     data() {
         return {
@@ -62,6 +81,12 @@ export default {
                 return this.$store.state.activeMonth.name;
             }
             return "";
+        },
+        selectedCategory() {
+            return this.$store.getters.getCategoryNameById(this.selectedBill?.subCategoryId);
+        },
+        selectedSubCategory() {
+            return this.$store.getters.getSubCategoryNameById(this.selectedBill?.subCategoryId);
         }
     },
     methods: {
@@ -147,5 +172,21 @@ export default {
 .add-bill {
     cursor: pointer;
     text-decoration: none;
+}
+.bill-detail {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    cursor: default;
+    color:dimgray;
+}
+.bill-detail-label {
+    color: white;
+    background-color: teal;
+    padding: 5px;
+    font-weight: bolder;
+    font-style: italic;
+    border: 2px solid teal;
+    border-radius: 10%;
+    margin-right: 7.5px;
 }
 </style>
