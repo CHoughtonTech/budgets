@@ -3,9 +3,9 @@
     {
       "id": 1,
       "name": "Mortgage",
-      "paid": true,
+      "paid": false,
       "amount": 750,
-      "datePaid": "10/20/2020",
+      "datePaid": null,
       "dateCreated": "10/20/2020",
       "isRecurring": true,
       "paidCount": 1,
@@ -16,9 +16,9 @@
     {
       "id": 2,
       "name": "T-Mobile",
-      "paid": true,
+      "paid": false,
       "amount": 181.38,
-      "datePaid": "10/20/2020",
+      "datePaid": null,
       "dateCreated": "10/20/2020",
       "isRecurring": true,
       "paidCount": 1,
@@ -29,9 +29,9 @@
     {
       "id": 3,
       "name": "Geico",
-      "paid": true,
+      "paid": false,
       "amount": 154.42,
-      "datePaid": "10/20/2020",
+      "datePaid": null,
       "dateCreated": "10/20/2020",
       "isRecurring": true,
       "paidCount": 1,
@@ -42,9 +42,9 @@
     {
       "id": 4,
       "name": "GM Financial",
-      "paid": true,
+      "paid": false,
       "amount": 100,
-      "datePaid": "10/20/2020",
+      "datePaid": null,
       "dateCreated": "10/20/2020",
       "isRecurring": true,
       "paidCount": 1,
@@ -55,9 +55,9 @@
     {
       "id": 5,
       "name": "Comcast",
-      "paid": true,
+      "paid": false,
       "amount": 159.31,
-      "datePaid": "10/25/2020",
+      "datePaid": null,
       "dateCreated": "10/20/2020",
       "isRecurring": true,
       "paidCount": 0,
@@ -68,9 +68,9 @@
     {
       "id": 6,
       "name": "Rocky Mountain Power",
-      "paid": true,
+      "paid": false,
       "amount": 147.27,
-      "datePaid": "10/20/2020",
+      "datePaid": null,
       "dateCreated": "10/20/2020",
       "isRecurring": true,
       "paidCount": 1,
@@ -81,9 +81,9 @@
     {
       "id": 7,
       "name": "Spotify",
-      "paid": true,
+      "paid": false,
       "amount": 16.08,
-      "datePaid": "10/20/2020",
+      "datePaid": null,
       "dateCreated": "10/20/2020",
       "isRecurring": true,
       "paidCount": 1,
@@ -94,9 +94,9 @@
     {
       "id": 8,
       "name": "South Valley Sewer District",
-      "paid": true,
+      "paid": false,
       "amount": 25,
-      "datePaid": "10/20/2020",
+      "datePaid": null,
       "dateCreated": "10/20/2020",
       "isRecurring": true,
       "paidCount": 1,
@@ -107,9 +107,9 @@
     {
       "id": 9,
       "name": "City of South Jordan",
-      "paid": true,
+      "paid": false,
       "amount": 76,
-      "datePaid": "10/20/2020",
+      "datePaid": null,
       "dateCreated": "10/20/2020",
       "isRecurring": true,
       "paidCount": 1,
@@ -120,9 +120,9 @@
     {
       "id": 10,
       "name": "Capital One Auto Loan",
-      "paid": true,
+      "paid": false,
       "amount": 190.28,
-      "datePaid": "10/20/2020",
+      "datePaid": null,
       "dateCreated": "10/20/2020",
       "isRecurring": true,
       "paidCount": 1,
@@ -132,7 +132,7 @@
     }
   ],
   "activeMonth": {
-    "name": "October",
-    "id": 9
+    "name": "November",
+    "id": 10
   }
 }
