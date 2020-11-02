@@ -26,7 +26,7 @@ export default {
             }
             promiseArr.push(this.$store.dispatch("updateBill", b));
           });
-          Promise.all(promiseArr).then((values) => {
+          Promise.all(promiseArr).then(() => {
             this.$store.dispatch("updateActiveMonth", this.currentMonth);
           });
         }
