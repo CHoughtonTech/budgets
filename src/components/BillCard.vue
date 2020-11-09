@@ -6,6 +6,7 @@
             <span class="delete-button" @click="deleteBill(bill)" ><BaseIcon name="x-circle"></BaseIcon></span>
             <span class="paid-button" v-if="!bill.paid" @click="paidBill(bill)" ><BaseIcon name="check-circle"></BaseIcon></span>
             <span class="undo-button" v-if="bill.paid" @click="undoBillPaid(bill)"><BaseIcon name="rotate-ccw"></BaseIcon></span>
+            <router-link class="edit-button" :to="{ name: 'edit-bill', params: { id: bill.id } }"><BaseIcon name="edit"></BaseIcon></router-link>
             <div class="paid-status" v-if="bill.paid"><BaseIcon name="check">{{new Date(bill.datePaid).toLocaleDateString('en-US', {timeZone: 'UTC'})}} &nbsp;</BaseIcon></div>
             <div>{{bill.amount | currency}}</div>
         </div>
@@ -69,7 +70,7 @@ export default {
 .paid-status {
     float:inherit;
 }
-.paid-button, .delete-button, .undo-button {
+.paid-button, .delete-button, .undo-button, .edit-button {
     float: right;
     padding: 0px;
 }

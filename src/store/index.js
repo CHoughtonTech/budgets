@@ -11,7 +11,8 @@ export default new Vuex.Store({
     activeMonth: null,
     categories: [],
     subCategories: [],
-    createdBill: null
+    createdBill: null,
+    editedBill: null
   },
   getters: {
     paidBills(state) {
@@ -99,6 +100,9 @@ export default new Vuex.Store({
     setCreatedBill(state, bill) {
       state.createdBill = bill;
     },
+    setEditedBill(state, bill) {
+      state.editedBill = bill;
+    },
     setActiveMonth(state, month){
       state.activeMonth = month;
     },
@@ -120,6 +124,17 @@ export default new Vuex.Store({
           resolve();
         }).catch(err => {
           console.log("Error getting bills: ", err.response);
+          reject();
+        });
+      });
+    },
+    getBillById({commit}, id) {
+      return new Promise ((resolve, reject) => {
+        BillService.getBillById(id).then(bill => {
+          commit('setEditedBill', bill.data);          
+          resolve();
+        }).catch(err => {
+          console.log(`Error getting bill by id: ${id}. Details: ${err.response.statusText}`);
           reject();
         });
       });
