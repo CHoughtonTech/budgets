@@ -26,6 +26,7 @@
             </option>
         </select>
         <button type="button" @click="createBill()">Create</button>
+        <button type="button" @click="cancelBill()">Cancel</button>
         <BaseModal v-if="showCreateAnotherModal">
             <h3 slot="header" style="color:Teal;">Bill Creation</h3>
             <h6 slot="body">Create Another bill?</h6>
@@ -85,6 +86,10 @@ export default {
                     });
                 });
             }
+        },
+        cancelBill() {
+            this.resetBill();
+            this.$router.push('/bills');
         },
         getBillID() {
             let isUniqueId = false;
