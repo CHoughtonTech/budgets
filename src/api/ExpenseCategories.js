@@ -30,6 +30,7 @@ const _subCategories = [
     { "id": 2, "Name": "Maintenance", "CategoryId": 1 },
     { "id": 3, "Name": "Registration Fees", "CategoryId": 1 },
     { "id": 4, "Name": "Auto Loan Payment", "CategoryId": 1 },
+    { "id": 99, "Name": "Reposession Payment", "CategoryId": 1 },
     //Bank Charges
     { "id": 5, "Name": "Check Orders", "CategoryId": 2 },
     { "id": 6, "Name": "Service Fees", "CategoryId": 2 },
@@ -109,7 +110,7 @@ const _subCategories = [
     //hobbies
     { "id": 99, "Name": "Clothing", "CategoryId": 16 },
     { "id": 68, "Name": "Cultural Events (e.g. parades, carnivals, etc.)", "CategoryId": 16 },
-    { "id": 69, "Name": "CD's", "CategoryId": 16 },
+    { "id": 69, "Name": "Music", "CategoryId": 16 },
     { "id": 70, "Name": "Video Games", "CategoryId": 16 },
     { "id": 71, "Name": "Toys", "CategoryId": 16 },
     { "id": 72, "Name": "Tourist Attractions (e.g. amusement parks, museums, zoos, etc.)", "CategoryId": 16 },

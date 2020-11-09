@@ -13,6 +13,9 @@ export default {
     getBills() {
         return apiClient.get("/bills");
     },
+    getBillById(id) {
+        return apiClient.get(`/bills/${id}`);
+    },
     createBill(bill) {
         let billPayload = JSON.stringify(bill);
         return apiClient.post("/bills", billPayload);
