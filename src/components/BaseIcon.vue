@@ -28,6 +28,7 @@ export default {
 <style scoped>
 .icon-wrapper {
   display: inline-flex;
+  vertical-align: middle;
   align-items: center;
   color: rgba(0, 0, 0, 0.4);
   font-size: 1rem;
