@@ -35,8 +35,11 @@ export default new Vuex.Store({
         return 0;
       });
     },
+    activeBills(state) {
+      return state.bills.filter(bill => (bill.isRecurring || new Date(bill.dateCreated).getMonth() === state.activeMonth?.id) && (bill.datePaidOff === false || bill.datePaidOff === null));
+    },
     activeBillCount(state) {
-      let filteredBills = state.bills.filter(bill => new Date(bill.dateCreated).getMonth() === state.activeMonth.id && bill.datePaidOff === null)
+      let filteredBills = state.bills.filter(bill => (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id || bill.isRecurring) && bill.datePaidOff === null)
       return filteredBills.length;
     },
     getSubCategoriesByCategoryId: (state) => (categoryId) => {
