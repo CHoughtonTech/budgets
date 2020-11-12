@@ -1,9 +1,15 @@
 <template>
     <div>
         <h3>{{activeMonth + ' ' + new Date().getFullYear() }} Bills</h3>
+        <div v-if="this.$store.getters.activeBillCount > 0" class="bill-summary -shadow">
+            <div class="bill-summary-header">Summary</div>
+            <div class="bill-summary-item">Bills Total: {{activeBillsTotal | currency}}</div>
+            <div class="bill-summary-item">Total Paid: {{totalPaid | currency}}</div>
+            <div class="bill-summary-item">Total Due: {{totalDue | currency}}</div>
+        </div>
         <router-link class="add-bill" :to="{ name: 'create-bill' }"><BaseIcon name="plus-circle">Add a Bill</BaseIcon></router-link>
         <hr/>
-        <BaseIcon v-if="unpaidBills.length > 0" name="arrow-right-circle"><span slot="pre">Unpaid Bills<span class="badge -fill-gradient">{{unpaidBills.length}}</span></span></BaseIcon>
+        <BaseIcon v-if="unpaidBills.length > 0" name="arrow-right-circle"><span slot="pre">Unpaid Bills<span class="badge -fill-gradient">{{unpaidBills.length}} / {{this.$store.getters.activeBillCount}}</span></span></BaseIcon>
         <BillCard v-for="bill in unpaidBills" :key="bill.id" :bill="bill" @delete-bill="deleteBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" />
         <BaseIcon v-if="paidBills.length > 0" name="arrow-right-circle"><span slot="pre">Paid Bills</span></BaseIcon>
         <BillCard v-for="bill in paidBills" :key="bill.id" :bill="bill" @delete-bill="deleteBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" />
@@ -75,6 +81,27 @@ export default {
         },
         unpaidBills() {
             return this.$store.getters.unpaidBills;
+        },
+        totalDue() {
+            let total = 0;
+            this.$store.getters.unpaidBills.forEach(bill => {
+                total += parseFloat(bill.amount);
+            });
+            return total;
+        },
+        totalPaid() {
+            let total = 0;
+            this.$store.getters.paidBills.forEach(bill => {
+                total += parseFloat(bill.amount);
+            });
+            return total;
+        },
+        activeBillsTotal() {
+            let total = 0;
+            this.$store.getters.activeBills.forEach(bill => {
+                total += parseFloat(bill.amount);
+            });
+            return total;
         },
         activeMonth() {
             if (this.$store.state.activeMonth && this.$store.state.activeMonth !== null) {
@@ -188,5 +215,27 @@ export default {
     border: 2px solid teal;
     border-radius: 10%;
     margin-right: 7.5px;
+}
+.bill-summary {
+    /* border: 1px solid black; */
+    transition: all 0.2s linear;
+    border-radius: 10px;
+    color:gray;
+    /* background-color: #09dbdb; */
+    margin-bottom: 25px;
+    margin-top: 25px;
+}
+.bill-summary-header {
+    background-color:teal;
+    border-radius: 10px 10px 0 0;
+    color:white;
+    font-size:large;
+    padding-left: 10px;
+    font-weight: bold;
+    border-bottom: 2px solid #09dbdb;
+}
+.bill-summary-item {
+    padding-left: 10px;
+    font-style:italic;
 }
 </style>
