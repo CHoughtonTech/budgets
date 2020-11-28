@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="bills-edit-view">
         <h1>Edit Bill</h1>
         <div>{{this.updatedBill.name}}</div>
         <hr/>
@@ -152,3 +152,9 @@ export default {
     }
 }
 </script>
+<style>
+.bills-edit-view {
+    min-width: 500px;
+    width: 25%;
+}
+</style>

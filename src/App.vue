@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <NavBar/>
-    <router-view/>
+    <router-view id="main-view"/>
   </div>
 </template>
 
@@ -58,14 +58,18 @@ body {
 }
 #app {
   box-sizing: border-box;
-  width: 500px;
-  padding: 0 20px 20px;
   margin: 0 auto;
 }
+#main-view {
+  margin-top: 60px;
+  min-width: 500px;
+  padding: 0 20px 20px;
+  box-sizing: border-box;
+}
 hr {
-  box-sizing: content-box;
-  height: 0;
-  overflow: visible;
+  width: 100%;
+  background-color:gray;
+  height: 1px;
 }
 a {
   color: #39b982;

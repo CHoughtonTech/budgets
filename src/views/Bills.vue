@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="bills-view">
         <h3>{{activeMonth + ' ' + new Date().getFullYear() }} Bills</h3>
         <div v-if="this.$store.getters.activeBillCount > 0" class="bill-summary -shadow">
             <div class="bill-summary-header">Summary</div>
@@ -196,6 +196,10 @@ export default {
 </script>
 
 <style scoped>
+.bills-view {
+    min-width: 500px;
+    width: 25%;
+}
 .add-bill {
     cursor: pointer;
     text-decoration: none;

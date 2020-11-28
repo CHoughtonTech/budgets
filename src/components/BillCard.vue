@@ -118,10 +118,4 @@ export default {
 .dropdown-item:hover {
     background-color: turquoise;
 }
-hr {
-width: 96%;
-background-color:gray;
-height: 1px;
-
-}
 </style>

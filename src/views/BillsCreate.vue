@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="bills-create-view">
         <h1>Add Bill</h1>
         <label for="billName">Name</label>
         <div v-if="validationFailed('billName')" class="error-detail">{{getErrorMessage('billName')}}</div>
@@ -186,3 +186,9 @@ export default {
     }
 };
 </script>
+<style>
+.bills-create-view {
+    min-width: 500px;
+    width: 25%;
+}
+</style>
