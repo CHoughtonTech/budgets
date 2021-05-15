@@ -59,13 +59,13 @@ export default {
                 id: null,
                 name: null,
                 paid: false,
-                amount:null,
-                datePaid: null,
+                amount:0.0,
+                datePaid: '',
                 dateCreated: null,
                 isRecurring: false,
                 paidCount: 0,
                 isFixedAmount: false,
-                datePaidOff: null,
+                datePaidOff: '',
                 subCategoryId : null
             },
             showCreateAnotherModal: false,
@@ -78,7 +78,7 @@ export default {
         createBill() {
             if (this.validateFields()) {
                 this.bill.id = this.getBillID();
-                this.bill.amount = parseFloat(this.bill.amount).toFixed(2);
+                this.bill.amount = this.toFixedNumber(parseFloat(this.bill.amount), 2);
                 this.bill.dateCreated = new Date().toLocaleDateString();
                 this.$store.dispatch("createBill", this.bill).then(() => {
                     this.$store.dispatch("getAllBills").then(() => {
@@ -163,12 +163,12 @@ export default {
                 name: null,
                 paid: false,
                 amount:null,
-                datePaid: null,
+                datePaid: '',
                 dateCreated: null,
                 isRecurring: false,
                 paidCount: 0,
                 isFixedAmount: false,
-                datePaidOff: null,
+                datePaidOff: '',
                 subCategoryId : null
             };
         },
@@ -182,6 +182,10 @@ export default {
                 console.log("Nope, back to bills");
                 this.$router.push('/bills');
             }
+        },
+        toFixedNumber(num, digits, base){
+            var pow = Math.pow(base||10, digits);
+            return Math.round(num*pow) / pow;
         }
     }
 };

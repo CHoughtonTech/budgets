@@ -7,7 +7,7 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    bills: [],
+    bills: undefined, //array of json objects
     activeMonth: null,
     categories: [],
     subCategories: [],
@@ -16,7 +16,7 @@ export default new Vuex.Store({
   },
   getters: {
     paidBills(state) {
-      let filteredArray = state.bills.filter(bill => bill.paid === true && (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id || bill.isRecurring === true) && bill.datePaidOff === null);
+      let filteredArray = state.bills.filter(bill => bill.paid === true && (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id || bill.isRecurring === true) && (bill.datePaidOff === null || bill.datePaidOff === ''));
       return filteredArray.sort(function(a,b) {
         let x = a.name.toLowerCase();
         let y = b.name.toLowerCase();
@@ -26,7 +26,7 @@ export default new Vuex.Store({
       });
     },
     unpaidBills(state) {
-      let filteredArray = state.bills.filter(bill => bill.paid === false && (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id || bill.isRecurring === true) && bill.datePaidOff === null);
+      let filteredArray = state.bills.filter(bill => bill.paid === false && (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id || bill.isRecurring === true) && (bill.datePaidOff === null || bill.datePaidOff === ''));
       return filteredArray.sort(function(a,b) {
         let x = a.name.toLowerCase();
         let y = b.name.toLowerCase();
@@ -35,11 +35,14 @@ export default new Vuex.Store({
         return 0;
       });
     },
+    hasBills(state) {
+      return state.bills != undefined;
+    },
     activeBills(state) {
-      return state.bills.filter(bill => (bill.isRecurring || new Date(bill.dateCreated).getMonth() === state.activeMonth?.id) && (bill.datePaidOff === false || bill.datePaidOff === null));
+      return state.bills.filter(bill => (bill.isRecurring || new Date(bill.dateCreated).getMonth() === state.activeMonth?.id) && (bill.datePaidOff === null || bill.datePaidOff === ''));
     },
     activeBillCount(state) {
-      let filteredBills = state.bills.filter(bill => (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id || bill.isRecurring) && bill.datePaidOff === null)
+      let filteredBills = state.bills.filter(bill => (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id || bill.isRecurring) && (bill.datePaidOff === null || bill.datePaidOff === ''))
       return filteredBills.length;
     },
     getSubCategoriesByCategoryId: (state) => (categoryId) => {
@@ -126,8 +129,8 @@ export default new Vuex.Store({
           commit('setBills', bills.data);
           resolve();
         }).catch(err => {
-          console.log("Error getting bills: ", err.response);
-          reject();
+          commit('setBills', []);
+          reject(err.message);
         });
       });
     },

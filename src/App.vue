@@ -30,7 +30,11 @@ export default {
             this.$store.dispatch("updateActiveMonth", this.currentMonth);
           });
         }
+      }).catch(err => {
+        console.log(`Error getting active month: ${err}`)
       });
+    }).catch(err => {
+      console.log(`Error getting all bills: ${err}`);
     });
   },
   data() {

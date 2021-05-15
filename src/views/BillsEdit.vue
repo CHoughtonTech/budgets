@@ -1,42 +1,47 @@
 <template>
     <div class="bills-edit-view">
         <h1>Edit Bill</h1>
-        <div>{{this.updatedBill.name}}</div>
-        <hr/>
-        <label for="billName">Name</label>
-        <div v-if="validationFailed('billName')" class="error-detail">{{getErrorMessage('billName')}}</div>
-        <input id="billName" type="text" v-model="updatedBill.name" :class="{'error-detail-input' : validationFailed('billName')}"/>
-        <label for="billAmount">Amount</label>
-        <div v-if="validationFailed('billAmount')" class="error-detail">{{getErrorMessage('billAmount')}}</div>
-        <input id="billAmount" type="number" v-model="updatedBill.amount" :class="{'error-detail-input' : validationFailed('billAmount')}"/>
-        <label for="billFixedAmount" style="margin-right: 25px">Is Fixed Amount</label>
-        <input id="billFixedAmount" type="checkbox" v-model="updatedBill.isFixedAmount"/><br/>
-        <label for="billRecurring" style="margin-right: 25px">Is Recurring</label>
-        <input id="billRecurring" type="checkbox" v-model="updatedBill.isRecurring"/><br/>
-        <label for="billCategories">Categories</label>
-        <div v-if="validationFailed('billSubcategories') && this.selectedCategoryId === null" class="error-detail">{{getErrorMessage('billSubcategories')}}</div>
-        <select id="billCategories" v-model="selectedCategoryId" @change="resetSubcategoryId" :class="{'error-detail-input': validationFailed('billSubcategories') && this.selectedCategoryId === null}">
-            <option v-for="category in this.$store.state.categories" :key="category.id" :value="category.id">
-                {{category.Name}}
-            </option>
-        </select>
-        <label v-if="activeSubCategories.length > 0" for="billSubCategories">SubCategories</label>
-        <div v-if="validationFailed('billSubcategories') && this.selectedCategoryId !== null" class="error-detail">{{getErrorMessage('billSubcategories')}}</div>
-        <select id="billSubCategories" v-if="activeSubCategories.length > 0" v-model="selectedSubCategoryId" :class="{'error-detail-input': validationFailed('billSubcategories') && this.selectedSubCategoryId === null}">
-            <option v-for="subCategory in this.activeSubCategories" :key="subCategory.id" :value="subCategory.id">
-                {{subCategory.Name}}
-            </option>
-        </select>
-        <button type="button" @click="updateBill()">Update</button>
-        <button type="button" @click="cancelUpdateBill()">Cancel</button>
-        <BaseModal v-if="showConfirmModal">
-            <h3 slot="header" style="color:Teal;">Confirm Update</h3>
-            <div slot="body">Update <strong><i>{{updatedBill.name}}</i></strong>?</div>
-            <div slot="footer">
-                <button type="button" @click="updateBillConfirm()">Confirm</button>
-                <button type="button" @click="showConfirmModal = !showConfirmModal">Cancel</button>
-            </div>
-        </BaseModal>
+        <div v-if="this.$store.state.editedBill != this.updatedBill">
+            <button class="button is-info is-loading" style="width:100%;"></button>
+        </div>
+        <div v-else>
+            <div>{{this.updatedBill.name}}</div>
+            <hr/>
+            <label for="billName">Name</label>
+            <div v-if="validationFailed('billName')" class="error-detail">{{getErrorMessage('billName')}}</div>
+            <input id="billName" type="text" v-model="updatedBill.name" :class="{'error-detail-input' : validationFailed('billName')}"/>
+            <label for="billAmount">Amount</label>
+            <div v-if="validationFailed('billAmount')" class="error-detail">{{getErrorMessage('billAmount')}}</div>
+            <input id="billAmount" type="number" v-model="updatedBill.amount" :class="{'error-detail-input' : validationFailed('billAmount')}"/>
+            <label for="billFixedAmount" style="margin-right: 25px">Is Fixed Amount</label>
+            <input id="billFixedAmount" type="checkbox" v-model="updatedBill.isFixedAmount"/><br/>
+            <label for="billRecurring" style="margin-right: 25px">Is Recurring</label>
+            <input id="billRecurring" type="checkbox" v-model="updatedBill.isRecurring"/><br/>
+            <label for="billCategories">Categories</label>
+            <div v-if="validationFailed('billSubcategories') && this.selectedCategoryId === null" class="error-detail">{{getErrorMessage('billSubcategories')}}</div>
+            <select id="billCategories" v-model="selectedCategoryId" @change="resetSubcategoryId" :class="{'error-detail-input': validationFailed('billSubcategories') && this.selectedCategoryId === null}">
+                <option v-for="category in this.$store.state.categories" :key="category.id" :value="category.id">
+                    {{category.Name}}
+                </option>
+            </select>
+            <label v-if="activeSubCategories.length > 0" for="billSubCategories">SubCategories</label>
+            <div v-if="validationFailed('billSubcategories') && this.selectedCategoryId !== null" class="error-detail">{{getErrorMessage('billSubcategories')}}</div>
+            <select id="billSubCategories" v-if="activeSubCategories.length > 0" v-model="selectedSubCategoryId" :class="{'error-detail-input': validationFailed('billSubcategories') && this.selectedSubCategoryId === null}">
+                <option v-for="subCategory in this.activeSubCategories" :key="subCategory.id" :value="subCategory.id">
+                    {{subCategory.Name}}
+                </option>
+            </select>
+            <button type="button" @click="updateBill()">Update</button>
+            <button type="button" @click="cancelUpdateBill()">Cancel</button>
+            <BaseModal v-if="showConfirmModal">
+                <h3 slot="header" style="color:Teal;">Confirm Update</h3>
+                <div slot="body">Update <strong><i>{{updatedBill.name}}</i></strong>?</div>
+                <div slot="footer">
+                    <button type="button" @click="updateBillConfirm()">Confirm</button>
+                    <button type="button" @click="showConfirmModal = !showConfirmModal">Cancel</button>
+                </div>
+            </BaseModal>
+        </div>
     </div>
 </template>
 
@@ -55,6 +60,7 @@ export default {
             selectedCategoryId: null,
             selectedSubCategoryId: null,
             showConfirmModal: false,
+            isLoading: false,
             errors: []
         }
     },
@@ -64,6 +70,7 @@ export default {
         }
     },
     created() {
+        this.isLoading = true;
         this.$store.dispatch('getBillById', this.id).then(() => {
             if (this.$store.state.editedBill === null) {
                 console.log(`No bill found for id '${this.id}'`);
@@ -73,6 +80,7 @@ export default {
                 this.selectedSubCategoryId = this.updatedBill.subCategoryId;
                 this.setCategoryId();
             }
+            this.isLoading = false;
         }).catch(() => {            
             console.log(`No bill found for id '${this.id}'`);
             this.$router.push('/bills');
