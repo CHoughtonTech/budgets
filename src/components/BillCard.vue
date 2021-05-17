@@ -21,7 +21,7 @@
                     </div>
                 </div>
             </div>
-            <span>{{bill.name}}</span>
+            <span style="color:lightgrey;">{{bill.name}}</span>
             <span class="paid-button" v-if="!bill.paid" @click="paidBill(bill)" ><BaseIcon name="check-circle"></BaseIcon></span>
             <span class="undo-button" v-if="bill.paid" @click="undoBillPaid(bill)"><BaseIcon name="rotate-ccw"></BaseIcon></span>
             <div class="paid-status" v-if="bill.paid"><BaseIcon name="check">{{new Date(bill.datePaid).toLocaleDateString('en-US', {timeZone: 'UTC'})}} &nbsp;</BaseIcon></div>
@@ -40,7 +40,9 @@ export default {
             return this.bill.paid;
         },
         isNewBill() {
-            return this.bill.id === this.$store.state.createdBill?.id;
+            let isCreatedToday = new Date(this.bill.dateCreated).toLocaleDateString() === new Date().toLocaleDateString();
+            console.log("Bill created today: ", isCreatedToday);
+            return isCreatedToday;
         }
     },
     methods: {
@@ -69,7 +71,7 @@ export default {
   border-radius:10px;
 }
 .bill-card:hover {
-  background-color:#09dbdb;
+  background-color: #C15EF2;
   box-shadow: 0 3px 12px 0 rgba(0, 0, 0, 0.2), 0 1px 15px 0 rgba(0, 0, 0, 0.19);
 }
 .bill-card > .title {
@@ -81,10 +83,10 @@ export default {
   font-weight: 100;
 }
 .new-bill {
-    border: 3px solid #09dbdb;
+    border: 3px solid #C15EF2;
 }
 .paid-bill {
-    background-color: #39b982;
+    background-color: #A755C2;
 }
 .paid-status {
     float:inherit;
@@ -94,7 +96,7 @@ export default {
     padding: 0px;
 }
 .bill-amount {
-    color: gray;
+    color: lightgrey;
     font-style:italic;
     float:right;
 }
@@ -111,11 +113,15 @@ export default {
 }
 .bill-menu-item {
     margin:0px;
-    background-color: teal;
+    background-color:#411159;
     min-width: 100px;
     z-index: 1;
 }
+.dropdown-menu, .dropdown-content {
+    background-color: #2D3033;
+    color: lightgrey;
+}
 .dropdown-item:hover {
-    background-color: turquoise;
+    background-color: #9C50B6;
 }
 </style>

@@ -1,5 +1,5 @@
 # budgets
-
+This is a simple little project that I made to learn Vue, that doubles as a useful tool for managing my budget. 
 ## Project setup
 ```
 npm install

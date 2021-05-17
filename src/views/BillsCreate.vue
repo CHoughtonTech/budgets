@@ -28,8 +28,8 @@
         <button type="button" @click="createBill()">Create</button>
         <button type="button" @click="cancelBill()">Cancel</button>
         <BaseModal v-if="showCreateAnotherModal">
-            <h3 slot="header" style="color:Teal;">Bill Creation</h3>
-            <h6 slot="body">Create Another bill?</h6>
+            <h3 slot="header" style="color:lightgrey;">Bill Creation</h3>
+            <h6 slot="body" style="color:lightgrey;">Create Another bill?</h6>
             <div slot="footer">
                 <button @click="createAnotherConfirm('Yes')">Yes</button>
                 <button @click="createAnotherConfirm('No')">No</button>
@@ -60,12 +60,12 @@ export default {
                 name: null,
                 paid: false,
                 amount:0.0,
-                datePaid: '',
+                datePaid: null,
                 dateCreated: null,
                 isRecurring: false,
                 paidCount: 0,
                 isFixedAmount: false,
-                datePaidOff: '',
+                datePaidOff: null,
                 subCategoryId : null
             },
             showCreateAnotherModal: false,
@@ -81,9 +81,7 @@ export default {
                 this.bill.amount = this.toFixedNumber(parseFloat(this.bill.amount), 2);
                 this.bill.dateCreated = new Date().toLocaleDateString();
                 this.$store.dispatch("createBill", this.bill).then(() => {
-                    this.$store.dispatch("getAllBills").then(() => {
-                        this.showCreateAnotherModal = true;
-                    });
+                    this.showCreateAnotherModal = true;
                 });
             }
         },

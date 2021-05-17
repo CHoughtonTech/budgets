@@ -1,11 +1,11 @@
 <template>
     <div class="bills-edit-view">
-        <h1>Edit Bill</h1>
+        <h3>Edit Bill</h3>
         <div v-if="this.$store.state.editedBill != this.updatedBill">
             <button class="button is-info is-loading" style="width:100%;"></button>
         </div>
         <div v-else>
-            <div>{{this.updatedBill.name}}</div>
+            <h1>{{this.updatedBill.name}}</h1>
             <hr/>
             <label for="billName">Name</label>
             <div v-if="validationFailed('billName')" class="error-detail">{{getErrorMessage('billName')}}</div>
@@ -34,8 +34,8 @@
             <button type="button" @click="updateBill()">Update</button>
             <button type="button" @click="cancelUpdateBill()">Cancel</button>
             <BaseModal v-if="showConfirmModal">
-                <h3 slot="header" style="color:Teal;">Confirm Update</h3>
-                <div slot="body">Update <strong><i>{{updatedBill.name}}</i></strong>?</div>
+                <h3 slot="header" style="color:lightgrey;">Confirm Update</h3>
+                <div slot="body" style="color:lightgrey;">Update <strong><i style="color:white;">{{updatedBill.name}}</i></strong>?</div>
                 <div slot="footer">
                     <button type="button" @click="updateBillConfirm()">Confirm</button>
                     <button type="button" @click="showConfirmModal = !showConfirmModal">Cancel</button>
@@ -97,9 +97,7 @@ export default {
             this.showConfirmModal = false;
             if (this.validateFields()) {
                 this.$store.dispatch('updateBill', this.updatedBill).then(() => {
-                    this.$store.dispatch("getAllBills").then(() => {
-                        this.$router.push('/bills');
-                    });
+                    this.$router.push('/bills');
                 });
             } else {
                 console.log("Validation Failed");
@@ -161,6 +159,15 @@ export default {
 }
 </script>
 <style>
+h1 {
+    color: #C15EF2
+}
+h3 {
+    color: lightgrey;
+}
+label {
+    color: lightgrey;
+}
 .bills-edit-view {
     min-width: 500px;
     width: 25%;
