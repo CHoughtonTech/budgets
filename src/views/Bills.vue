@@ -1,10 +1,7 @@
 <template>
     <div class="bills-view">
-        <h3>{{activeMonth + ' ' + new Date().getFullYear() }} Bills</h3>
-        <div v-if="!this.$store.getters.hasBills">
-            <button class="button is-info is-loading" style="width:100%"></button>
-        </div>
-        <div v-else>
+        <h3 style="color:lightgrey;">{{activeMonth + ' ' + new Date().getFullYear() }} Bills</h3>
+        <div>
             <div v-if="this.$store.getters.activeBillCount > 0" class="bill-summary -shadow">
                 <div class="bill-summary-header">Summary</div>
                 <div class="bill-summary-item">Bills Total: {{activeBillsTotal | currency}}</div>
@@ -18,9 +15,9 @@
             <BaseIcon v-if="paidBills.length > 0" name="arrow-right-circle"><span slot="pre">Paid Bills</span></BaseIcon>
             <BillCard v-for="bill in paidBills" :key="bill.id" :bill="bill" @delete-bill="deleteBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" />
             <BaseModal v-if="showBillDeleteModal">
-                <h3 slot="header" style="color:Teal;">Delete Bill</h3>
+                <h3 slot="header" style="color:#411159">Delete Bill</h3>
                 <div slot="body">
-                    Delete bill: <b style="color:Teal;">{{this.selectedBill.name}}</b>?
+                    Delete bill: <b style="color:#411159;">{{this.selectedBill.name}}</b>?
                 </div>
                 <div slot="footer">
                     <button @click="deleteBillConfirm('confirm')">Confirm</button>
@@ -28,7 +25,7 @@
                 </div>
             </BaseModal>
             <BaseModal v-if="showBillAmountModal">
-                <h3 slot="header" style="color:Teal;">Enter Amount</h3>
+                <h3 slot="header" style="color:#411159;">Enter Amount</h3>
                 <div slot="body">
                     <h4>Bill: {{selectedBill.name}}</h4>
                     <label for="billInputAmount">Amount</label>
@@ -41,7 +38,7 @@
                 </div>
             </BaseModal>
             <BaseModal v-if="showBillDetailModal">
-                <h4 slot="header" style="color:Teal;">{{selectedBill.name}}</h4>
+                <h3 slot="header" style="color:#C15EF2;">{{selectedBill.name}}</h3>
                 <div slot="body">
                     <hr/><br/>
                     <div class="bill-detail"><span class="bill-detail-label">Amount</span>{{selectedBill.amount | currency}}</div>
@@ -210,38 +207,37 @@ export default {
     text-decoration: none;
 }
 .bill-detail {
+    background: #2D3033;
     margin-top: 10px;
     margin-bottom: 10px;
     cursor: default;
-    color:dimgray;
+    color: lightgrey;
 }
 .bill-detail-label {
-    color: white;
-    background-color: teal;
+    color: lightgrey;
+    background-color: #411159;
     padding: 5px;
     font-weight: bolder;
     font-style: italic;
-    border: 2px solid teal;
+    border: 2px solid #411159;
     border-radius: 10%;
     margin-right: 7.5px;
 }
 .bill-summary {
-    /* border: 1px solid black; */
     transition: all 0.2s linear;
     border-radius: 10px;
-    color:gray;
-    /* background-color: #09dbdb; */
+    color: lightgrey;
     margin-bottom: 25px;
     margin-top: 25px;
 }
 .bill-summary-header {
-    background-color:teal;
+    background-color: #411159;
     border-radius: 10px 10px 0 0;
     color:white;
     font-size:large;
     padding-left: 10px;
     font-weight: bold;
-    border-bottom: 2px solid #09dbdb;
+    border-bottom: 2px solid #C15EF2;
 }
 .bill-summary-item {
     padding-left: 10px;

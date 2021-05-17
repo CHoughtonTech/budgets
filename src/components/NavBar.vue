@@ -17,7 +17,7 @@ export default {};
     top:0;
     width: 100%;
     min-width: 500px;
-    background-color: teal;
+    background-color:#411159;
     color: white;
     margin: 0;
     z-index: 1;
@@ -32,12 +32,12 @@ export default {};
   font-size: 17px;
 }
 .nav-link:hover {
-    background-color:#09dbdb;
-    color: teal;
+    background-color: #C15EF2;
+    color: whitesmoke;
 }
 .router-link-exact-active {
-    background-color: #67dada;
-    color:gray;
+    background-color: #8834B3;
+    color: lightgrey;
     font-style: italic;
 }
 

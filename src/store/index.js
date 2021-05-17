@@ -1,19 +1,19 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import BillService from '../services/BillService';
 import ExpenseCategories from '../api/ExpenseCategories';
+import createPersistedState from 'vuex-persistedstate';
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    bills: undefined, //array of json objects
+    bills: [], //array of json objects
     activeMonth: null,
     categories: [],
     subCategories: [],
-    createdBill: null,
     editedBill: null
   },
+  plugins: [createPersistedState()],
   getters: {
     paidBills(state) {
       let filteredArray = state.bills.filter(bill => bill.paid === true && (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id || bill.isRecurring === true) && (bill.datePaidOff === null || bill.datePaidOff === ''));
@@ -36,7 +36,7 @@ export default new Vuex.Store({
       });
     },
     hasBills(state) {
-      return state.bills != undefined;
+      return state.bills !== undefined && state.bills !== null && state.bills.length > 0;
     },
     activeBills(state) {
       return state.bills.filter(bill => (bill.isRecurring || new Date(bill.dateCreated).getMonth() === state.activeMonth?.id) && (bill.datePaidOff === null || bill.datePaidOff === ''));
@@ -90,9 +90,6 @@ export default new Vuex.Store({
     }
   },
   mutations: {
-    setBills(state, bills) {
-      state.bills = bills;
-    },
     updateBill(state, bill) {
       state.bills.forEach(b => {
         if (b.id === bill.id) {
@@ -103,8 +100,8 @@ export default new Vuex.Store({
     removeBill(state, index) {
       state.bills.splice(index,1);
     },
-    setCreatedBill(state, bill) {
-      state.createdBill = bill;
+    createBill(state, bill) {
+      state.bills.push(bill);
     },
     setEditedBill(state, bill) {
       state.editedBill = bill;
@@ -123,90 +120,36 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    getAllBills({commit}) {
-      return new Promise((resolve, reject) => {
-        BillService.getBills().then(bills => {
-          commit('setBills', bills.data);
-          resolve();
-        }).catch(err => {
-          commit('setBills', []);
-          reject(err.message);
-        });
-      });
-    },
     getBillById({commit}, id) {
-      return new Promise ((resolve, reject) => {
-        BillService.getBillById(id).then(bill => {
-          commit('setEditedBill', bill.data);          
-          resolve();
-        }).catch(err => {
-          console.log(`Error getting bill by id: ${id}. Details: ${err.response.statusText}`);
-          reject();
-        });
-      });
+      let foundBill = this.state.bills.find(b => b.id === id);
+      if(foundBill) {
+        commit('setEditedBill', foundBill);
+      }
     },
     updateBill({commit}, bill) {
-      return new Promise((resolve, reject) => {
-        BillService.updateBill(bill).then(() => {
-          commit('updateBill', bill);
-          resolve();
-        }).catch(err => {
-          console.log("Error updating bills: ", err.response);
-          reject();
-        });
-      });
+      commit('updateBill', bill);
     },
     deleteBill({commit, state}, billId) {
-      return new Promise((resolve, reject) => {
-        BillService.deleteBill(billId).then(() => {
-          let billIndex = null;
-          for (let i = 0; i < state.bills.length; i++) {
-            const bill = state.bills[i];
-            if (bill.id === billId) {
-              billIndex = i;
-              break;
-            }
-          }
-          commit('removeBill', billIndex);
-          resolve();
-        }).catch(err => {
-          console.log("Error deleting bill: ", err.response);
-          reject();
-        });
-      });
+      let billIndex = null;
+      for (let i = 0; i < state.bills.length; i++) {
+        const bill = state.bills[i];
+        if(bill.id === billId) {
+          billIndex = i;
+          break;
+        }
+      }
+      if (billIndex !== null) {
+        commit('removeBill', billIndex);
+      }
     },
     createBill({commit}, bill) {
-      return new Promise((resolve, reject) => {
-        BillService.createBill(bill).then(() => {
-          commit('setCreatedBill', bill);
-          resolve();
-        }).catch(err => {
-          console.log("Error creating bill: ", err.response);
-          reject();
-        });
-      });
+      commit('createBill', bill);
     },
-    getActiveMonth({commit}) {
-      return new Promise((resolve, reject) => {
-        BillService.getActiveMonth().then(month => {
-          commit('setActiveMonth', month.data);
-          resolve();
-        }).catch(err => {
-          console.log("Error getting active month: ", err.response);
-          reject();
-        });
-      });
+    getActiveMonth() {
+      console.log(this.state.activeMonth);
     },
     updateActiveMonth({commit}, activeMonth) {
-      return new Promise((resolve, reject) => {
-        BillService.updateActiveMonth(activeMonth).then(() => {
-          commit('updateActiveMonth', activeMonth);
-          resolve();
-        }).catch(err => {
-          console.log("Error updating activeMonth: ", err.response);
-          reject();
-        });
-      });
+      commit('updateActiveMonth', activeMonth);
     },
     getCategories({commit}) {
       return new Promise((resolve) => {
@@ -224,7 +167,5 @@ export default new Vuex.Store({
         });
       });
     }
-  },
-  modules: {
   }
 })
