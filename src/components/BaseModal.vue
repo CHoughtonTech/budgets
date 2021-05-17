@@ -46,19 +46,20 @@ export default {};
 }
 
 .modal-container {
-  width: 300px;
+  width: 25%;
+  min-width: 400px;
   margin: 0px auto;
   padding: 20px 30px;
-  background-color: #fff;
+  background-color: #2D3033;
   border-radius: 2px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+  box-shadow: 0 2px 8px lightgrey;
   transition: all 0.3s ease;
   font-family: Helvetica, Arial, sans-serif;
 }
 
 .modal-header h3 {
   margin-top: 0;
-  color: #42b983;
+  color: #ab42b9;
 }
 
 .modal-body {

@@ -2,7 +2,8 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import BudgetDashboard from '../views/BudgetDashboard';
 import Bills from '../views/Bills';
-import BillsCreate from '../views/BillsCreate'
+import BillsCreate from '../views/BillsCreate';
+import BillsEdit from '../views/BillsEdit';
 
 Vue.use(VueRouter)
 
@@ -21,6 +22,12 @@ const routes = [
     path: '/bills/create',
     name: 'create-bill',
     component: BillsCreate
+  },
+  {
+    path: '/bills/:id',
+    name: 'edit-bill',
+    component: BillsEdit,
+    props: true
   }
 ]
 

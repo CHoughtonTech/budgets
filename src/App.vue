@@ -1,7 +1,8 @@
 <template>
   <div id="app">
     <NavBar/>
-    <router-view/>
+    <router-view id="main-view"/>
+    <div class="copyright">&copy; {{currentYear}} OxSoft Solutions</div>
   </div>
 </template>
 
@@ -11,6 +12,40 @@ import NavBar from "./components/NavBar";
 export default {
   components: {
     NavBar
+  },
+  created() {
+    this.$store.dispatch("getCategories");
+    this.$store.dispatch("getSubcategories");
+    if (this.$store.state.activeMonth?.name !== this.currentMonth.name || this.$store.state.activeMonth?.id !== this.currentMonth.id) {
+        let promiseArr = [];
+        if (this.$store.getters.hasBills) {
+          this.$store.state.bills.forEach(b => {
+            if (b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === '')) {
+              b.paid = false;
+              b.datePaid = null;
+            }
+            promiseArr.push(this.$store.dispatch("updateBill", b));
+          });
+          Promise.all(promiseArr).then(() => {
+            this.$store.dispatch("updateActiveMonth", this.currentMonth);
+          });
+        } else {
+          this.$store.dispatch("updateActiveMonth", this.currentMonth);
+        }
+      }
+  },
+  computed: {
+    currentYear() {
+      return  new Date().getFullYear();
+    }
+  },
+  data() {
+    return {
+      currentMonth: {
+          name: new Date().toLocaleString('default', { month: 'long' }),
+          id: new Date().getMonth()
+      }
+    }
   }
 }
 </script>
@@ -20,6 +55,7 @@ html {
   -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: #2D3033;
 }
 body {
   margin: 0;
@@ -29,17 +65,21 @@ body {
 }
 #app {
   box-sizing: border-box;
-  width: 500px;
-  padding: 0 20px 20px;
   margin: 0 auto;
 }
+#main-view {
+  margin-top: 60px;
+  min-width: 500px;
+  padding: 0 20px 20px;
+  box-sizing: border-box;
+}
 hr {
-  box-sizing: content-box;
-  height: 0;
-  overflow: visible;
+  width: 100%;
+  background-color: lightgrey;
+  height: 1px;
 }
 a {
-  color: #39b982;
+  color: #A755C2;
   font-weight: 600;
   background-color: transparent;
 }
@@ -92,10 +132,10 @@ small {
   font-size: 20px;
 }
 .-text-primary {
-  color: #39b982;
+  color: #A755C2;
 }
 .-text-base {
-  color: #000;
+  color: lightgrey;
 }
 .-text-error {
   color: tomato;
@@ -119,7 +159,7 @@ small {
   line-height: 26px;
 }
 .badge.-fill-gradient {
-  background: linear-gradient(to right, #16c0b0, #84cf6a);
+  background: linear-gradient(to right, #5f1192, #a26acf);
   color: #fff;
 }
 button,
@@ -146,8 +186,8 @@ button,
 [type="button"],
 [type="reset"],
 [type="submit"] {
-  background-color: teal; 
-  border: 1px solid cyan;
+  background-color: #411159;
+  border: 1px solid #8834B3;
   color: white;
   padding: 10px;
   text-align: center;
@@ -169,7 +209,7 @@ button:-moz-focusring,
 [type="button"]:-moz-focusring,
 [type="reset"]:-moz-focusring,
 [type="submit"]:-moz-focusring {
-  outline: 2px solid #39b982;
+  outline: 2px solid #A755C2;
 }
 label {
   color: rgba(0, 0, 0, 0.5);
@@ -214,7 +254,7 @@ textarea {
 [type="number"]:focus,
 [type="search"]:focus,
 [type="password"]:focus {
-  border-color: #39b982;
+  border-color: #A755C2;
 }
 ::-webkit-file-upload-button {
   -webkit-appearance: button;
@@ -239,7 +279,7 @@ select {
   appearance: none;
 }
 select:focus {
-  border-color: #39b982;
+  border-color: #A755C2;
   outline: 0;
 }
 select:focus::ms-value {
@@ -251,6 +291,20 @@ select::ms-expand {
 }
 .field-details {
   font-size: 12px;
-  color:teal;
+  color: #411159;
+}
+.error-detail {
+  font-size: 12px;
+  color:crimson;
+  font-style:italic;
+  font-weight:500;
+}
+.error-detail-input {
+  border-color: crimson;
+  border-radius: 1px;
+}
+.copyright {
+  color:lightgrey;
+  text-align: center;
 }
 </style>

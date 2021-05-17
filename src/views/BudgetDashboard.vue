@@ -1,15 +1,11 @@
 <template>
     <div>
-        <h1>This is the dashboard</h1>
-        <h5>(Trison thinks this is ridiculous)</h5>
-        <img src="https://media4.giphy.com/media/c12vYfKIs2WRi/giphy.gif?cid=ecf05e47uec1diav716os5zfs4wuz7js8uwxlg68yxol542t&rid=giphy.gif" />
+        <h1 style="color:lightgrey;">This is the dashboard</h1>
+        <h3 style="color:white;font-weight:bold"><i>This is currently under construction.</i></h3>
+        <img src="https://media1.tenor.com/images/bc78ea2aa84a3776d6b54d6a04e9da86/tenor.gif?itemid=17626280" style="width:750px"/>
     </div>
 </template>
 
 <script>
-export default {
-    created(){
-        console.log("Made it to the Budget-Dashboard: ", new Date().toLocaleDateString());
-    }
-}
+export default {}
 </script>
