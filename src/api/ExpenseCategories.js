@@ -71,7 +71,6 @@ const _subCategories = [
     { "id": 35, "Name": "Holiday", "CategoryId": 10 },
     { "id": 36, "Name": "Anniversary", "CategoryId": 10 },
     { "id": 37, "Name": "Just Because", "CategoryId": 10 },
-    { "id": 98, "Name": "Charity", "CategoryId": 10},
     //Healthcare
     { "id": 38, "Name": "Dental", "CategoryId": 11 },
     { "id": 39, "Name": "Vision", "CategoryId": 11 },
@@ -108,7 +107,6 @@ const _subCategories = [
     { "id": 66, "Name": "Sporting Events", "CategoryId": 15 },
     { "id": 67, "Name": "Sporting Goods", "CategoryId": 15 },
     //hobbies
-    { "id": 99, "Name": "Clothing", "CategoryId": 16 },
     { "id": 68, "Name": "Cultural Events (e.g. parades, carnivals, etc.)", "CategoryId": 16 },
     { "id": 69, "Name": "Music", "CategoryId": 16 },
     { "id": 70, "Name": "Video Games", "CategoryId": 16 },
@@ -144,7 +142,11 @@ const _subCategories = [
     { "id": 94, "Name": "Day Trips", "CategoryId": 22 },
     { "id": 95, "Name": "Transportation", "CategoryId": 22 },
     { "id": 96, "Name": "Lodging", "CategoryId": 22 },
-    { "id": 97, "Name": "Entertainment", "CategoryId": 22 }
+    { "id": 97, "Name": "Entertainment", "CategoryId": 22 },
+    { "id": 98, "Name": "Charity", "CategoryId": 10},
+    { "id": 99, "Name": "Clothing", "CategoryId": 16 },
+    { "id": 100, "Name": "Homeowners/Renters", "CategoryId": 13 },
+    { "id": 101, "Name": "Subscriptions (e.g. Disney+, Hulu, etc.)", "CategoryId": 16 }
 ]
 
 export default {

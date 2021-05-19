@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="bill-card -shadow" :class="{'paid-bill' : isPaidBill, 'new-bill' : isNewBill}">
+        <div class="bill-card -shadow" :class="{'paid-bill' : isPaidBill, 'new-bill' : isNewBill, 'existing-bill': !isNewBill && !isPaidBill}">
             <div class="dropdown is-hoverable">
                 <div class="dropdown-trigger">
                     <div>
@@ -26,7 +26,7 @@
             <span class="undo-button" v-if="bill.paid" @click="undoBillPaid(bill)"><BaseIcon name="rotate-ccw"></BaseIcon></span>
             <div class="paid-status" v-if="bill.paid"><BaseIcon name="check">{{new Date(bill.datePaid).toLocaleDateString('en-US', {timeZone: 'UTC'})}} &nbsp;</BaseIcon></div>
             <hr/>
-            <div :class="{'bill-amount': !bill.paid, 'bill-amount-paid': bill.paid}">Amount {{bill.paid ? 'Paid' : 'Due'}}: {{bill.amount | currency}}</div>
+            <div :class="{'bill-amount': !bill.paid, 'bill-amount-paid': bill.paid}">Amount {{bill.paid ? 'Paid' : 'Due'}}: {{bill.amount | currency}}</div><br/>
         </div>
     </div>
 </template>
@@ -81,6 +81,9 @@ export default {
   color: black;
   text-decoration: none;
   font-weight: 100;
+}
+.existing-bill {
+    border: 3px solid #A755C2;
 }
 .new-bill {
     border: 3px solid #C15EF2;
