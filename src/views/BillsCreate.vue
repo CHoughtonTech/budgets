@@ -7,6 +7,8 @@
         <label for="billAmount">Amount</label>
         <div v-if="validationFailed('billAmount')" class="error-detail">{{getErrorMessage('billAmount')}}</div>
         <input id="billAmount" type="number" v-model="bill.amount" placeholder="0.00" :class="{'error-detail-input': validationFailed('billAmount')}" />
+        <label for="billDueDate">Due Date</label>
+        <datepicker placeholder="Select Due Date" :format="format" :disabledDates="disabledDates" v-model="selectedDueDate"></datepicker>
         <label for="billFixedAmount" style="margin-right: 25px">Is fixed amount?</label>
         <input id="billFixedAmount" type="checkbox" v-model="bill.isFixedAmount" /><br/>
         <label for="billRecurring" style="margin-right: 25px">Is recurring?</label>
@@ -39,9 +41,11 @@
 </template>
 <script>
 import BaseModal from '../components/BaseModal';
+import Datepicker from 'vuejs-datepicker';
 export default {
     components: {
-        BaseModal: BaseModal
+        BaseModal: BaseModal,
+        Datepicker: Datepicker
     },
     created() {
         if (this.$store.state.categories?.length <= 0) {
@@ -66,11 +70,17 @@ export default {
                 paidCount: 0,
                 isFixedAmount: false,
                 datePaidOff: null,
-                subCategoryId : null
+                subCategoryId : null,
+                dueDate: null
             },
+            format: 'M/d/yyyy',
             showCreateAnotherModal: false,
             selectedCategoryId: null,
             selectedSubCategoryId: null,
+            selectedDueDate: null,
+            disabledDates: {
+                to: new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate())
+            },
             errors: []
         }
     },
@@ -80,6 +90,7 @@ export default {
                 this.bill.id = this.getBillID();
                 this.bill.amount = this.toFixedNumber(parseFloat(this.bill.amount), 2);
                 this.bill.dateCreated = new Date().toLocaleDateString();
+                this.bill.dueDate = this.selectedDueDate.toLocaleDateString();
                 this.$store.dispatch("createBill", this.bill).then(() => {
                     this.showCreateAnotherModal = true;
                 });

@@ -1,7 +1,7 @@
 <template>
     <div class="bills-edit-view">
         <h3>Edit Bill</h3>
-        <div v-if="this.$store.state.editedBill != this.updatedBill">
+        <div v-if="!this.$store.state.editedBill">
             <button class="button is-info is-loading" style="width:100%;"></button>
         </div>
         <div v-else>
@@ -13,6 +13,8 @@
             <label for="billAmount">Amount</label>
             <div v-if="validationFailed('billAmount')" class="error-detail">{{getErrorMessage('billAmount')}}</div>
             <input id="billAmount" type="number" v-model="updatedBill.amount" :class="{'error-detail-input' : validationFailed('billAmount')}"/>
+            <label for="billDueDate">Due Date</label>
+            <datepicker placeholder="Select Due Date" :format="format" :disabledDates="disabledDates" v-model="selectedDueDate"></datepicker>
             <label for="billFixedAmount" style="margin-right: 25px">Is Fixed Amount</label>
             <input id="billFixedAmount" type="checkbox" v-model="updatedBill.isFixedAmount"/><br/>
             <label for="billRecurring" style="margin-right: 25px">Is Recurring</label>
@@ -47,9 +49,11 @@
 
 <script>
 import BaseModal from '../components/BaseModal';
+import Datepicker from 'vuejs-datepicker';
 export default {
     components: {
-        BaseModal: BaseModal
+        BaseModal: BaseModal,
+        Datepicker: Datepicker
     },
     props: {
         id: null
@@ -61,6 +65,11 @@ export default {
             selectedSubCategoryId: null,
             showConfirmModal: false,
             isLoading: false,
+            format: 'M/d/yyyy',
+            selectedDueDate: null,
+            disabledDates: {
+                to: new Date(new Date().getFullYear(),new Date().getMonth(),1)
+            },
             errors: []
         }
     },
@@ -76,8 +85,9 @@ export default {
                 console.log(`No bill found for id '${this.id}'`);
                 this.$router.push('/bills');
             } else {
-                this.updatedBill = this.$store.state.editedBill;
+                this.loadBill(this.$store.state.editedBill);
                 this.selectedSubCategoryId = this.updatedBill.subCategoryId;
+                this.selectedDueDate = this.updatedBill.dueDate;
                 this.setCategoryId();
             }
             this.isLoading = false;
@@ -87,8 +97,29 @@ export default {
         });
     },
     methods: {
+        loadBill(foundBill) {
+            this.updatedBill = {
+                id: foundBill.id,
+                name: foundBill.name,
+                paid: foundBill.paid,
+                amount: parseFloat(foundBill.amount),
+                datePaid: foundBill.datePaid,
+                dateCreated: foundBill.dateCreated,
+                isRecurring: foundBill.isRecurring,
+                paidCount: foundBill.paidCount,
+                isFixedAmount: foundBill.isFixedAmount,
+                datePaidOff: foundBill.datePaidOff,
+                subCategoryId : foundBill.subCategoryId,
+                dueDate: foundBill.dueDate
+            }
+        },
         updateBill() {
             this.updatedBill.subCategoryId = this.selectedSubCategoryId;
+            if (this.selectedDueDate && this.selectedDueDate !== null && typeof this.selectedDueDate !== "string") {
+                this.updatedBill.dueDate = this.selectedDueDate.toLocaleDateString();
+            } else {
+                this.updatedBill.dueDate = this.selectedDueDate;
+            }
             if (this.validateFields()) {
                 this.showConfirmModal = true;
             }
