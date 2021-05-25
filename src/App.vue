@@ -21,6 +21,14 @@ export default {
         if (this.$store.getters.hasBills) {
           this.$store.state.bills.forEach(b => {
             if (b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === '')) {
+              if (b.dueDate && b.dueDate !== null) {
+                let currentDueDate = new Date(b.dueDate);
+                let newDueDate = new Date(b.dueDate);
+                if (currentDueDate.getMonth() < this.currentMonth.id) {
+                  newDueDate.setMonth(currentDueDate.getMonth() + 1);
+                }
+                b.dueDate = newDueDate.toLocaleDateString();
+              }
               b.paid = false;
               b.datePaid = null;
             }

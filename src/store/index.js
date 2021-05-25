@@ -17,23 +17,11 @@ export default new Vuex.Store({
   getters: {
     paidBills(state) {
       let filteredArray = state.bills.filter(bill => bill.paid === true && (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id || bill.isRecurring === true) && (bill.datePaidOff === null || bill.datePaidOff === ''));
-      return filteredArray.sort(function(a,b) {
-        let x = a.name.toLowerCase();
-        let y = b.name.toLowerCase();
-        if (x < y) { return -1 }
-        if (x > y) { return 1 }
-        return 0;
-      });
+      return filteredArray;
     },
     unpaidBills(state) {
       let filteredArray = state.bills.filter(bill => bill.paid === false && (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id || bill.isRecurring === true) && (bill.datePaidOff === null || bill.datePaidOff === ''));
-      return filteredArray.sort(function(a,b) {
-        let x = a.name.toLowerCase();
-        let y = b.name.toLowerCase();
-        if (x < y) { return -1 }
-        if (x > y) { return 1 }
-        return 0;
-      });
+      return filteredArray;
     },
     hasBills(state) {
       return state.bills !== undefined && state.bills !== null && state.bills.length > 0;
@@ -93,7 +81,17 @@ export default new Vuex.Store({
     updateBill(state, bill) {
       state.bills.forEach(b => {
         if (b.id === bill.id) {
-          b = bill;
+          b.name =  bill.name,
+          b.paid =  bill.paid,
+          b.amount =  parseFloat(bill.amount),
+          b.datePaid =  bill.datePaid,
+          b.dateCreated =  bill.dateCreated,
+          b.isRecurring =  bill.isRecurring,
+          b.paidCount =  bill.paidCount,
+          b.isFixedAmount =  bill.isFixedAmount,
+          b.datePaidOff =  bill.datePaidOff,
+          b.subCategoryId  =  bill.subCategoryId,
+          b.dueDate =  bill.dueDate
         }
       });
     },
