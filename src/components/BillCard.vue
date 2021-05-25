@@ -26,6 +26,7 @@
             <span class="undo-button" v-if="bill.paid" @click="undoBillPaid(bill)"><BaseIcon name="rotate-ccw"></BaseIcon></span>
             <div class="paid-status" v-if="bill.paid"><BaseIcon name="check">{{new Date(bill.datePaid).toLocaleDateString('en-US', {timeZone: 'UTC'})}} &nbsp;</BaseIcon></div>
             <hr/>
+            <div v-if="bill.dueDate" :class="{'bill-past-due' : isPastDue, 'bill-still-due' : !isPastDue}">Due: {{bill.dueDate}}</div>
             <div :class="{'bill-amount': !bill.paid, 'bill-amount-paid': bill.paid}">Amount {{bill.paid ? 'Paid' : 'Due'}}: {{bill.amount | currency}}</div><br/>
         </div>
     </div>
@@ -41,8 +42,19 @@ export default {
         },
         isNewBill() {
             let isCreatedToday = new Date(this.bill.dateCreated).toLocaleDateString() === new Date().toLocaleDateString();
-            console.log("Bill created today: ", isCreatedToday);
             return isCreatedToday;
+        },
+        isPastDue() {
+            if (this.bill.paid) {
+                return false;
+            }
+            if (!this.bill.dueDate || this.bill.dueDate === '') {
+                return false;
+            } else if (new Date(this.bill.dueDate).getDate() < new Date().getDate()) {
+                return true;
+            } else {
+                return false;
+            }
         }
     },
     methods: {
@@ -126,5 +138,14 @@ export default {
 }
 .dropdown-item:hover {
     background-color: #9C50B6;
+}
+.bill-past-due {
+    color:crimson;
+    font-weight: bolder;
+    float: left;
+}
+.bill-still-due {
+    float: left;
+    color: lightgrey;
 }
 </style>

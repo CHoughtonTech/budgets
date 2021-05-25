@@ -8,10 +8,34 @@
                 <div class="bill-summary-item">Total Paid: {{totalPaid | currency}}</div>
                 <div class="bill-summary-item">Total Due: {{totalDue | currency}}</div>
             </div>
+            <div v-if="this.$store.getters.unpaidBills.length > 0 && totalPastDue > 0">
+                <div class='overdue-bill-count'>Past Due Bills: {{totalPastDue}}</div>
+                <br/>
+            </div>
             <router-link class="add-bill" :to="{ name: 'create-bill' }"><BaseIcon name="plus-circle">Add a Bill</BaseIcon></router-link>
             <hr/>
+            <div v-if="unpaidBills.length > 0 || paidBills.length > 0">
+                <div class="buttons has-addons is-centered">
+                    <button class="button is-rounded" :class="{'is-selected is-sorted' : this.sortMethod === 'dueDate', 'is-dark': this.sortMethod !== 'dueDate'}" @click="setSort('dueDate')">
+                        <BaseIcon :name="(this.ascending && this.sortMethod === 'dueDate' ? 'chevron-up' : 'chevron-down')">
+                            <span slot="pre">Date Due</span>
+                        </BaseIcon>
+                    </button>
+                    <button class="button" :class="{'is-selected is-sorted' : this.sortMethod === null, 'is-dark': this.sortMethod !== null}" @click="setSort(null)">
+                        <BaseIcon :name="(this.ascending && this.sortMethod === null ? 'chevron-up' : 'chevron-down')">
+                            <span slot="pre">Name</span>
+                        </BaseIcon>
+                    </button>
+                    <button class="button is-rounded" :class="{'is-selected is-sorted' : this.sortMethod === 'amount', 'is-dark': this.sortMethod !== 'amount'}" @click="setSort('amount')">
+                        <BaseIcon :name="(this.ascending && this.sortMethod === 'amount' ? 'chevron-up' : 'chevron-down')">
+                            <span slot="pre">Amount</span>
+                        </BaseIcon>
+                    </button>
+                </div>
+            </div>
+            <br/>
             <BaseIcon v-if="unpaidBills.length > 0" name="arrow-right-circle"><span slot="pre">Unpaid Bills<span class="badge -fill-gradient">{{unpaidBills.length}} / {{this.$store.getters.activeBillCount}}</span></span></BaseIcon>
-            <br/><br/>
+            <br v-if="unpaidBills.length > 0" /><br v-if="unpaidBills.length > 0" />
             <BillCard v-for="bill in unpaidBills" :key="bill.id" :bill="bill" @delete-bill="deleteBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" />
             <BaseIcon v-if="paidBills.length > 0" name="arrow-right-circle"><span slot="pre">Paid Bills</span></BaseIcon>
             <br/><br/>
@@ -45,11 +69,12 @@
                     <hr/><br/>
                     <div class="bill-detail"><span class="bill-detail-label">Amount</span>{{selectedBill.amount | currency}}</div>
                     <div class="bill-detail"><span class="bill-detail-label">Created</span>{{selectedBill.dateCreated}}</div>
+                    <div class="bill-detail"><span class="bill-detail-label">Due</span>{{selectedBill.dueDate ? selectedBill.dueDate : "--"}}</div>
                     <div class="bill-detail"><span class="bill-detail-label">Recurring</span><BaseIcon :name="selectedBill.isRecurring ? 'check' : 'x'"></BaseIcon></div>
                     <div class="bill-detail"><span class="bill-detail-label">Fixed Amount</span><BaseIcon :name="selectedBill.isFixedAmount ? 'check' : 'x'"></BaseIcon></div>
                     <div class="bill-detail"><span class="bill-detail-label">Category</span>{{selectedCategory}}</div>
                     <div class="bill-detail"><span class="bill-detail-label">SubCategory</span>{{selectedSubCategory}}</div>
-                    <div class="bill-detail"><span class="bill-detail-label">Paid</span><i><strong>{{selectedBill.paidCount}}</strong></i> time{{selectedBill.paidCount === 1 ? '' : 's'}}</div>
+                    <div class="bill-detail"><span class="bill-detail-label">Paid</span><i><strong style="color:lightgrey;">{{selectedBill.paidCount}}</strong></i> time{{selectedBill.paidCount === 1 ? '' : 's'}}</div>
                 </div>
                 <div slot="footer">
                     <button style="float:right;" @click="showBillDetailModal = false">Ok</button>
@@ -76,15 +101,22 @@ export default {
             showBillDeleteModal: false,
             showBillDetailModal: false,
             showBillAmountModal: false,
+            ascending: true,
+            sortMethod: null,
+            sortType: {
+                NAME: "name",
+                DUEDATE: "dueDate",
+                AMOUNT: "amount"
+            },
             errors: []
         }
     },
     computed: {
         paidBills() {
-            return this.$store.getters.paidBills;
+            return this.sortBills(this.$store.getters.paidBills, this.sortMethod);
         },
         unpaidBills() {
-            return this.$store.getters.unpaidBills;
+            return this.sortBills(this.$store.getters.unpaidBills, this.sortMethod);
         },
         totalDue() {
             let total = 0;
@@ -99,6 +131,15 @@ export default {
                 total += parseFloat(bill.amount);
             });
             return total;
+        },
+        totalPastDue() {
+            let billsPastDue = 0;
+            this.$store.getters.unpaidBills.forEach(bill => {
+                if (bill.dueDate !== null & bill.dueDate !== '' && new Date(bill.dueDate).getDate() < new Date().getDate()) {
+                    billsPastDue += 1;
+                }
+            });
+            return billsPastDue;
         },
         activeBillsTotal() {
             let total = 0;
@@ -121,6 +162,43 @@ export default {
         }
     },
     methods: {
+        sortBills(bills, sortMethod) {
+            if(!bills || bills === null) { return []; }
+            switch (sortMethod) {
+                case 'dueDate':
+                    return bills.sort((a,b) => {
+                        let x = a.dueDate ? new Date(a.dueDate).getDate() : null;
+                        let y = b.dueDate ? new Date(b.dueDate).getDate() : null;
+                        if (x < y) {return this.ascending ? -1 : 1}
+                        if (y < x) {return this.ascending ? 1 : -1}
+                        return 0;
+                    });
+                case 'amount': 
+                    return bills.sort((a,b) => {
+                        let x = typeof a.amount === 'number' ? a.amount : parseFloat(a.amount);
+                        let y = typeof b.amount === 'number' ? b.amount : parseFloat(b.amount);
+                        if (x < y) { return this.ascending ? -1 : 1 }
+                        if (x > y) { return this.ascending ? 1 : -1 }
+                        return 0;
+                    });
+                default:
+                    return bills.sort((a,b) => {
+                        let x = a.name.toLowerCase();
+                        let y = b.name.toLowerCase();
+                        if (x < y) { return this.ascending ? -1 : 1 }
+                        if (x > y) { return this.ascending ? 1 : -1 }
+                        return 0;
+                    });
+            }
+        },
+        setSort(sortType) {
+            if (this.sortMethod === sortType) {
+                this.ascending = !this.ascending;   
+            } else if (this.sortMethod !== sortType) {
+                this.ascending = true;
+            }
+            this.sortMethod = sortType;
+        },
         deleteBill(bill) {
             this.selectedBill = bill;
             this.showBillDeleteModal = true;
@@ -244,5 +322,16 @@ export default {
 .bill-summary-item {
     padding-left: 10px;
     font-style:italic;
+}
+.is-sorted {
+    background-color: #8834B3;
+    color: lightgrey;
+    border: 1px solid #8834B3;
+}
+.overdue-bill-count {
+    background-color: crimson;
+    color:whitesmoke;
+    font-weight: bolder;
+    text-align: center;
 }
 </style>
