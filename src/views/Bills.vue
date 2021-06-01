@@ -8,10 +8,11 @@
                 <div class="bill-summary-item">Total Paid: {{totalPaid | currency}}</div>
                 <div class="bill-summary-item">Total Due: {{totalDue | currency}}</div>
             </div>
-            <div v-if="this.$store.getters.unpaidBills.length > 0 && totalPastDue > 0">
+            <div v-if="this.$store.getters.unpaidBills.length > 0 && totalPastDue > 0" class="overdue-bill">
                 <div class='overdue-bill-count'>Past Due Bills: {{totalPastDue}}</div>
-                <br/>
+                <div class="overdue-bill-total">Total Past Due: {{totalPastDueTotal | currency}}</div>
             </div>
+            <br/>
             <router-link class="add-bill" :to="{ name: 'create-bill' }"><BaseIcon name="plus-circle">Add a Bill</BaseIcon></router-link>
             <hr/>
             <div v-if="unpaidBills.length > 0 || paidBills.length > 0">
@@ -129,6 +130,15 @@ export default {
             let total = 0;
             this.$store.getters.paidBills.forEach(bill => {
                 total += parseFloat(bill.amount);
+            });
+            return total;
+        },
+        totalPastDueTotal() {
+            let total = 0;
+            this.$store.getters.unpaidBills.forEach(bill => {
+                if (bill.dueDate !== null & bill.dueDate !== '' && new Date(bill.dueDate).getDate() < new Date().getDate()) {
+                    total += parseFloat(bill.amount);
+                }
             });
             return total;
         },
@@ -328,10 +338,21 @@ export default {
     color: lightgrey;
     border: 1px solid #8834B3;
 }
-.overdue-bill-count {
-    background-color: crimson;
+.overdue-bill {
+    border: 2px solid lightcoral;
+    border-radius: 10px;
+    background-color:crimson;
     color:whitesmoke;
+}
+.overdue-bill-count {
+    padding-left: 10px;
+    float: left;
     font-weight: bolder;
-    text-align: center;
+}
+.overdue-bill-total {
+    text-align:right;
+    padding-right: 10px;
+    font-style:italic;
+    font-weight:bolder;
 }
 </style>
