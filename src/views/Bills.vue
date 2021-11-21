@@ -8,7 +8,7 @@
                 <div class="bill-summary-item">Total Paid: {{totalPaid | currency}}</div>
                 <div class="bill-summary-item">Total Due: {{totalDue | currency}}</div>
             </div>
-            <div v-if="this.$store.getters.unpaidBills.length > 0 && totalPastDue > 0" class="overdue-bill">
+            <div v-if="unpaidBills.length > 0 && totalPastDue > 0" class="overdue-bill">
                 <div class='overdue-bill-count'>Past Due Bills: {{totalPastDue}}</div>
                 <div class="overdue-bill-total">Total Past Due: {{totalPastDueTotal | currency}}</div>
             </div>
@@ -114,28 +114,30 @@ export default {
     },
     computed: {
         paidBills() {
-            return this.sortBills(this.$store.getters.paidBills, this.sortMethod);
+            const paidBills = this.$store.getters.activeBills.filter(b => b.paid === true);
+            return this.sortBills(paidBills, this.sortMethod);
         },
         unpaidBills() {
-            return this.sortBills(this.$store.getters.unpaidBills, this.sortMethod);
+            const unpaidBills = this.$store.getters.activeBills.filter(b => b.paid === false);
+            return this.sortBills(unpaidBills, this.sortMethod);
         },
         totalDue() {
             let total = 0;
-            this.$store.getters.unpaidBills.forEach(bill => {
+            this.unpaidBills.forEach(bill => {
                 total += parseFloat(bill.amount);
             });
             return total;
         },
         totalPaid() {
             let total = 0;
-            this.$store.getters.paidBills.forEach(bill => {
+            this.paidBills.forEach(bill => {
                 total += parseFloat(bill.amount);
             });
             return total;
         },
         totalPastDueTotal() {
             let total = 0;
-            this.$store.getters.unpaidBills.forEach(bill => {
+            this.unpaidBills.forEach(bill => {
                 if (bill.dueDate !== null & bill.dueDate !== '' && new Date(bill.dueDate).getDate() < new Date().getDate()) {
                     total += parseFloat(bill.amount);
                 }
@@ -144,7 +146,7 @@ export default {
         },
         totalPastDue() {
             let billsPastDue = 0;
-            this.$store.getters.unpaidBills.forEach(bill => {
+            this.unpaidBills.forEach(bill => {
                 if (bill.dueDate !== null & bill.dueDate !== '' && new Date(bill.dueDate).getDate() < new Date().getDate()) {
                     billsPastDue += 1;
                 }
