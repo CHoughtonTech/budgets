@@ -15,22 +15,14 @@ export default new Vuex.Store({
   },
   plugins: [createPersistedState()],
   getters: {
-    paidBills(state) {
-      let filteredArray = state.bills.filter(bill => bill.paid === true && (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id || bill.isRecurring === true) && (bill.datePaidOff === null || bill.datePaidOff === ''));
-      return filteredArray;
-    },
-    unpaidBills(state) {
-      let filteredArray = state.bills.filter(bill => bill.paid === false && (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id || bill.isRecurring === true) && (bill.datePaidOff === null || bill.datePaidOff === ''));
-      return filteredArray;
-    },
     hasBills(state) {
       return state.bills !== undefined && state.bills !== null && state.bills.length > 0;
     },
     activeBills(state) {
-      return state.bills.filter(bill => (bill.isRecurring || new Date(bill.dateCreated).getMonth() === state.activeMonth?.id) && (bill.datePaidOff === null || bill.datePaidOff === ''));
+      return state.bills.filter(bill => (bill.isRecurring || new Date(bill.dateCreated).getMonth() === state.activeMonth?.id && new Date(bill.dateCreated).getFullYear() === new Date().getFullYear()));
     },
     activeBillCount(state) {
-      let filteredBills = state.bills.filter(bill => (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id || bill.isRecurring) && (bill.datePaidOff === null || bill.datePaidOff === ''))
+      let filteredBills = state.bills.filter(bill => (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id && new Date(bill.dateCreated).getFullYear() === new Date().getFullYear() || bill.isRecurring));
       return filteredBills.length;
     },
     getSubCategoriesByCategoryId: (state) => (categoryId) => {
