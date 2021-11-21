@@ -1,6 +1,6 @@
 <template>
     <div class='dashboard-view'>
-        <h1 style="color:lightgrey;">Curt's Budget</h1>
+        <h1 style="color:lightgrey;">Your Budget</h1>
         <!-- <h3 style="color:white;font-weight:bold"><i>This is currently under construction.</i></h3>
         <img src="https://media1.tenor.com/images/bc78ea2aa84a3776d6b54d6a04e9da86/tenor.gif?itemid=17626280" style="width:750px"/> -->
         <!-- <BaseSummary :summaries='summaryList'></BaseSummary> -->
@@ -17,9 +17,9 @@
             <div class='summary-group-header'>Annual</div>
             <div class='base-summaries'>
                 <!-- <BaseSummary :summaries='summaryList'></BaseSummary> -->
-                <BaseSummary :summaryName='"Income"' :amount='incomeTotal*12'></BaseSummary>
-                <BaseSummary :summaryName='"Bills"' :amount='expensesTotal*12'></BaseSummary>
-                <BaseSummary :summaryName='"Remaining"' :amount='remainingTotal*12'></BaseSummary>
+                <BaseSummary :summaryName='"Income"' :amount='annualIncomeTotal'></BaseSummary>
+                <BaseSummary :summaryName='"Bills"' :amount='annualExpensesTotal'></BaseSummary>
+                <BaseSummary :summaryName='"Remaining"' :amount='annualRemainingTotal'></BaseSummary>
             </div>
         </div>
         <br/>
@@ -58,11 +58,20 @@ export default {
             });
             return total;
         },
+        annualExpensesTotal() {
+            return this.expensesTotal * 12;
+        },
         incomeTotal() {
             return 0;
         },
+        annualIncomeTotal() {
+            return this.incomeTotal * 12;
+        },
         remainingTotal() {
             return this.incomeTotal - this.expensesTotal;
+        },
+        annualRemainingTotal() {
+            return this.remainingTotal * 12;
         }
     },
     data() {
