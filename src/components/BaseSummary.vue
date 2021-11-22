@@ -37,6 +37,7 @@ export default {
 <style scoped>
 .base-summary {
     width: 25%;
+    flex: content;
     margin:5px;
     min-width: 200px;
     border-radius: 10px;

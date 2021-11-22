@@ -1,25 +1,21 @@
 <template>
     <div class='dashboard-view'>
         <h1 style="color:lightgrey;">Your Budget</h1>
-        <!-- <h3 style="color:white;font-weight:bold"><i>This is currently under construction.</i></h3>
-        <img src="https://media1.tenor.com/images/bc78ea2aa84a3776d6b54d6a04e9da86/tenor.gif?itemid=17626280" style="width:750px"/> -->
-        <!-- <BaseSummary :summaries='summaryList'></BaseSummary> -->
         <div class='summary-group'>
-            <div class='summary-group-header'>Monthly</div>
+            <div class='summary-group-header'>
+                <div class="select is-rounded is-medium">
+                    <select v-model="selectedSummary">
+                        <option value="1">Monthly</option>
+                        <option value="3">Quarterly</option>
+                        <option value="6">Semi-Annual</option>
+                        <option value="12">Annual</option>
+                    </select>
+                </div>
+            </div>
             <div class='base-summaries'>
-                <!-- <BaseSummary :summaries='summaryList'></BaseSummary> -->
                 <BaseSummary :summaryName='"Income"' :amount='incomeTotal'></BaseSummary>
                 <BaseSummary :summaryName='"Bills"' :amount='expensesTotal'></BaseSummary>
                 <BaseSummary :summaryName='"Remaining"' :amount='remainingTotal'></BaseSummary>
-            </div>
-        </div>
-        <div class='summary-group'>
-            <div class='summary-group-header'>Annual</div>
-            <div class='base-summaries'>
-                <!-- <BaseSummary :summaries='summaryList'></BaseSummary> -->
-                <BaseSummary :summaryName='"Income"' :amount='annualIncomeTotal'></BaseSummary>
-                <BaseSummary :summaryName='"Bills"' :amount='annualExpensesTotal'></BaseSummary>
-                <BaseSummary :summaryName='"Remaining"' :amount='annualRemainingTotal'></BaseSummary>
             </div>
         </div>
         <br/>
@@ -51,32 +47,41 @@ export default {
     },
     computed: {
         expensesTotal() {
-            let bills = this.$store.getters.activeBills;
+            const bills = this.$store.getters.activeBills;
             let total = 0;
+            const summaryMult = parseInt(this.selectedSummary);
             bills.forEach(bill => {
                 total += parseFloat(bill.amount);
             });
-            return total;
-        },
-        annualExpensesTotal() {
-            return this.expensesTotal * 12;
+            const result = total * summaryMult;
+            return result;
         },
         incomeTotal() {
-            return 0;
-        },
-        annualIncomeTotal() {
-            return this.incomeTotal * 12;
+            const summaryMult = parseInt(this.selectedSummary);
+            return 0 * summaryMult;
         },
         remainingTotal() {
             return this.incomeTotal - this.expensesTotal;
         },
-        annualRemainingTotal() {
-            return this.remainingTotal * 12;
+        selectedSummaryLabel() {
+            switch (parseInt(this.selectedSummary)) {
+                case 1:
+                    return "Monthly";         
+                case 3:
+                    return "Quarterly";
+                case 6:
+                    return "Semi-Annual";
+                case 12: 
+                    return "Annual";   
+                default:
+                    return "Monthly";
+            }
         }
     },
     data() {
         return {
-            summaryList: Object
+            summaryList: Object,
+            selectedSummary: 1
         }
     }
 }
@@ -102,5 +107,12 @@ export default {
     background-color:#411159;
     border-radius: 10px 10px 0 0;
     font-weight: bolder;
+}
+select {
+    background-color: #411159;
+    color:whitesmoke;
+    border:#411159;
+    font-weight:bold;
+    text-align: center;
 }
 </style>
