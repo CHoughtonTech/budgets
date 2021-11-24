@@ -14,7 +14,7 @@
             </div>
             <div class='base-summaries'>
                 <BaseSummary :summaryName='"Income"' :amount='incomeTotal'></BaseSummary>
-                <BaseSummary :summaryName='"Bills"' :amount='expensesTotal'></BaseSummary>
+                <BaseSummary :summaryName='"Bills"' :amount='expensesTotal' :summaryLink='"bills"'></BaseSummary>
                 <BaseSummary :summaryName='"Remaining"' :amount='remainingTotal'></BaseSummary>
             </div>
         </div>
@@ -47,7 +47,7 @@ export default {
     },
     computed: {
         expensesTotal() {
-            const bills = this.$store.getters.activeBills;
+            const bills = this.$store.getters.activeBills.filter(b => b.isRecurring === true);
             let total = 0;
             const summaryMult = parseInt(this.selectedSummary);
             bills.forEach(bill => {

@@ -1,7 +1,8 @@
 <template>
     <div class='base-summary'>
         <div v-if='summaries === undefined'>
-            <div class='base-summary-header'>{{summaryName}} &nbsp;<BaseIcon :name='"arrow-right-circle"'></BaseIcon></div>
+            <div v-if='summaryLink === null' class='base-summary-header'>{{summaryName}} &nbsp;<BaseIcon :name='"arrow-right-circle"'></BaseIcon></div>
+            <div v-else class='base-summary-header'>{{summaryName}} &nbsp;<router-link :to="{ name: summaryLink }"><BaseIcon :name='"arrow-right-circle"'></BaseIcon></router-link></div>
             <div :class='{"base-summary-body": amount > 0, "base-summary-body-neg": amount <= 0}'>{{amount | currency}}</div>
         </div>
         <div v-else>
@@ -29,6 +30,10 @@ export default {
         amount:{
             type: [Number, String],
             default: 0
+        },
+        summaryLink: {
+            type: [String],
+            default: null
         },
         summaries: Object
     }
