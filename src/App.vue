@@ -2,6 +2,7 @@
   <div id="app">
     <NavBar/>
     <router-view id="main-view"/>
+    <hr/>
     <div class="copyright">&copy; {{currentYear}} OxSoft Solutions</div>
   </div>
 </template>
