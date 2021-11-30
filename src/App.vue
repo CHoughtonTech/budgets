@@ -17,6 +17,10 @@ export default {
   created() {
     this.$store.dispatch("getCategories");
     this.$store.dispatch("getSubcategories");
+    this.$store.dispatch("getStateData");
+    this.$store.dispatch("getFederalTaxes");
+    this.$store.dispatch("getStateTaxes");
+    this.$store.dispatch("getFICARate");
     if (this.$store.state.activeMonth?.name !== this.currentMonth.name || this.$store.state.activeMonth?.id !== this.currentMonth.id) {
         let promiseArr = [];
         if (this.$store.getters.hasBills) {

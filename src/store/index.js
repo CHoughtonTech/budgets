@@ -2,16 +2,23 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import ExpenseCategories from '../api/ExpenseCategories';
 import createPersistedState from 'vuex-persistedstate';
+import States from '../api/States';
+import TaxData from '../api/TaxData';
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
     bills: [], //array of json objects
+    income: [],
     activeMonth: null,
     categories: [],
     subCategories: [],
-    editedBill: null
+    editedBill: null,
+    states: [],
+    federalTaxBrackets: [],
+    stateTaxBrackets: [],
+    ficaRate: []
   },
   plugins: [createPersistedState()],
   getters: {
@@ -67,7 +74,22 @@ export default new Vuex.Store({
       } else {
         return "Unknown";
       }
-    }
+    },
+    getFederalTaxes: (state) => {
+      return state.federalTaxBrackets;
+    },
+    getStateTaxes: (state) => {
+      return state.stateTaxBrackets;
+    },
+    getFICA: (state) => {
+      return state.ficaRate;
+    },
+    getStates: (state) => {
+      return state.states;
+    },
+    getIncome: (state) =>{
+      return state.income;
+    },
   },
   mutations: {
     updateBill(state, bill) {
@@ -93,6 +115,29 @@ export default new Vuex.Store({
     createBill(state, bill) {
       state.bills.push(bill);
     },
+    createIncome(state, income) {
+      state.income.push(income);
+    },
+    updateIncome(state, income) {
+      state.income.forEach(i => {
+        if (i.id === income.id) {
+          i.name = income.name,
+          i.type = income.type,
+          i.salary = income.salary,
+          i.hourlyRate = income.hourlyRate,
+          i.hoursPerWeek = income.hoursPerWeek,
+          i.employment = income.employment,
+          i.filingStatus = income.filingStatus,
+          i.payPeriods = income.payPeriods,
+          i.deductions = income.deductions,
+          i.state = income.state,
+          i.isActive = income.isActive
+        }
+      });
+    },
+    removeIncome(state, index) {
+      state.income.splice(index, 1);
+    },
     setEditedBill(state, bill) {
       state.editedBill = bill;
     },
@@ -107,6 +152,18 @@ export default new Vuex.Store({
     },
     setSubcategories(state, subcategories) {
       state.subCategories = subcategories;
+    },
+    setFederalTaxes(state, fedTaxes) {
+      state.federalTaxBrackets = fedTaxes;
+    },
+    setStateTaxes(state, stateTaxes) {
+      state.stateTaxBrackets = stateTaxes;
+    },
+    setFICARate(state, fica) {
+      state.ficaRate = fica;
+    },
+    setStates(state, stateList) {
+      state.states = stateList;
     }
   },
   actions: {
@@ -120,20 +177,25 @@ export default new Vuex.Store({
       commit('updateBill', bill);
     },
     deleteBill({commit, state}, billId) {
-      let billIndex = null;
-      for (let i = 0; i < state.bills.length; i++) {
-        const bill = state.bills[i];
-        if(bill.id === billId) {
-          billIndex = i;
-          break;
-        }
-      }
-      if (billIndex !== null) {
+      const billIndex = state.bills.findIndex(b => b.id === billId);
+      if (billIndex > -1) {
         commit('removeBill', billIndex);
       }
     },
     createBill({commit}, bill) {
       commit('createBill', bill);
+    },
+    createIncome({commit}, income) {
+      commit('createIncome', income);
+    },
+    updateIncome({commit}, income) {
+      commit('updateIncome', income);
+    },
+    deleteIncome({commit, state}, incomeId) {
+      const index = state.income.findIndex(i => i.id === incomeId);
+      if (index > -1) {
+        commit('removeIncome', index);
+      }
     },
     getActiveMonth() {
       console.log(this.state.activeMonth);
@@ -153,6 +215,38 @@ export default new Vuex.Store({
       return new Promise((resolve) => {
         ExpenseCategories.getSubCategories(subcategories => {
           commit('setSubcategories', subcategories);
+          resolve();
+        });
+      });
+    },
+    getStateData({commit}) {
+      return new Promise((resolve) => {
+        States.getAllStates(states => {
+          commit('setStates', states);
+          resolve();
+        });
+      });
+    },
+    getFederalTaxes({commit}) {
+      return new Promise((resolve) => {
+        TaxData.getFederalTaxBracket(federal => {
+          commit('setFederalTaxes', federal);
+          resolve();
+        });
+      });
+    },
+    getStateTaxes({commit}) {
+      return new Promise((resolve) => {
+        TaxData.getStateTaxBracket(state => {
+          commit('setStateTaxes', state);
+          resolve();
+        });
+      });
+    },
+    getFICARate({commit}) {
+      return new Promise((resolve) => {
+        TaxData.getFICATaxRate(fica => {
+          commit('setFICARate', fica);
           resolve();
         });
       });

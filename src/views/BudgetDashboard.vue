@@ -13,7 +13,7 @@
                 </div>
             </div>
             <div class='base-summaries'>
-                <BaseSummary :summaryName='"Income"' :amount='incomeTotal'></BaseSummary>
+                <BaseSummary :summaryName='"Net Income"' :amount='incomeTotal' :summaryLink='"income"'></BaseSummary>
                 <BaseSummary :summaryName='"Bills"' :amount='expensesTotal' :summaryLink='"bills"'></BaseSummary>
                 <BaseSummary :summaryName='"Remaining"' :amount='remainingTotal'></BaseSummary>
             </div>
@@ -28,23 +28,6 @@ export default {
     components: {
         BaseSummary: BaseSummary
     },
-    created() {
-        this.summaryList = {
-            name: "Budget",
-            items: [{
-                name: 'Expenses',
-                amount: this.expensesTotal
-            },
-            {
-                name: 'Income',
-                amount: this.incomeTotal
-            },
-            {
-                name: 'Disposable',
-                amount: this.remainingTotal
-            }]
-        };
-    },
     computed: {
         expensesTotal() {
             const bills = this.$store.getters.activeBills.filter(b => b.isRecurring === true);
@@ -57,8 +40,30 @@ export default {
             return result;
         },
         incomeTotal() {
+            const income = this.$store.getters.getIncome.filter(i => i.isActive === true);
             const summaryMult = parseInt(this.selectedSummary);
-            return 0 * summaryMult;
+            let total = 0;
+            income.forEach(i => {
+                let perMonth = 0;
+                switch (i.payPeriod) {
+                    case 52:
+                        perMonth = 4;
+                        break;
+                    case 24:
+                    case 26: 
+                        perMonth = 2;
+                        break;
+                    case 12:
+                        perMonth = 1;
+                        break;
+                    default:
+                        perMonth = 2;
+                        break;
+                }
+                let payPerMonth = summaryMult === 12 ? i.netSalary / 12 : (i.netSalary / i.payPeriod) * perMonth;
+                total += payPerMonth;
+            })
+            return total * summaryMult;
         },
         remainingTotal() {
             return this.incomeTotal - this.expensesTotal;
@@ -80,7 +85,6 @@ export default {
     },
     data() {
         return {
-            summaryList: Object,
             selectedSummary: 1
         }
     }
