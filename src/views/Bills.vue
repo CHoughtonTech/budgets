@@ -68,7 +68,7 @@
             <BaseModal v-if="showBillDetailModal">
                 <h3 slot="header" style="color:#C15EF2;">{{selectedBill.name}}</h3>
                 <div slot="body">
-                    <hr/><br/>
+                    <br/>
                     <div class="bill-detail"><span class="bill-detail-label">Amount</span>{{selectedBill.amount | currency}}</div>
                     <div class="bill-detail"><span class="bill-detail-label">Created</span>{{selectedBill.dateCreated}}</div>
                     <div class="bill-detail"><span class="bill-detail-label">Due</span>{{selectedBill.dueDate ? selectedBill.dueDate : "--"}}</div>

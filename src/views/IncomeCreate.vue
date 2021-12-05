@@ -85,9 +85,9 @@
                         </div>
                     </div>
                     <div class="tile is-parent is-4 is-vertical">
-                        <div class="tile is-12 is-child notification is-deduction-panel">
-                            <label>Deductions</label>
-                            <label class="is-pulled-right toggle-deductions" @click="toggleHideDeductions">
+                        <div class="tile is-12 is-child notification is-deduction-panel toggle-deductions" @click="toggleHideDeductions">
+                            <label class="toggle-deductions">Deductions</label>
+                            <label class="is-pulled-right toggle-deductions">
                                 <BaseIcon v-if="hideDeductions" name="chevron-down"></BaseIcon>
                                 <BaseIcon v-if="!hideDeductions" name="chevron-up"></BaseIcon>
                             </label>
@@ -120,17 +120,21 @@
                             <ul>
                                 <li class="deduction-header">Pre-Tax Deductions</li>
                                 <li :class="{'deduction-item' : isOdd(index)}" v-for="(deduction, index) in preTaxDeductions" :key="`deduction-${index}`">
-                                    <div class='tile is-parent'>
-                                        <div class='tile is-child is-4'>
-                                            {{deduction.name}}
+                                    <div class="level is-mobile is-padded">
+                                        <div class="level-item has-text-centered">
+                                            <div>
+                                                <span class="title is-4">{{deduction.name}}</span>
+                                            </div>
                                         </div>
-                                        <div class='tile is-child is-4 deduction-amount'>
-                                            {{deduction.amount | currency}}
+                                        <div class="level-item has-text-centered">
+                                            <div>
+                                                <span class="title is-4">{{deduction.amount | currency}}</span>
+                                            </div>
                                         </div>
-                                        <div class='tile is-child is-4'>
-                                            <span class="is-pulled-right remove-deduction-item" @click="removeDeduction(index)" >
-                                                <BaseIcon name="delete"></BaseIcon>
-                                            </span>
+                                        <div class="level-item">
+                                            <div @click="removeDeduction(index)">
+                                                <span class="title is-4 is-pulled-right button is-danger"><BaseIcon name="delete"></BaseIcon></span>
+                                            </div>
                                         </div>
                                     </div>
                                 </li>
@@ -140,17 +144,21 @@
                             <ul>
                                 <li class="deduction-header">Post-Tax Deductions</li>
                                 <li :class="{'deduction-item' : isOdd(index)}" v-for="(deduction, index) in postTaxDeductions" :key="`deduction-${index}`">
-                                    <div class='tile is-parent'>
-                                        <div class='tile is-child is-4'>
-                                            {{deduction.name}}
+                                    <div class="level is-mobile is-padded">
+                                        <div class="level-item has-text-centered">
+                                            <div>
+                                                <span class="title is-4">{{deduction.name}}</span>
+                                            </div>
                                         </div>
-                                        <div class='tile is-child is-4 deduction-amount'>
-                                            {{deduction.amount | currency}}
+                                        <div class="level-item has-text-centered">
+                                            <div>
+                                                <span class="title is-4">{{deduction.amount | currency}}</span>
+                                            </div>
                                         </div>
-                                        <div class='tile is-child is-4'>
-                                            <span class="is-pulled-right remove-deduction-item" @click="removeDeduction(index)" >
-                                                <BaseIcon name="delete"></BaseIcon>
-                                            </span>
+                                        <div class="level-item">
+                                            <div @click="removeDeduction(index)">
+                                                <span class="title is-4 is-pulled-right button is-danger"><BaseIcon name="delete"></BaseIcon></span>
+                                            </div>
                                         </div>
                                     </div>
                                 </li>
@@ -161,9 +169,9 @@
             </div>
         </div>
         <BaseModal v-if="showIncomePreview">
-            <h3 slot="header" class="income-detail-header">{{income.name}}</h3>
+            <h3 slot="header">{{income.name}}</h3>
             <div slot="body">
-                <hr/><br/>
+                <br/>
                 <label>Gross Income</label><br/>
                 <span>{{income.salary | currency}}</span><br/>
                 <label>Gross Paycheck Amount</label><br/>
@@ -221,14 +229,14 @@ export default {
         },
         amountPerPaycheck() {
             if (this.netIncome > 0) {
-                return this.netIncome / this.income.payPeriod;
+                return this.toFixedNumber(this.netIncome / this.income.payPeriod, 2);
             } else {
                 return 0;
             }    
         },
         amountGrossPerCheck() {
             if (this.income.salary > 0) {
-                return this.income.salary / this.income.payPeriod;
+                return this.toFixedNumber(this.income.salary / this.income.payPeriod, 2);
             } else {
                 return 0;
             }
@@ -256,7 +264,7 @@ export default {
                     } 
                 })
             }
-            return preTaxTotal;
+            return this.toFixedNumber(preTaxTotal, 2);
         },
         postTaxDeductionTotal() {
             let postTaxTotal = 0;
@@ -268,7 +276,7 @@ export default {
                     }
                 });
             }
-            return postTaxTotal;
+            return this.toFixedNumber(postTaxTotal, 2);
         }
     },
     data() {
@@ -337,6 +345,7 @@ export default {
     methods: {
         addDeduction() {
             if (this.validateDeductionFields()) {
+                this.deduction.amount = this.toFixedNumber(this.deduction.amount, 2);
                 this.income.deductions.push(this.deduction);
                 this.deduction = {
                     name: null,
@@ -356,12 +365,12 @@ export default {
         calculateNetIncome() {
             if (this.validateIncomeFields()) {
                 this.income.id = this.getIncomeID();
-                this.income.salary = this.income.type === 'h' ? (parseFloat(this.income.hourlyRate) * this.income.hoursPerWeek * 52) : parseFloat(this.salary);
+                this.income.salary = this.toFixedNumber(this.income.type === 'h' ? (parseFloat(this.income.hourlyRate) * this.income.hoursPerWeek * 52) : parseFloat(this.salary), 2);
                 const preTaxDeductedIncome = this.income.salary - (this.preTaxDeductionTotal * this.income.payPeriod);
                 this.setFederalTaxRate(preTaxDeductedIncome);
                 this.setStateTaxRate(preTaxDeductedIncome);
                 this.netIncome = preTaxDeductedIncome - (this.postTaxDeductionTotal * this.income.payPeriod) - (preTaxDeductedIncome * (this.stateTaxRate / 100) + preTaxDeductedIncome * (this.federalTaxRate / 100) + this.getFICATaxAmount(preTaxDeductedIncome));
-                this.income.netSalary = this.netIncome;
+                this.income.netSalary = this.toFixedNumber(this.netIncome, 2);
                 if(this.netIncome > 0)
                     this.toggleShowIncomePreview();
             }
@@ -382,7 +391,7 @@ export default {
                 this.federalTaxRate = parseFloat(federal[0].rate);
             }
             const fedTaxRatePct = this.federalTaxRate / 100;
-            this.federalTaxAmount = preTaxDeductedIncome * fedTaxRatePct;
+            this.federalTaxAmount = this.toFixedNumber(preTaxDeductedIncome * fedTaxRatePct, 2);
         },
         setStateTaxRate(preTaxDeductedIncome) {
             const state = this.stateTaxes.filter(s => {
@@ -397,7 +406,7 @@ export default {
                     return 0;
                 });
                 this.stateTaxRate = state[0].rate;
-                this.stateTaxAmount = preTaxDeductedIncome * (this.stateTaxRate / 100);
+                this.stateTaxAmount = this.toFixedNumber(preTaxDeductedIncome * (this.stateTaxRate / 100), 2);
             }
         },
         getFICATaxAmount(preTaxDeductedIncome) {
@@ -505,6 +514,10 @@ export default {
                 }
             }
             return id;
+        },
+        toFixedNumber(num, digits, base){
+            var pow = Math.pow(base||10, digits);
+            return Math.round(num*pow) / pow;
         }
     }
 }
@@ -515,6 +528,8 @@ span {
 }
 ul {
     color:whitesmoke;
+    background-color: #411159;
+    border: solid 1px whitesmoke;
     font-size: large;
 }
 .deduction-item {
@@ -522,9 +537,6 @@ ul {
     color: whitesmoke;
     font-size: large;
     border: solid 1px whitesmoke;
-}
-.deduction-amount {
-    text-align:center;
 }
 .deduction-header {
     background-color: #411159;
@@ -541,5 +553,8 @@ ul {
 }
 .is-deduction-panel {
     background-color: #8834B3;
+}
+.is-padded {
+    padding: 10px;
 }
 </style>

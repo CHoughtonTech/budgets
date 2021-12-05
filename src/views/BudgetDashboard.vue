@@ -40,7 +40,7 @@ export default {
             return result;
         },
         incomeTotal() {
-            const income = this.$store.getters.getIncome.filter(i => i.isActive === true);
+            const income = this.$store.getters.getIncomes.filter(i => i.isActive === true);
             const summaryMult = parseInt(this.selectedSummary);
             let total = 0;
             income.forEach(i => {

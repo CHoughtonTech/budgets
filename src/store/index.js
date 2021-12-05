@@ -87,7 +87,7 @@ export default new Vuex.Store({
     getStates: (state) => {
       return state.states;
     },
-    getIncome: (state) =>{
+    getIncomes: (state) =>{
       return state.income;
     },
   },
