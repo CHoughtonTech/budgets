@@ -132,7 +132,7 @@
                                             </div>
                                         </div>
                                         <div class="level-item">
-                                            <div @click="removeDeduction(index)">
+                                            <div @click="removeDeduction(deduction)">
                                                 <span class="title is-4 is-pulled-right button is-danger"><BaseIcon name="delete"></BaseIcon></span>
                                             </div>
                                         </div>
@@ -156,7 +156,7 @@
                                             </div>
                                         </div>
                                         <div class="level-item">
-                                            <div @click="removeDeduction(index)">
+                                            <div @click="removeDeduction(deduction)">
                                                 <span class="title is-4 is-pulled-right button is-danger"><BaseIcon name="delete"></BaseIcon></span>
                                             </div>
                                         </div>
@@ -277,6 +277,29 @@ export default {
                 });
             }
             return this.toFixedNumber(postTaxTotal, 2);
+        },
+        regularHoursPerWeek() {
+            if (this.income.hoursPerWeek > 40) {
+                return 40;
+            } else {
+                return this.income.hoursPerWeek;
+            }
+        },
+        overTimeHours() {
+            if (this.income.hoursPerWeek > 40) {
+                return this.income.hoursPerWeek - 40;
+            } else {
+                return 0;
+            }
+        },
+        overTimeHourlyRate() {
+            return this.income.hourlyRate * 1.5;
+        },
+        regularPay() {
+            return this.income.hourlyRate * this.regularHoursPerWeek * 52;
+        },
+        overTimePay() {
+            return this.overTimeHours * this.overTimeHourlyRate * 52;
         }
     },
     data() {
@@ -365,11 +388,11 @@ export default {
         calculateNetIncome() {
             if (this.validateIncomeFields()) {
                 this.income.id = this.getIncomeID();
-                this.income.salary = this.toFixedNumber(this.income.type === 'h' ? (parseFloat(this.income.hourlyRate) * this.income.hoursPerWeek * 52) : parseFloat(this.salary), 2);
+                this.income.salary = this.toFixedNumber(this.income.type === 'h' ? (this.regularPay + this.overTimePay) : parseFloat(this.salary), 2);
                 const preTaxDeductedIncome = this.income.salary - (this.preTaxDeductionTotal * this.income.payPeriod);
                 this.setFederalTaxRate(preTaxDeductedIncome);
                 this.setStateTaxRate(preTaxDeductedIncome);
-                this.netIncome = preTaxDeductedIncome - (this.postTaxDeductionTotal * this.income.payPeriod) - (preTaxDeductedIncome * (this.stateTaxRate / 100) + preTaxDeductedIncome * (this.federalTaxRate / 100) + this.getFICATaxAmount(preTaxDeductedIncome));
+                this.netIncome = preTaxDeductedIncome - (this.postTaxDeductionTotal * this.income.payPeriod) - (preTaxDeductedIncome * (this.stateTaxRate / 100) + ((preTaxDeductedIncome) * (this.federalTaxRate / 100)) + this.getFICATaxAmount(preTaxDeductedIncome));
                 this.income.netSalary = this.toFixedNumber(this.netIncome, 2);
                 if(this.netIncome > 0)
                     this.toggleShowIncomePreview();
@@ -493,8 +516,11 @@ export default {
         toggleShowIncomePreview() {
             this.showIncomePreview = !this.showIncomePreview;
         },
-        removeDeduction(index) {
-            this.income.deductions.splice(index, 1);
+        removeDeduction(deduction) {
+            const index = this.income.deductions.findIndex(d => d.name === deduction.name && d.type === deduction.type && d.amount === deduction.amount);
+            if (index > -1) {
+                this.income.deductions.splice(index, 1);
+            }
         },
         getIncomeID() {
             let isUniqueId = false;

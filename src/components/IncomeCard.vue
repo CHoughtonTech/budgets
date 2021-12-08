@@ -37,9 +37,11 @@
                     <BaseIcon name="info"></BaseIcon>
                 </p>
                 <div>&nbsp;</div>
-                <p class="is-pulled-left button is-success" @click="editIncome(income)">
-                    <BaseIcon name="edit" width="12" height="12"></BaseIcon>
-                </p>
+                <router-link class="is-pulled-left button is-success" :to="{ name: 'edit-income', params: { id: income.id }}">
+                    <p>
+                        <BaseIcon name="edit" width="12" height="12"></BaseIcon>
+                    </p>
+                </router-link>
                 <div>&nbsp;</div>
                 <p class="is-pulled-right button is-danger" @click="confirmDelete(income)">
                     <BaseIcon name="delete"></BaseIcon>
@@ -253,16 +255,6 @@ export default {
         hasDeductions() {
             return this.income.deductions.length > 0;
         },
-        incomeItems() {
-            let incomeArray = Object.entries(this.income).map(([key, value]) => {
-                if (key === 'id' || key === 'isActive' || key === 'deductions')
-                    return null;
-                return { oKey: key, oVal: value };
-            }).filter(i => {
-                return i && i !== null;
-            });
-            return incomeArray;
-        },
         netAmountPerCheck() {
             return this.toFixedNumber(this.income.netSalary / this.income.payPeriod, 2);
         },
@@ -387,9 +379,6 @@ export default {
                     this.selectedIncome = {};
                 });
             }
-        },
-        editIncome(income){
-            this.$router.push(`/income/${income.id}`)
         },
         cancelDelete() {
             this.selectedIncome = {};

@@ -15,6 +15,7 @@ export default new Vuex.Store({
     categories: [],
     subCategories: [],
     editedBill: null,
+    editedIncome: null,
     states: [],
     federalTaxBrackets: [],
     stateTaxBrackets: [],
@@ -124,19 +125,23 @@ export default new Vuex.Store({
           i.name = income.name,
           i.type = income.type,
           i.salary = income.salary,
+          i.netSalary = income.netSalary,
           i.hourlyRate = income.hourlyRate,
           i.hoursPerWeek = income.hoursPerWeek,
-          i.employment = income.employment,
+          i.employmentType = income.employmentType,
           i.filingStatus = income.filingStatus,
-          i.payPeriods = income.payPeriods,
-          i.deductions = income.deductions,
+          i.payPeriod = income.payPeriod,
           i.state = income.state,
-          i.isActive = income.isActive
+          i.isActive = income.isActive,
+          i.deductions = income.deductions.map(d => { return d; })
         }
       });
     },
     removeIncome(state, index) {
       state.income.splice(index, 1);
+    },
+    foundIncome(state, income) {
+      state.editedIncome = income;
     },
     setEditedBill(state, bill) {
       state.editedBill = bill;
@@ -184,6 +189,17 @@ export default new Vuex.Store({
     },
     createBill({commit}, bill) {
       commit('createBill', bill);
+    },
+    getIncomeById({commit}, id) {
+      return new Promise((resolve, reject) => {
+        let foundIncome = this.state.income.find(i => i.id === id);
+        if (foundIncome) {
+          commit('foundIncome', foundIncome);
+          resolve();
+        } else {
+          reject({ message: 'Income not found for Id: ' + id});
+        }
+      });
     },
     createIncome({commit}, income) {
       commit('createIncome', income);

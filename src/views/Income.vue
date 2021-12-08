@@ -37,17 +37,14 @@
         <div v-if="inactiveIncomesCount > 0">
             <IncomeCard v-for="income in inactiveIncomes" :key="income.id" :income="income"></IncomeCard>
         </div>
-        <div class="no-incomes" v-if="incomes.count < 1">
+        <div class="no-incomes" v-if="incomeCount < 1">
             <p>Oh snap! You have no income sources! Click below to create your first income source!</p>
-            <br/>
-            <p style="font-size:xx-large;">(╯°□°)╯︵ ┻━┻</p>
             <br/>
             <router-link class="add-income subtitle is-5" :to="{ name: 'create-income' }"><button><BaseIcon name="plus-circle">Add an Income</BaseIcon></button></router-link>
         </div>
     </div>
 </template>
 <script>
-// import BaseModal from "../components/BaseModal";
 import BaseIcon from "../components/BaseIcon";
 import IncomeCard from "../components/IncomeCard";
 import { mobileCheckMixin } from "../mixins/GlobalMixin.js";
