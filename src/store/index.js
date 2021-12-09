@@ -95,7 +95,11 @@ export default new Vuex.Store({
       return state.income;
     },
     getVersionIsConfirmed: (state) => {
-      return state.currentVersion.versionNum === state.confirmedVersion.versionNum;
+      if (state.currentVersion && state.currentVersion !== null && state.confirmedVersion && state.confirmedVersion !== null) {
+        return state.currentVersion.versionNum === state.confirmedVersion.versionNum;
+      } else {
+        return false;
+      }
     },
     getVersionChanges: (state) => {
       return state.currentVersion.changes;
