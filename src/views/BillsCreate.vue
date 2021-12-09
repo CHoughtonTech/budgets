@@ -183,12 +183,10 @@ export default {
         },
         createAnotherConfirm(value) {
             if (value === 'Yes') {
-                console.log("Create another");
                 this.bill = this.resetBill();
                 this.$refs.billName.focus();
                 this.showCreateAnotherModal = false;
             } else {
-                console.log("Nope, back to bills");
                 this.$router.push('/bills');
             }
         },

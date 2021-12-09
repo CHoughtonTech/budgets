@@ -4,6 +4,7 @@
         <div>
             <div v-if="this.$store.getters.activeBillCount > 0" class="bill-summary -shadow">
                 <div class="bill-summary-header">Summary</div>
+                <div class="bill-summary-item">Recurring Bills Total: {{ recurringBillsTotal | currency }}</div>
                 <div class="bill-summary-item">Bills Total: {{activeBillsTotal | currency}}</div>
                 <div class="bill-summary-item">Total Paid: {{totalPaid | currency}}</div>
                 <div class="bill-summary-item">Total Due: {{totalDue | currency}}</div>
@@ -67,7 +68,7 @@
             <BaseModal v-if="showBillDetailModal">
                 <h3 slot="header" style="color:#C15EF2;">{{selectedBill.name}}</h3>
                 <div slot="body">
-                    <hr/><br/>
+                    <br/>
                     <div class="bill-detail"><span class="bill-detail-label">Amount</span>{{selectedBill.amount | currency}}</div>
                     <div class="bill-detail"><span class="bill-detail-label">Created</span>{{selectedBill.dateCreated}}</div>
                     <div class="bill-detail"><span class="bill-detail-label">Due</span>{{selectedBill.dueDate ? selectedBill.dueDate : "--"}}</div>
@@ -156,6 +157,14 @@ export default {
         activeBillsTotal() {
             let total = 0;
             this.$store.getters.activeBills.forEach(bill => {
+                total += parseFloat(bill.amount);
+            });
+            return total;
+        },
+        recurringBillsTotal() {
+            const recurringBills = this.$store.getters.activeBills.filter(b => b.isRecurring === true);
+            let total = 0;
+            recurringBills.forEach(bill => {
                 total += parseFloat(bill.amount);
             });
             return total;

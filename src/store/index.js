@@ -2,16 +2,27 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import ExpenseCategories from '../api/ExpenseCategories';
 import createPersistedState from 'vuex-persistedstate';
+import States from '../api/States';
+import TaxData from '../api/TaxData';
+import Version from '../api/Version';
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
     bills: [], //array of json objects
+    income: [],
     activeMonth: null,
     categories: [],
     subCategories: [],
-    editedBill: null
+    editedBill: null,
+    editedIncome: null,
+    states: [],
+    federalTaxBrackets: [],
+    stateTaxBrackets: [],
+    ficaRate: [],
+    confirmedVersion: null,
+    currentVersion: null
   },
   plugins: [createPersistedState()],
   getters: {
@@ -67,6 +78,27 @@ export default new Vuex.Store({
       } else {
         return "Unknown";
       }
+    },
+    getFederalTaxes: (state) => {
+      return state.federalTaxBrackets;
+    },
+    getStateTaxes: (state) => {
+      return state.stateTaxBrackets;
+    },
+    getFICA: (state) => {
+      return state.ficaRate;
+    },
+    getStates: (state) => {
+      return state.states;
+    },
+    getIncomes: (state) =>{
+      return state.income;
+    },
+    getVersionIsConfirmed: (state) => {
+      return state.currentVersion.versionNum === state.confirmedVersion.versionNum;
+    },
+    getVersionChanges: (state) => {
+      return state.currentVersion.changes;
     }
   },
   mutations: {
@@ -93,6 +125,33 @@ export default new Vuex.Store({
     createBill(state, bill) {
       state.bills.push(bill);
     },
+    createIncome(state, income) {
+      state.income.push(income);
+    },
+    updateIncome(state, income) {
+      state.income.forEach(i => {
+        if (i.id === income.id) {
+          i.name = income.name,
+          i.type = income.type,
+          i.salary = income.salary,
+          i.netSalary = income.netSalary,
+          i.hourlyRate = income.hourlyRate,
+          i.hoursPerWeek = income.hoursPerWeek,
+          i.employmentType = income.employmentType,
+          i.filingStatus = income.filingStatus,
+          i.payPeriod = income.payPeriod,
+          i.state = income.state,
+          i.isActive = income.isActive,
+          i.deductions = income.deductions.map(d => { return d; })
+        }
+      });
+    },
+    removeIncome(state, index) {
+      state.income.splice(index, 1);
+    },
+    foundIncome(state, income) {
+      state.editedIncome = income;
+    },
     setEditedBill(state, bill) {
       state.editedBill = bill;
     },
@@ -107,9 +166,30 @@ export default new Vuex.Store({
     },
     setSubcategories(state, subcategories) {
       state.subCategories = subcategories;
+    },
+    setFederalTaxes(state, fedTaxes) {
+      state.federalTaxBrackets = fedTaxes;
+    },
+    setStateTaxes(state, stateTaxes) {
+      state.stateTaxBrackets = stateTaxes;
+    },
+    setFICARate(state, fica) {
+      state.ficaRate = fica;
+    },
+    setStates(state, stateList) {
+      state.states = stateList;
+    },
+    setConfirmedVersion(state) {
+      state.confirmedVersion = state.currentVersion;
+    },
+    setLatestVersionData(state, versionData) {
+      state.currentVersion = versionData;
     }
   },
   actions: {
+    confirmNewVersion({commit}) {
+      commit('setConfirmedVersion');
+    },
     getBillById({commit}, id) {
       let foundBill = this.state.bills.find(b => b.id === id);
       if(foundBill) {
@@ -120,20 +200,36 @@ export default new Vuex.Store({
       commit('updateBill', bill);
     },
     deleteBill({commit, state}, billId) {
-      let billIndex = null;
-      for (let i = 0; i < state.bills.length; i++) {
-        const bill = state.bills[i];
-        if(bill.id === billId) {
-          billIndex = i;
-          break;
-        }
-      }
-      if (billIndex !== null) {
+      const billIndex = state.bills.findIndex(b => b.id === billId);
+      if (billIndex > -1) {
         commit('removeBill', billIndex);
       }
     },
     createBill({commit}, bill) {
       commit('createBill', bill);
+    },
+    getIncomeById({commit}, id) {
+      return new Promise((resolve, reject) => {
+        let foundIncome = this.state.income.find(i => i.id === id);
+        if (foundIncome) {
+          commit('foundIncome', foundIncome);
+          resolve();
+        } else {
+          reject({ message: 'Income not found for Id: ' + id});
+        }
+      });
+    },
+    createIncome({commit}, income) {
+      commit('createIncome', income);
+    },
+    updateIncome({commit}, income) {
+      commit('updateIncome', income);
+    },
+    deleteIncome({commit, state}, incomeId) {
+      const index = state.income.findIndex(i => i.id === incomeId);
+      if (index > -1) {
+        commit('removeIncome', index);
+      }
     },
     getActiveMonth() {
       console.log(this.state.activeMonth);
@@ -154,6 +250,53 @@ export default new Vuex.Store({
         ExpenseCategories.getSubCategories(subcategories => {
           commit('setSubcategories', subcategories);
           resolve();
+        });
+      });
+    },
+    getStateData({commit}) {
+      return new Promise((resolve) => {
+        States.getAllStates(states => {
+          commit('setStates', states);
+          resolve();
+        });
+      });
+    },
+    getFederalTaxes({commit}) {
+      return new Promise((resolve) => {
+        TaxData.getFederalTaxBracket(federal => {
+          commit('setFederalTaxes', federal);
+          resolve();
+        });
+      });
+    },
+    getStateTaxes({commit}) {
+      return new Promise((resolve) => {
+        TaxData.getStateTaxBracket(state => {
+          commit('setStateTaxes', state);
+          resolve();
+        });
+      });
+    },
+    getFICARate({commit}) {
+      return new Promise((resolve) => {
+        TaxData.getFICATaxRate(fica => {
+          commit('setFICARate', fica);
+          resolve();
+        });
+      });
+    },
+    getVersionData({commit}) {
+      return new Promise((resolve, reject) => {
+        let versionInfo = [];
+        Version.getVersions(v => { 
+          let filteredVersion = v.filter(vers => vers.latest === true);
+          if(filteredVersion && filteredVersion.length > 0 && filteredVersion.length <= 1) {
+            versionInfo = v.filter(vers => vers.latest === true)[0];
+            commit('setLatestVersionData', versionInfo);
+            resolve();
+          } else {
+            reject('No version data is available');
+          }
         });
       });
     }
