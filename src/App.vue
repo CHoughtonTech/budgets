@@ -4,15 +4,31 @@
     <router-view id="main-view"/>
     <hr/>
     <div class="copyright">&copy; {{currentYear}} OxSoft Solutions</div>
+    <BaseModal v-if="showChangeLog" @close="confirmVersion()">
+      <h2 slot="header" class="notification is-warning">Change Log</h2>
+      <div slot="body" style="color:whitesmoke;">
+        <h1 class='notification is-success'>Features</h1>
+        <ol>
+          <li v-for="(c, index) in versionFeatures" :key="`feature-${index}`">{{c.change}}</li>
+        </ol>
+        <br>
+        <h1 class="notification is-danger">Bugs Fixed</h1>
+        <ol>
+          <li v-for="(c, index) in versionBugs" :key="`bug-${index}`">{{c.change}}</li>
+        </ol>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
 <script>
 import NavBar from "./components/NavBar";
+import BaseModal from "./components/BaseModal.vue";
 
 export default {
   components: {
-    NavBar
+    NavBar,
+    BaseModal
   },
   created() {
     this.$store.dispatch("getCategories");
@@ -21,6 +37,9 @@ export default {
     this.$store.dispatch("getFederalTaxes");
     this.$store.dispatch("getStateTaxes");
     this.$store.dispatch("getFICARate");
+    this.$store.dispatch("getVersionData").catch(e => {
+      console.log(e);
+    });
     if (this.$store.state.activeMonth?.name !== this.currentMonth.name || this.$store.state.activeMonth?.id !== this.currentMonth.id) {
         let promiseArr = [];
         if (this.$store.getters.hasBills) {
@@ -50,6 +69,18 @@ export default {
   computed: {
     currentYear() {
       return  new Date().getFullYear();
+    },
+    versionChanges() {
+      return this.$store.getters.getVersionChanges;
+    },
+    versionBugs() {
+      return this.versionChanges.filter(f => f.type === 'Bug');
+    },
+    versionFeatures() {
+      return this.versionChanges.filter(f => f.type === 'Feature');
+    },
+    showChangeLog() {
+      return this.$store.getters.getVersionIsConfirmed === false;
     }
   },
   data() {
@@ -57,6 +88,14 @@ export default {
       currentMonth: {
           name: new Date().toLocaleString('default', { month: 'long' }),
           id: new Date().getMonth()
+      }
+    }
+  },
+  methods: {
+    confirmVersion() {
+      this.$store.dispatch('confirmNewVersion');
+      if (this.$route.name !== 'budget-dashboard') {
+        this.$router.push('/');
       }
     }
   }

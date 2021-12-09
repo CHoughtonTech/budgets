@@ -4,6 +4,7 @@ import ExpenseCategories from '../api/ExpenseCategories';
 import createPersistedState from 'vuex-persistedstate';
 import States from '../api/States';
 import TaxData from '../api/TaxData';
+import Version from '../api/Version';
 
 Vue.use(Vuex)
 
@@ -19,7 +20,9 @@ export default new Vuex.Store({
     states: [],
     federalTaxBrackets: [],
     stateTaxBrackets: [],
-    ficaRate: []
+    ficaRate: [],
+    confirmedVersion: null,
+    currentVersion: null
   },
   plugins: [createPersistedState()],
   getters: {
@@ -91,6 +94,12 @@ export default new Vuex.Store({
     getIncomes: (state) =>{
       return state.income;
     },
+    getVersionIsConfirmed: (state) => {
+      return state.currentVersion.versionNum === state.confirmedVersion.versionNum;
+    },
+    getVersionChanges: (state) => {
+      return state.currentVersion.changes;
+    }
   },
   mutations: {
     updateBill(state, bill) {
@@ -169,9 +178,18 @@ export default new Vuex.Store({
     },
     setStates(state, stateList) {
       state.states = stateList;
+    },
+    setConfirmedVersion(state) {
+      state.confirmedVersion = state.currentVersion;
+    },
+    setLatestVersionData(state, versionData) {
+      state.currentVersion = versionData;
     }
   },
   actions: {
+    confirmNewVersion({commit}) {
+      commit('setConfirmedVersion');
+    },
     getBillById({commit}, id) {
       let foundBill = this.state.bills.find(b => b.id === id);
       if(foundBill) {
@@ -264,6 +282,21 @@ export default new Vuex.Store({
         TaxData.getFICATaxRate(fica => {
           commit('setFICARate', fica);
           resolve();
+        });
+      });
+    },
+    getVersionData({commit}) {
+      return new Promise((resolve, reject) => {
+        let versionInfo = [];
+        Version.getVersions(v => { 
+          let filteredVersion = v.filter(vers => vers.latest === true);
+          if(filteredVersion && filteredVersion.length > 0 && filteredVersion.length <= 1) {
+            versionInfo = v.filter(vers => vers.latest === true)[0];
+            commit('setLatestVersionData', versionInfo);
+            resolve();
+          } else {
+            reject('No version data is available');
+          }
         });
       });
     }
