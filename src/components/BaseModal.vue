@@ -5,18 +5,17 @@
                 <div class="modal-container">
                     <div class="modal-header">
                         <slot name="header">
-                            Default Header
                         </slot>
                     </div>
+                    <hr/>
                     <div class="modal-body">
                         <slot name="body">
-                            Default Body
                         </slot>
                     </div>
                     <div class="modal-footer">
                         <slot name="footer">
-                            Default Footer
                             <button class="modal-default-button" @click="$emit('close')">OK</button>
+                            <br/><br/>
                         </slot>
                     </div>
                 </div>

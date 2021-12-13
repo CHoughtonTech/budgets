@@ -3,6 +3,7 @@
         <nav>
             <router-link class="nav-link" :to="{ name: 'budget-dashboard' }">Home</router-link>
             <router-link class="nav-link" :to="{ name: 'bills' }">Bills</router-link>
+            <router-link class="nav-link" :to="{ name: 'income' }">Income</router-link>
         </nav>
     </div>
 </template>
