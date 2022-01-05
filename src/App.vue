@@ -7,13 +7,13 @@
     <BaseModal v-if="showChangeLog" @close="confirmVersion()">
       <h2 slot="header" class="notification is-warning">Change Log</h2>
       <div slot="body" style="color:whitesmoke;">
-        <h1 class='notification is-success'>Features</h1>
-        <ol>
+        <h1 class="notification is-success" v-if="hasVersionFeatures">Features</h1>
+        <ol v-if="hasVersionFeatures">
           <li v-for="(c, index) in versionFeatures" :key="`feature-${index}`">{{c.change}}</li>
         </ol>
         <br>
-        <h1 class="notification is-danger">Bugs Fixed</h1>
-        <ol>
+        <h1 class='notification is-danger' v-if="hasVersionBugs">Bugs Fixed</h1>
+        <ol v-if="hasVersionBugs">
           <li v-for="(c, index) in versionBugs" :key="`bug-${index}`">{{c.change}}</li>
         </ol>
       </div>
@@ -31,24 +31,25 @@ export default {
     BaseModal
   },
   created() {
-    this.$store.dispatch("getCategories");
-    this.$store.dispatch("getSubcategories");
-    this.$store.dispatch("getStateData");
-    this.$store.dispatch("getFederalTaxes");
-    this.$store.dispatch("getStateTaxes");
-    this.$store.dispatch("getFICARate");
-    this.$store.dispatch("getVersionData").catch(e => {
+    let self = this;
+    self.$store.dispatch("getCategories");
+    self.$store.dispatch("getSubcategories");
+    self.$store.dispatch("getStateData");
+    self.$store.dispatch("getFederalTaxes");
+    self.$store.dispatch("getStateTaxes");
+    self.$store.dispatch("getFICARate");
+    self.$store.dispatch("getVersionData").catch(e => {
       console.log(e);
     });
-    if (this.$store.state.activeMonth?.name !== this.currentMonth.name || this.$store.state.activeMonth?.id !== this.currentMonth.id) {
+    if (self.$store.state.activeMonth?.name !== self.currentMonth.name || self.$store.state.activeMonth?.id !== self.currentMonth.id) {
         let promiseArr = [];
-        if (this.$store.getters.hasBills) {
-          this.$store.state.bills.forEach(b => {
+        if (self.$store.getters.hasBills) {
+          self.$store.state.bills.forEach(b => {
             if (b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === '')) {
               if (b.dueDate && b.dueDate !== null) {
                 let currentDueDate = new Date(b.dueDate);
                 let newDueDate = new Date(b.dueDate);
-                if (currentDueDate.getMonth() < this.currentMonth.id) {
+                if (currentDueDate.getMonth() < self.currentMonth.id || self.currentMonth.id === 0) {
                   newDueDate.setMonth(currentDueDate.getMonth() + 1);
                 }
                 b.dueDate = newDueDate.toLocaleDateString();
@@ -59,10 +60,10 @@ export default {
             promiseArr.push(this.$store.dispatch("updateBill", b));
           });
           Promise.all(promiseArr).then(() => {
-            this.$store.dispatch("updateActiveMonth", this.currentMonth);
+            self.$store.dispatch("updateActiveMonth", this.currentMonth);
           });
         } else {
-          this.$store.dispatch("updateActiveMonth", this.currentMonth);
+          self.$store.dispatch("updateActiveMonth", this.currentMonth);
         }
       }
   },
@@ -78,6 +79,12 @@ export default {
     },
     versionFeatures() {
       return this.versionChanges.filter(f => f.type === 'Feature');
+    },
+    hasVersionFeatures() {
+      return this.versionFeatures.length > 0;
+    },
+    hasVersionBugs() {
+      return this.versionBugs.length > 0;
     },
     showChangeLog() {
       return this.$store.getters.getVersionIsConfirmed === false;

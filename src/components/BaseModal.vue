@@ -45,7 +45,8 @@ export default {};
 }
 
 .modal-container {
-  width: 25%;
+  width: 35%;
+  height: 95%;
   min-width: 400px;
   margin: 0px auto;
   padding: 20px 30px;
@@ -54,6 +55,7 @@ export default {};
   box-shadow: 0 2px 8px lightgrey;
   transition: all 0.3s ease;
   font-family: Helvetica, Arial, sans-serif;
+  overflow-y: auto;
 }
 
 .modal-header h3 {
