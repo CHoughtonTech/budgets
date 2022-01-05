@@ -471,7 +471,7 @@ export default {
         setTimeout(() => cb(_federalTaxBracket.filter(f => f.year === new Date().getFullYear())), 100);
     },
     getStateTaxBracket(cb) {
-        setTimeout(() => cb(_stateTaxBracket.filter(s => s.year === new Date().getFullYear())), 100);
+        setTimeout(() => cb(_stateTaxBracket.filter(s => s.year === 2021)), 100);
     },
     getFICATaxRate(cb) {
         setTimeout(() => cb(_ficaTaxRate), 100);
