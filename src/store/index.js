@@ -30,11 +30,15 @@ export default new Vuex.Store({
       return state.bills !== undefined && state.bills !== null && state.bills.length > 0;
     },
     activeBills(state) {
-      return state.bills.filter(bill => (bill.isRecurring || new Date(bill.dateCreated).getMonth() === state.activeMonth?.id && new Date(bill.dateCreated).getFullYear() === new Date().getFullYear()));
+      return state.bills.filter(bill => 
+        (bill.isRecurring 
+          || new Date(bill.dateCreated).getMonth() === state.activeMonth?.id && new Date(bill.dateCreated).getFullYear() === new Date().getFullYear()) 
+        && (bill.datePaidOff === null 
+            || bill.datePaidOff === '' 
+            || (new Date(bill.datePaidOff).getMonth() === state.activeMonth?.id && new Date(bill.datePaidOff).getFullYear() === new Date().getFullYear())));
     },
-    activeBillCount(state) {
-      let filteredBills = state.bills.filter(bill => (new Date(bill.dateCreated).getMonth() === state.activeMonth?.id && new Date(bill.dateCreated).getFullYear() === new Date().getFullYear() || bill.isRecurring));
-      return filteredBills.length;
+    activeBillCount(state, getters) {
+      return getters.activeBills.length;
     },
     getSubCategoriesByCategoryId: (state) => (categoryId) => {
       if (categoryId !== null) {

@@ -14,11 +14,20 @@ const _versions = [
     {
         id: 1,
         versionNum: '0.2.0',
-        latest: true,
+        latest: false,
         changes: [
             { change: 'Fixed Due Dates to be updated when year rolls over', type: 'Bug' },
             { change: 'Fixed change log to handle smaller vertical windows', type: 'Bug' },
             { change: 'Keeping State Tax Brackets to 2021 until new tax information is released', type: 'Bug' }
+        ]
+    },
+    {
+        id: 2,
+        versionNum: '0.2.1',
+        latest: true,
+        changes: [
+            { change: 'Added Tax-Exempt Income', type: 'Feature' },
+            { change: 'Added ability to mark bills as paid-off for future analytics', type: 'Feature' }
         ]
     }
 ];

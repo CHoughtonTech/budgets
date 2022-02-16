@@ -8,17 +8,22 @@
                     <div v-if="validationFailed('incomeName', errors)" class="error-detail" >{{getErrorMessage('incomeName', errors)}}</div>
                     <input class="input is-rounded" type="text" v-model="updatedIncome.name" />
                 </div>
-                <div class="tile is-3 is-child">&nbsp;</div>
+                <div class="tile is-3 is-child is-padded" >&nbsp;</div>
+                <div class="tile is-3 is-child is-padded" @click="toggleTaxExempt()">
+                    <div>
+                        <BaseIcon :name="incomeIsTaxExemptIcon" :class="{ 'is-active-label' : updatedIncome.isTaxExempt, 'is-inactive-label' : !updatedIncome.isTaxExempt}">Tax Exempt</BaseIcon>
+                    </div>
+                </div>
                 <div class="tile is-3 is-child is-padded" @click="toggleIncomeIsActive()">
                     <div>
-                        <BaseIcon :name="incomeIsActiveIcon" :class="{'is-active-income-label' : updatedIncome.isActive, 'is-inactive-income-label' : !updatedIncome.isActive}">{{incomeIsActiveLabel}}</BaseIcon>
+                        <BaseIcon :name="incomeIsActiveIcon" :class="{'is-active-label' : updatedIncome.isActive, 'is-inactive-label' : !updatedIncome.isActive}">{{incomeIsActiveLabel}}</BaseIcon>
                     </div>
                 </div>
             </div>
         </div>
         <div class="tile is-ancestor">
             <div class="tile is-parent">
-                <div class="tile is-3 is-child">
+                <div v-if="!updatedIncome.isTaxExempt" class="tile is-3 is-child">
                     <label>State</label><br/>
                     <div v-if="validationFailed('selectedState', errors)" class="error-detail">{{getErrorMessage('selectedState', errors)}}</div>
                     <div class="select is-rounded is-medium">
@@ -28,7 +33,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="tile is-3 is-child">
+                <div v-if="!updatedIncome.isTaxExempt" class="tile is-3 is-child">
                     <label>Filing Status</label><br/>
                     <div v-if="validationFailed('filingStatus', errors)" class="error-detail">{{getErrorMessage('filingStatus', errors)}}</div>
                     <div class="select is-rounded is-medium">
@@ -253,6 +258,7 @@ export default {
                 payPeriod: null,
                 state: null,
                 isActive: true,
+                isTaxExempt: false,
                 deductions: []
             },
             incomeType: [
@@ -272,6 +278,7 @@ export default {
             ],
             hideDeductions: true,
             showIncomePreview: false,
+            isTaxExempt: false,
             deduction: {
                 name: null,
                 amount: 0,
@@ -388,6 +395,12 @@ export default {
         },
         overTimePay() {
             return this.overTimeHours * this.overTimeHourlyRate * 52;
+        },
+        incomeIsTaxExemptIcon() {
+            if (this.income && this.income !== null) {
+                return this.income.isTaxExempt ? 'check-circle' : 'x-circle';
+            }
+            return 'check-circle';
         }
     },
     methods: {
@@ -436,6 +449,7 @@ export default {
                 payPeriod: i.payPeriod,
                 state: i.state,
                 isActive: i.isActive,
+                isTaxExempt: i.isTaxExempt,
                 deductions: i.deductions.map(d => { return d; })
             };
         },
@@ -448,6 +462,11 @@ export default {
             this.$router.push('/income');
         },
         setFederalTaxRate(preTaxDeductedIncome){
+            if (this.updatedIncome.isTaxExempt) {
+                this.federalTaxRate = 0;
+                this.federalTaxAmount = 0;
+                return;
+            }
             const federal = this.federalTaxes.filter(ft => {
                 return ft.filing_status === this.updatedIncome.filingStatus && ft.incomeMin < preTaxDeductedIncome && ft.incomeMax > preTaxDeductedIncome;
             });
@@ -458,6 +477,11 @@ export default {
             this.federalTaxAmount = this.toFixedNumber(preTaxDeductedIncome * fedTaxRatePct, 2);
         },
         setStateTaxRate(preTaxDeductedIncome) {
+            if (this.updatedIncome.isTaxExempt) {
+                this.stateTaxRate = 0;
+                this.stateTaxAmount = 0;
+                return;
+            }
             const state = this.stateTaxes.filter(s => {
                 return s.filing_status === this.selectedStateFilingStatus && s.incomeMin < preTaxDeductedIncome && s.state === this.updatedIncome.state;
             });
@@ -475,6 +499,9 @@ export default {
         },
         getFICATaxAmount(preTaxDeductedIncome) {
             let amount = 0;
+            if (this.updatedIncome.isTaxExempt) {
+                return amount;
+            }
             if(this.ficaRate && this.ficaRate.length > 0) {
                 this.ficaRate.forEach(fr => {
                     let ficaAmount = preTaxDeductedIncome * (parseFloat(fr.rate) / 100);
@@ -490,10 +517,13 @@ export default {
             if (!i.name || i.name === null) {
                 this.errors.push({ message: 'Name entry is required!', field: 'incomeName' });
             }
-            if (!i.state || i.state == null) {
+            if (i.name.length > 10) {
+                this.errors.push({ message: 'Name cannot exceed 10 characters!', field: 'incomeName' });
+            }
+            if ((!i.state || i.state == null) && !i.isTaxExempt) {
                 this.errors.push({ message: 'State selection is required!', field: 'selectedState' });
             }
-            if (!i.filingStatus || i.filingStatus === null) {
+            if ((!i.filingStatus || i.filingStatus === null) && !i.isTaxExempt) {
                 this.errors.push({ message: 'Filing Status is selection required!', field: 'filingStatus' });
             }
             if (!i.employmentType || i.employmentType === null) {
@@ -550,6 +580,11 @@ export default {
             const oddResult = (num + 1) % 2;
             let result = oddResult === 1;
             return result;
+        },
+        toggleTaxExempt() {
+            this.updatedIncome.isTaxExempt = !this.updatedIncome.isTaxExempt;
+            this.updatedIncome.filingStatus = this.updatedIncome.isTaxExempt ? null : this.updatedIncome.filingStatus;
+            this.updatedIncome.state = this.updatedIncome.isTaxExempt ? null : this.updatedIncome.state;
         },
         toggleHideDeductions() {
             this.hideDeductions = !this.hideDeductions;
@@ -614,14 +649,14 @@ ul {
 .is-padded {
     padding: 10px;
 }
-.is-active-income-label {
-    background-color: #411159;
+.is-active-label {
+    background-color: forestgreen;
     border: solid 2px whitesmoke;
     border-radius: 25px;
     cursor: pointer;
     padding: 10px;
 }
-.is-inactive-income-label {
+.is-inactive-label {
     background-color: crimson;
     border: solid 2px whitesmoke;
     border-radius: 25px;

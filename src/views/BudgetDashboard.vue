@@ -30,7 +30,7 @@ export default {
     },
     computed: {
         expensesTotal() {
-            const bills = this.$store.getters.activeBills.filter(b => b.isRecurring === true);
+            const bills = this.$store.getters.activeBills.filter(b => b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === ''));
             let total = 0;
             const summaryMult = parseInt(this.selectedSummary);
             bills.forEach(bill => {

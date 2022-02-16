@@ -38,10 +38,10 @@
             <br/>
             <BaseIcon v-if="unpaidBills.length > 0" name="arrow-right-circle"><span slot="pre">Unpaid Bills<span class="badge -fill-gradient">{{unpaidBills.length}} / {{this.$store.getters.activeBillCount}}</span></span></BaseIcon>
             <br v-if="unpaidBills.length > 0" /><br v-if="unpaidBills.length > 0" />
-            <BillCard v-for="bill in unpaidBills" :key="bill.id" :bill="bill" @delete-bill="deleteBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" />
+            <BillCard v-for="bill in unpaidBills" :key="bill.id" :bill="bill" @delete-bill="deleteBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
             <BaseIcon v-if="paidBills.length > 0" name="arrow-right-circle"><span slot="pre">Paid Bills</span></BaseIcon>
             <br/><br/>
-            <BillCard v-for="bill in paidBills" :key="bill.id" :bill="bill" @delete-bill="deleteBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" />
+            <BillCard v-for="bill in paidBills" :key="bill.id" :bill="bill" @delete-bill="deleteBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
             <BaseModal v-if="showBillDeleteModal">
                 <h3 slot="header" style="color:#411159">Delete Bill</h3>
                 <div slot="body">
@@ -77,10 +77,21 @@
                     <div class="bill-detail"><span class="bill-detail-label">Category</span>{{selectedCategory}}</div>
                     <div class="bill-detail"><span class="bill-detail-label">SubCategory</span>{{selectedSubCategory}}</div>
                     <div class="bill-detail"><span class="bill-detail-label">Paid</span><i><strong style="color:lightgrey;">{{selectedBill.paidCount}}</strong></i> time{{selectedBill.paidCount === 1 ? '' : 's'}}</div>
+                    <div v-if="selectedBill.datePaidOff !== '' && selectedBill.datePaidOff !== null" class="bill-detail"><span class="bill-detail-label">Paid Off</span><BaseIcon name="check"></BaseIcon></div>
                 </div>
                 <div slot="footer">
                     <button style="float:right;" @click="showBillDetailModal = false">Ok</button>
                     <br/><br/>
+                </div>
+            </BaseModal>
+            <BaseModal v-if="showBillPayOffModal">
+                <h3 slot="header">{{selectedBill.name}}</h3>
+                <div slot="body" style="color:whitesmoke;">
+                    Mark bill: <strong style="color:whitesmoke;">{{selectedBill.name}}</strong> as paid off?
+                </div>
+                <div slot="footer">
+                    <button @click="updateBillPayOffConfirm('confirm')">Confirm</button>
+                    <button @click="updateBillPayOffConfirm('cancel')">Cancel</button>
                 </div>
             </BaseModal>
         </div>
@@ -103,6 +114,7 @@ export default {
             showBillDeleteModal: false,
             showBillDetailModal: false,
             showBillAmountModal: false,
+            showBillPayOffModal: false,
             ascending: true,
             sortMethod: null,
             sortType: {
@@ -157,12 +169,14 @@ export default {
         activeBillsTotal() {
             let total = 0;
             this.$store.getters.activeBills.forEach(bill => {
-                total += parseFloat(bill.amount);
+                if (bill.datePaidOff === null || bill.datePaidOff === '') {
+                    total += parseFloat(bill.amount);
+                }
             });
             return total;
         },
         recurringBillsTotal() {
-            const recurringBills = this.$store.getters.activeBills.filter(b => b.isRecurring === true);
+            const recurringBills = this.$store.getters.activeBills.filter(b => b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === ''));
             let total = 0;
             recurringBills.forEach(bill => {
                 total += parseFloat(bill.amount);
@@ -233,6 +247,23 @@ export default {
                 bill.datePaid = new Date().toLocaleDateString();
                 bill.paidCount++;
                 this.$store.dispatch('updateBill', bill);
+            }
+        },
+        toggleBillPayOffModal(bill) {
+            this.selectedBill = bill;
+            this.showBillPayOffModal = !this.showBillPayOffModal;
+        },
+        updateBillPayOffConfirm(choice) {
+            if (choice === 'cancel') {
+                this.showBillPayOffModal = !this.showBillPayOffModal;
+            } else {
+                this.selectedBill.paid = true;
+                this.selectedBill.datePaid = new Date().toLocaleDateString();
+                this.selectedBill.datePaidOff = this.selectedBill.datePaid;
+                this.selectedBill.paidCount++;
+                this.$store.dispatch('updateBill', this.selectedBill).then(() => {
+                    this.showBillPayOffModal = !this.showBillPayOffModal;
+                });
             }
         },
         updateBillPaidConfirm(choice) {
