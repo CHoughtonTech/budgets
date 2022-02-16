@@ -103,6 +103,7 @@ export default {
                 payPeriod: null,
                 state: null,
                 isActive: true,
+                isTaxExempt: false,
                 deductions: []
             },
             showSelectedIncomeDetails: false
