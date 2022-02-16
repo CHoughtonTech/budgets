@@ -80,10 +80,50 @@
                     <div class="tile is-parent">
                         <article class="tile is-child income-detail-box">
                             <div class="is-flex is-justify-content-center">
-                                <h4 class="income-detail-box-header">Taxes</h4>
+                                <h4 class="income-detail-box-header">Pay Info</h4>
                             </div>
                             <hr/>
                             <ul>
+                                <li>
+                                    <span>Employment Type</span>
+                                    <span class="is-pulled-right">{{employmentType}}</span>
+                                </li>
+                                <li>
+                                    <span>Pay Period Frequency</span>
+                                    <span class="is-pulled-right">{{payPeriodFrequency}}</span>
+                                </li>
+                                <li v-if="hasFilingStatus">
+                                    <span>Filing Status</span>
+                                    <span class="is-pulled-right">{{filingStatus}}</span>
+                                </li>
+                                <li v-if="hasFilingState">
+                                    <span>Filing State</span>
+                                    <span class="is-pulled-right">{{filingStateName}}</span>
+                                </li>
+                                <li v-if="isHourly">
+                                    <span>Hourly Rate</span>
+                                    <span class="is-pulled-right">{{income.hourlyRate | currency}}</span>
+                                </li>
+                                <li v-if="isHourly">
+                                    <span>Hours Per Week</span>
+                                    <span class="is-pulled-right">{{income.hoursPerWeek}}</span>
+                                </li>
+                                <li v-if="!isHourly">
+                                    <span>Annual Salary</span>
+                                    <span class="is-pulled-right">{{income.salary | currency}}</span>
+                                </li>
+                            </ul>
+                        </article>
+                    </div>
+                </div>
+                <div class="tile">
+                    <div class="tile is-parent">
+                        <article class="tile is-child income-detail-box">
+                            <div class="is-flex is-justify-content-center">
+                                <h4 class="income-detail-box-header">Taxes</h4>
+                            </div>
+                            <hr/>
+                            <ul v-if="!income.isTaxExempt">
                                 <li>
                                     <span>Annual Federal Taxes</span>
                                     <span class="is-pulled-right">{{federalTaxAmount | currency}}</span>
@@ -121,46 +161,9 @@
                                     <span class="is-pulled-right">{{ficaRate}}%</span>
                                 </li>
                             </ul>
-                        </article>
-                    </div>
-                </div>
-                <div class="tile">
-                    <div class="tile is-parent">
-                        <article class="tile is-child income-detail-box">
-                            <div class="is-flex is-justify-content-center">
-                                <h4 class="income-detail-box-header">Pay Info</h4>
+                            <div v-else class="is-flex is-justify-content-center notification is-info">
+                                <p>Tax Exempt Income!</p>
                             </div>
-                            <hr/>
-                            <ul>
-                                <li>
-                                    <span>Employment Type</span>
-                                    <span class="is-pulled-right">{{employmentType}}</span>
-                                </li>
-                                <li>
-                                    <span>Pay Period Frequency</span>
-                                    <span class="is-pulled-right">{{payPeriodFrequency}}</span>
-                                </li>
-                                <li>
-                                    <span>Filing Status</span>
-                                    <span class="is-pulled-right">{{filingStatus}}</span>
-                                </li>
-                                <li>
-                                    <span>Filing State</span>
-                                    <span class="is-pulled-right">{{filingStateName}}</span>
-                                </li>
-                                <li v-if="isHourly">
-                                    <span>Hourly Rate</span>
-                                    <span class="is-pulled-right">{{income.hourlyRate | currency}}</span>
-                                </li>
-                                <li v-if="isHourly">
-                                    <span>Hours Per Week</span>
-                                    <span class="is-pulled-right">{{income.hoursPerWeek}}</span>
-                                </li>
-                                <li v-if="!isHourly">
-                                    <span>Annual Salary</span>
-                                    <span class="is-pulled-right">{{income.salary | currency}}</span>
-                                </li>
-                            </ul>
                         </article>
                     </div>
                     <div class="tile is-parent">
@@ -170,9 +173,15 @@
                             </div>
                             <hr/>
                             <ul v-if="hasDeductions">
+                                <li v-if="preTaxDeductions.length > 0" class="is-flex is-justify-content-center">
+                                    <span>Pre-Tax Deductions</span>
+                                </li>
                                 <li v-for="(preDeduction, index) in preTaxDeductions" :key="`prededuction-${index}`">
                                     <span>{{preDeduction.name}}</span>
                                     <span class="is-pulled-right">{{preDeduction.amount | currency}}</span>
+                                </li>
+                                <li v-if="postTaxDeductions.length > 0" class="is-flex is-justify-content-center">
+                                    <span>Post-Tax Deductions</span>
                                 </li>
                                 <li v-for="(postDeduction, index) in postTaxDeductions" :key="`postdeduction-${index}`">
                                     <span>{{postDeduction.name}}</span>
@@ -190,30 +199,11 @@
                             </ul>
                             <div v-else class="is-flex is-justify-content-center notification is-info">
                                 <p>No Deductions!</p>
-                                <!-- <figure class='image'>
-                                    <img src="https://c.tenor.com/9UXwh7MKQ08AAAAC/starwars-movealong.gif"/>
-                                </figure> -->
                             </div>
                         </article>
                     </div>
                 </div>
             </div>
-            <!-- <div class="tile is-parent">
-                <article class="tile is-child income-detail-box">
-                    <h4 class="income-detail-box-header">Deductions</h4>
-                    <hr/>
-                    <ul>
-                        <li v-for="(preDeduction, index) in preTaxDeductions" :key="`prededuction-${index}`">
-                            <span>{{preDeduction.name}}</span>
-                            <span class="is-pulled-right">{{preDeduction.amount | currency}}</span>
-                        </li>
-                        <li v-for="(postDeduction, index) in postTaxDeductions" :key="`postdeduction-${index}`">
-                            <span>{{postDeduction.name}}</span>
-                            <span class="is-pulled-right">{{postDeduction.amount | currency}}</span>
-                        </li>
-                    </ul>
-                </article>
-            </div> -->
         </div>
         <BaseModal v-if="showConfirmDelete">
             <h3 slot="header">Confirm Delete</h3>
@@ -288,12 +278,16 @@ export default {
             return result;
         },
         filingStateName() {
-            let foundState = this.$store.getters.getStates.find(s => s.abbreviation === this.income.state);
+            const foundState = this.$store.getters.getStates.find(s => s.abbreviation === this.income.state);
             if (foundState && foundState !== null) {
                 return foundState.name;
             } else {
                 return null;
             }
+        },
+        hasFilingState() {
+            let foundState = this.$store.getters.getStates.find(s => s.abbreviation === this.income.state);
+            return foundState && foundState !== null;
         },
         employmentType() {
             let result = null;
@@ -327,6 +321,9 @@ export default {
                     break;
             }
             return result;
+        },
+        hasFilingStatus() {
+            return this.income.filingStatus !== null;
         },
         filingStatus() {
             let result = null;
@@ -439,6 +436,8 @@ export default {
             }
         },
         setTaxRates(federalTaxes, stateTaxes, ficaRate) {
+            if (this.income.isTaxExempt)
+                return;
             this.federalTaxRate = federalTaxes.filter(ft => ft.filing_status === this.income.filingStatus && ft.incomeMin < this.income.salary && ft.incomeMax > this.income.salary)[0].rate;
             this.stateTaxRate = stateTaxes.filter(s => s.filing_status === this.getStateFilingStatus() && s.incomeMin < this.income.salary && s.state === this.income.state)[0].rate;
             ficaRate.forEach(fica => {

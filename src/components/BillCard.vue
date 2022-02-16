@@ -12,18 +12,21 @@
                         <div class="dropdown-item" @click="showBillDetails(bill)">
                             <BaseIcon name="help-circle">Details</BaseIcon>
                         </div>
-                        <div class="dropdown-item">
+                        <div v-if="bill.datePaidOff === '' || bill.datePaidOff === null" class="dropdown-item">
                             <router-link :to="{ name: 'edit-bill', params: { id: bill.id } }"><BaseIcon name="edit">Edit</BaseIcon></router-link>
                         </div>
-                        <div class="dropdown-item">
+                        <div v-if="bill.datePaidOff === '' || bill.datePaidOff === null" class="dropdown-item">
                             <span @click="deleteBill(bill)"><BaseIcon name="x-circle">Delete</BaseIcon></span>
+                        </div>
+                        <div v-if="bill.datePaidOff === '' || bill.datePaidOff === null" class="dropdown-item">
+                            <span @click="payOffBill(bill)"><BaseIcon name="stop-circle">Pay Off</BaseIcon></span>
                         </div>
                     </div>
                 </div>
             </div>
             <span style="color:lightgrey;">{{bill.name}}</span>
             <span class="paid-button" v-if="!bill.paid" @click="paidBill(bill)" ><BaseIcon name="check-circle"></BaseIcon></span>
-            <span class="undo-button" v-if="bill.paid" @click="undoBillPaid(bill)"><BaseIcon name="rotate-ccw"></BaseIcon></span>
+            <span class="undo-button" v-if="bill.paid && (bill.datePaidOff === null || bill.datePaidOff === '')" @click="undoBillPaid(bill)"><BaseIcon name="rotate-ccw"></BaseIcon></span>
             <div class="paid-status" v-if="bill.paid"><BaseIcon name="check">{{new Date(bill.datePaid).toLocaleDateString('en-US', {timeZone: 'UTC'})}} &nbsp;</BaseIcon></div>
             <hr/>
             <div v-if="bill.dueDate" :class="{'bill-past-due' : isPastDue, 'bill-still-due' : !isPastDue}">Due: {{bill.dueDate}}</div>
@@ -70,6 +73,10 @@ export default {
         showBillDetails(bill) {
             this.showMenu = false;
             this.$emit('bill-details', bill);
+        },
+        payOffBill(bill) {
+            this.showMenu = false;
+            this.$emit('payoff-bill', bill);
         }
     }
 };
