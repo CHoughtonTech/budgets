@@ -1,9 +1,8 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import BudgetDashboard from '../views/BudgetDashboard';
+import BillsDashboard from '../views/BillsDashboard';
 import Bills from '../views/Bills';
-import BillsCreate from '../views/BillsCreate';
-import BillsEdit from '../views/BillsEdit';
 import Income from '../views/Income';
 import IncomeCreate from '../views/IncomeCreate';
 import IncomeEdit from '../views/IncomeEdit';
@@ -19,17 +18,17 @@ const routes = [
   {
     path: '/bills',
     name: 'bills',
-    component: Bills
+    component: BillsDashboard
   },
   {
     path: '/bills/create',
     name: 'create-bill',
-    component: BillsCreate
+    component: Bills
   },
   {
     path: '/bills/:id',
     name: 'edit-bill',
-    component: BillsEdit,
+    component: Bills,
     props: true
   },
   {

@@ -27,7 +27,7 @@ export default new Vuex.Store({
   plugins: [createPersistedState()],
   getters: {
     hasBills(state) {
-      return state.bills !== undefined && state.bills !== null && state.bills.length > 0;
+      return state.bills && state.bills.length > 0;
     },
     activeBills(state) {
       return state.bills.filter(bill => 
