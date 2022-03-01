@@ -24,10 +24,18 @@ const _versions = [
     {
         id: 2,
         versionNum: '0.2.1',
-        latest: true,
+        latest: false,
         changes: [
             { change: 'Added Tax-Exempt Income', type: 'Feature' },
             { change: 'Added ability to mark bills as paid-off for future analytics', type: 'Feature' }
+        ]
+    },
+    {
+        id: 3,
+        versionNum: '0.2.2',
+        latest: true,
+        changes: [
+            { change: 'Fixed Monthly due date reset for recurring bills', type: 'Bug' },
         ]
     }
 ];
