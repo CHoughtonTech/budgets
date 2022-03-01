@@ -49,8 +49,8 @@ export default {
               if (b.dueDate && b.dueDate !== null) {
                 let currentDueDate = new Date(b.dueDate);
                 let newDueDate = new Date(b.dueDate);
-                if (currentDueDate.getMonth() < self.currentMonth.id || self.currentMonth.id === 0) {
-                  newDueDate.setMonth(currentDueDate.getMonth() + 1);
+                if (currentDueDate.getMonth() !== self.currentMonth.id) {
+                  newDueDate.setMonth(self.currentMonth.id);
                 }
                 b.dueDate = newDueDate.toLocaleDateString();
               }
