@@ -199,10 +199,15 @@ export default new Vuex.Store({
       commit('setConfirmedVersion');
     },
     getBillById({commit}, id) {
-      let foundBill = this.state.bills.find(b => b.id === id);
-      if(foundBill) {
-        commit('setEditedBill', foundBill);
-      }
+      return new Promise((resolve, reject) => {
+        let foundBill = this.state.bills.find(b => b.id === id);
+        if(foundBill) {
+          commit('setEditedBill', foundBill);
+          resolve();
+        } else {
+          reject({ message: 'Bill not found for Id: ' + id});
+        }
+      });
     },
     updateBill({commit}, bill) {
       commit('updateBill', bill);

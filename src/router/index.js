@@ -23,7 +23,8 @@ const routes = [
   {
     path: '/bills/create',
     name: 'create-bill',
-    component: Bills
+    component: Bills,
+    props: true
   },
   {
     path: '/bills/:id',

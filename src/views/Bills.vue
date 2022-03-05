@@ -1,6 +1,6 @@
 <template>
     <div class="bills-create-view">
-        <h1>Add Bill</h1>
+        <h1>{{ billActionLabel }}</h1>
         <label for="billName">Name</label>
         <div v-if="validationFailed('billName')" class="error-detail">{{getErrorMessage('billName')}}</div>
         <input id="billName" type="text" ref="billName" v-model="bill.name" placeholder="Bill Name" :class="{'error-detail-input': validationFailed('billName')}" />
@@ -42,7 +42,7 @@
             <div slot="body" style="color:lightgrey;">Update <strong><i style="color:white;">{{ bill.name }}</i></strong>?</div>
             <div slot="footer">
                 <button type="button" @click="updateBillConfirm()">Confirm</button>
-                <button type="button" @click="showConfirmModal = !showConfirmModal">Cancel</button>
+                <button type="button" @click="toggleShowConfirmModal()">Cancel</button>
             </div>
         </BaseModal>
     </div>
@@ -62,7 +62,7 @@ export default {
         if (this.$store.state.categories?.length <= 0) {
             this.$router.push("/bills");
         }
-        if (this.id !== null){
+        if (this.id !== null && this.id !== -1) {
             this.loadBill(this.id);
         }
     },
@@ -78,7 +78,10 @@ export default {
         },
         showUpdateModal() {
             return this.isLoaded && this.showConfirmModal;
-        }
+        },
+        billActionLabel() {
+            return this.isLoaded ? 'Edit Bill' : 'Add Bill';
+        },
     },
     data() {
         return {
@@ -148,14 +151,20 @@ export default {
                 this.bill.dateCreated = new Date().toLocaleDateString();
                 this.bill.dueDate = this.selectedDueDate.toLocaleDateString();
                 this.$store.dispatch("createBill", this.bill).then(() => {
-                    this.showCreateAnotherModal = true;
+                    this.toggleShowConfirmModal();
                 });
             }
         },
         updateBill() {
             if (this.validateFields()) {
-                console.log(this.bill);
+                this.toggleShowConfirmModal();
             }
+        },
+        updateBillConfirm() {
+            this.toggleShowConfirmModal();
+            this.$store.dispatch('updateBill', this.bill).then(() => {
+                this.$router.push('/bills');
+            });
         },
         cancelBill() {
             this.resetBill();
@@ -179,6 +188,9 @@ export default {
                 }
             }
             return id;
+        },
+        toggleShowConfirmModal() {
+            this.showConfirmModal = !this.showConfirmModal;
         },
         validateFields() {
             this.errors = [];
@@ -246,7 +258,7 @@ export default {
             if (value === 'Yes') {
                 this.bill = this.resetBill();
                 this.$refs.billName.focus();
-                this.showCreateAnotherModal = false;
+                this.toggleShowConfirmModal();
             } else {
                 this.$router.push('/bills');
             }
@@ -268,6 +280,15 @@ export default {
 };
 </script>
 <style>
+h1 {
+    color: #C15EF2
+}
+h3 {
+    color: lightgrey;
+}
+label {
+    color: lightgrey;
+}
 .bills-create-view {
     min-width: 500px;
     width: 25%;

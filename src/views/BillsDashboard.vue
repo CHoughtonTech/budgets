@@ -14,7 +14,7 @@
                 <div class="overdue-bill-total">Total Past Due: {{totalPastDueTotal | currency}}</div>
             </div>
             <br/>
-            <router-link class="add-bill" :to="{ name: 'create-bill' }"><BaseIcon name="plus-circle">Add a Bill</BaseIcon></router-link>
+            <router-link class="add-bill" :to="{ name: 'create-bill' , params: { id: -1 } }"><BaseIcon name="plus-circle">Add a Bill</BaseIcon></router-link>
             <hr/>
             <div v-if="unpaidBills.length > 0 || paidBills.length > 0">
                 <div class="buttons has-addons is-centered">
@@ -23,8 +23,8 @@
                             <span slot="pre">Date Due</span>
                         </BaseIcon>
                     </button>
-                    <button class="button" :class="{'is-selected is-sorted' : this.sortMethod === null, 'is-dark': this.sortMethod !== null}" @click="setSort(null)">
-                        <BaseIcon :name="(this.ascending && this.sortMethod === null ? 'chevron-up' : 'chevron-down')">
+                    <button class="button" :class="{'is-selected is-sorted' : this.sortMethod === 'name', 'is-dark': this.sortMethod !== 'name'}" @click="setSort('name')">
+                        <BaseIcon :name="(this.ascending && this.sortMethod === 'name' ? 'chevron-up' : 'chevron-down')">
                             <span slot="pre">Name</span>
                         </BaseIcon>
                     </button>
@@ -116,7 +116,7 @@ export default {
             showBillAmountModal: false,
             showBillPayOffModal: false,
             ascending: true,
-            sortMethod: null,
+            sortMethod: 'dueDate',
             sortType: {
                 NAME: "name",
                 DUEDATE: "dueDate",
@@ -200,14 +200,6 @@ export default {
         sortBills(bills, sortMethod) {
             if(!bills || bills === null) { return []; }
             switch (sortMethod) {
-                case 'dueDate':
-                    return bills.sort((a,b) => {
-                        let x = a.dueDate ? new Date(a.dueDate).getDate() : null;
-                        let y = b.dueDate ? new Date(b.dueDate).getDate() : null;
-                        if (x < y) {return this.ascending ? -1 : 1}
-                        if (y < x) {return this.ascending ? 1 : -1}
-                        return 0;
-                    });
                 case 'amount': 
                     return bills.sort((a,b) => {
                         let x = typeof a.amount === 'number' ? a.amount : parseFloat(a.amount);
@@ -216,12 +208,20 @@ export default {
                         if (x > y) { return this.ascending ? 1 : -1 }
                         return 0;
                     });
-                default:
+                case 'name': 
                     return bills.sort((a,b) => {
                         let x = a.name.toLowerCase();
                         let y = b.name.toLowerCase();
                         if (x < y) { return this.ascending ? -1 : 1 }
                         if (x > y) { return this.ascending ? 1 : -1 }
+                        return 0;
+                    });
+                default:
+                    return bills.sort((a,b) => {
+                        let x = a.dueDate ? new Date(a.dueDate).getDate() : null;
+                        let y = b.dueDate ? new Date(b.dueDate).getDate() : null;
+                        if (x < y) {return this.ascending ? -1 : 1}
+                        if (y < x) {return this.ascending ? 1 : -1}
                         return 0;
                     });
             }

@@ -52,6 +52,9 @@ export default {
                 if (currentDueDate.getMonth() !== self.currentMonth.id) {
                   newDueDate.setMonth(self.currentMonth.id);
                 }
+                if (currentDueDate.getFullYear() !== this.currentYear) {
+                  newDueDate.setFullYear(this.currentYear);
+                }
                 b.dueDate = newDueDate.toLocaleDateString();
               }
               b.paid = false;
