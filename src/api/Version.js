@@ -33,9 +33,21 @@ const _versions = [
     {
         id: 3,
         versionNum: '0.2.2',
-        latest: true,
+        latest: false,
         changes: [
             { change: 'Fixed Monthly due date reset for recurring bills', type: 'Bug' },
+        ]
+    },
+    {
+        id: 4,
+        versionNum: '0.2.3',
+        latest: true,
+        changes: [
+            { change: 'Refactored how income and bills are created and updated', type: 'Feature' },
+            { change: 'Added Login teaser', type: 'Feature' },
+            { change: 'Changed default sort from "Name", to "Due Date"', type: 'Feature' },
+            { change: 'Fixed issue with Displayed incomes not grabbing correct tax rate', type: 'Bug' },
+            { change: 'Fixed issue with Bill Pay Off showing up for non-recurring bills', type: 'Bug' }
         ]
     }
 ];
