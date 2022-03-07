@@ -27,7 +27,7 @@ export default new Vuex.Store({
   plugins: [createPersistedState()],
   getters: {
     hasBills(state) {
-      return state.bills !== undefined && state.bills !== null && state.bills.length > 0;
+      return state.bills && state.bills.length > 0;
     },
     activeBills(state) {
       return state.bills.filter(bill => 
@@ -150,6 +150,7 @@ export default new Vuex.Store({
           i.payPeriod = income.payPeriod,
           i.state = income.state,
           i.isActive = income.isActive,
+          i.isTaxExempt = income.isTaxExempt,
           i.deductions = income.deductions.map(d => { return d; })
         }
       });
@@ -199,10 +200,15 @@ export default new Vuex.Store({
       commit('setConfirmedVersion');
     },
     getBillById({commit}, id) {
-      let foundBill = this.state.bills.find(b => b.id === id);
-      if(foundBill) {
-        commit('setEditedBill', foundBill);
-      }
+      return new Promise((resolve, reject) => {
+        let foundBill = this.state.bills.find(b => b.id === id);
+        if(foundBill) {
+          commit('setEditedBill', foundBill);
+          resolve();
+        } else {
+          reject({ message: 'Bill not found for Id: ' + id});
+        }
+      });
     },
     updateBill({commit}, bill) {
       commit('updateBill', bill);

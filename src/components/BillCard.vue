@@ -18,7 +18,7 @@
                         <div v-if="bill.datePaidOff === '' || bill.datePaidOff === null" class="dropdown-item">
                             <span @click="deleteBill(bill)"><BaseIcon name="x-circle">Delete</BaseIcon></span>
                         </div>
-                        <div v-if="bill.datePaidOff === '' || bill.datePaidOff === null" class="dropdown-item">
+                        <div v-if="(bill.datePaidOff === '' || bill.datePaidOff === null) && bill.isRecurring" class="dropdown-item">
                             <span @click="payOffBill(bill)"><BaseIcon name="stop-circle">Pay Off</BaseIcon></span>
                         </div>
                     </div>
