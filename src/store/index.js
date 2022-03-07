@@ -150,6 +150,7 @@ export default new Vuex.Store({
           i.payPeriod = income.payPeriod,
           i.state = income.state,
           i.isActive = income.isActive,
+          i.isTaxExempt = income.isTaxExempt,
           i.deductions = income.deductions.map(d => { return d; })
         }
       });

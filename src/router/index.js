@@ -3,9 +3,9 @@ import VueRouter from 'vue-router'
 import BudgetDashboard from '../views/BudgetDashboard';
 import BillsDashboard from '../views/BillsDashboard';
 import Bills from '../views/Bills';
+import IncomeDashboard from '../views/IncomeDashboard';
 import Income from '../views/Income';
-import IncomeCreate from '../views/IncomeCreate';
-import IncomeEdit from '../views/IncomeEdit';
+
 
 Vue.use(VueRouter)
 
@@ -35,17 +35,18 @@ const routes = [
   {
     path: '/income',
     name: 'income', 
-    component: Income
+    component: IncomeDashboard
   },
   {
     path: '/income/create',
     name: 'create-income',
-    component: IncomeCreate
+    component: Income,
+    props: true
   },
   {
     path: '/income/:id',
     name: 'edit-income',
-    component: IncomeEdit,
+    component: Income,
     props: true
   }
 ]
