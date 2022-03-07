@@ -5,11 +5,24 @@
             <router-link class="nav-link" :to="{ name: 'bills' }">Bills</router-link>
             <router-link class="nav-link" :to="{ name: 'income' }">Income</router-link>
         </nav>
+        <div v-if="!triedLoggingIn" class="is-pulled-right profile" @click="toggleLoginTeaser()"><base-icon name="user">Login</base-icon></div>
+        <div v-else class="is-pulled-right profile" @click="toggleLoginTeaser()"><base-icon name="user-x">COMING SOON</base-icon></div>
     </div>
 </template>
 
 <script>
-export default {};
+export default {
+    data() {
+        return {
+            triedLoggingIn: false,
+        }  
+    },
+    methods: {
+        toggleLoginTeaser() {
+            this.triedLoggingIn = !this.triedLoggingIn;
+        },
+    },
+}
 </script>
 <style>
 .nav {
@@ -40,6 +53,10 @@ export default {};
     background-color: #8834B3;
     color: lightgrey;
     font-style: italic;
+}
+.profile {
+    padding: 15px 15px;
+    cursor: pointer;
 }
 
 </style>

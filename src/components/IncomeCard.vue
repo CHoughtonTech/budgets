@@ -439,7 +439,13 @@ export default {
             if (this.income.isTaxExempt)
                 return;
             this.federalTaxRate = federalTaxes.filter(ft => ft.filing_status === this.income.filingStatus && ft.incomeMin < this.income.salary && ft.incomeMax > this.income.salary)[0].rate;
-            this.stateTaxRate = stateTaxes.filter(s => s.filing_status === this.getStateFilingStatus() && s.incomeMin < this.income.salary && s.state === this.income.state)[0].rate;
+            this.stateTaxRate = stateTaxes.filter(s => s.filing_status === this.getStateFilingStatus() && s.incomeMin < this.income.salary && s.state === this.income.state).sort((a,b) => {
+                    let x = typeof a.rate === 'number' ? a.rate : parseFloat(a.rate);
+                    let y = typeof b.rate === 'number' ? b.rate : parseFloat(b.rate);
+                    if (x < y) { return 1 }
+                    if (x > y) { return -1 }
+                    return 0;
+                })[0].rate;
             ficaRate.forEach(fica => {
                 this.ficaRate += fica.rate;
             });
