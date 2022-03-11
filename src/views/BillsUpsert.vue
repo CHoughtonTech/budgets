@@ -8,7 +8,7 @@
         <div v-if="validationFailed('billAmount')" class="error-detail">{{getErrorMessage('billAmount')}}</div>
         <input id="billAmount" type="number" v-model="bill.amount" placeholder="0.00" :class="{'error-detail-input': validationFailed('billAmount')}" />
         <label for="billDueDate">Due Date</label>
-        <datepicker placeholder="Select Due Date" :format="format" :disabledDates="disabledDates" v-model="selectedDueDate"></datepicker>
+        <DatePicker v-model="selectedDueDate" :format="format" :enableTimePicker="false" autoApply @update:modelValue="logInfo()"></DatePicker>
         <label for="billFixedAmount" style="margin-right: 25px">Is fixed amount?</label>
         <input id="billFixedAmount" type="checkbox" v-model="bill.isFixedAmount" /><br/>
         <label for="billRecurring" style="margin-right: 25px">Is recurring?</label>
@@ -30,40 +30,53 @@
         <button type="button" @click="isLoaded ? updateBill() : createBill()">{{ buttonLabel }}</button>
         <button type="button" @click="cancelBill()">Cancel</button>
         <BaseModal v-if="showCreateAnotherModal">
-            <h3 slot="header" style="color:lightgrey;">Bill Creation</h3>
-            <h6 slot="body" style="color:lightgrey;">Create Another bill?</h6>
-            <div slot="footer">
-                <button @click="createAnotherConfirm('Yes')">Yes</button>
-                <button @click="createAnotherConfirm('No')">No</button>
-            </div>
+            <template #header>
+                <h3 style="color:lightgrey;">Bill Creation</h3>
+            </template>
+            <template #body>
+                <h6 style="color:lightgrey;">Create Another bill?</h6>
+            </template>
+            <template #footer>
+                <div>
+                    <button @click="createAnotherConfirm('Yes')">Yes</button>
+                    <button @click="createAnotherConfirm('No')">No</button>
+                </div>
+            </template>
         </BaseModal>
         <BaseModal v-if="showUpdateModal">
-            <h3 slot="header" style="color:lightgrey;">Confirm Update</h3>
-            <div slot="body" style="color:lightgrey;">Update <strong><i style="color:white;">{{ bill.name }}</i></strong>?</div>
-            <div slot="footer">
-                <button type="button" @click="updateBillConfirm()">Confirm</button>
-                <button type="button" @click="toggleShowConfirmModal()">Cancel</button>
-            </div>
+            <template #header>
+                <h3 style="color:lightgrey;">Confirm Update</h3>
+            </template>
+            <template #body>
+                <div style="color:lightgrey;">Update <strong><i style="color:white;">{{ bill.name }}</i></strong>?</div>
+            </template>
+            <template #footer>
+                <div>
+                    <button type="button" @click="updateBillConfirm()">Confirm</button>
+                    <button type="button" @click="toggleShowConfirmModal()">Cancel</button>
+                </div>
+            </template>
         </BaseModal>
     </div>
 </template>
 <script>
 import BaseModal from '../components/BaseModal';
-import Datepicker from 'vuejs-datepicker';
+import DatePicker from 'vue3-date-time-picker';
+import 'vue3-date-time-picker/dist/main.css';
 export default {
     components: {
-        BaseModal: BaseModal,
-        Datepicker: Datepicker
+        BaseModal,
+        DatePicker
     },
     props: {
-        id: null
+        billId: null
     },
     created() {
         if (this.$store.state.categories?.length <= 0) {
-            this.$router.push("/bills");
+            this.$router.push('/bills');
         }
-        if (this.id !== null && this.id !== -1) {
-            this.loadBill(this.id);
+        if (this.billId !== null && parseInt(this.billId) !== -1) {
+            this.loadBill(this.billId);
         }
     },
     computed: {
@@ -105,13 +118,13 @@ export default {
             selectedDueDate: null,
             isLoaded: false,
             showConfirmModal: false,
-            disabledDates: {
-                to: new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate())
-            },
             errors: []
         }
     },
     methods: {
+        logInfo() {
+            console.log(this.selectedDueDate);
+        },
         loadBill(id) {
             const billId = typeof id !== 'number' ? parseInt(id) : id;
             this.$store.dispatch('getBillById', billId).then(() => {
@@ -140,7 +153,7 @@ export default {
                     this.isLoaded = true;
                 }
             }).catch(() => {            
-                console.log(`No bill found for id '${this.id}'`);
+                console.log(`No bill found for id '${this.billId}'`);
                 this.$router.push('/bills');
             });
         },
@@ -150,7 +163,7 @@ export default {
                 this.bill.amount = this.toFixedNumber(parseFloat(this.bill.amount), 2);
                 this.bill.dateCreated = new Date().toLocaleDateString();
                 this.bill.dueDate = this.selectedDueDate.toLocaleDateString();
-                this.$store.dispatch("createBill", this.bill).then(() => {
+                this.$store.dispatch('createBill', this.bill).then(() => {
                     this.toggleShowConfirmModal();
                 });
             }
@@ -197,15 +210,15 @@ export default {
             let b = this.bill;
             //Bill Name Validation
             if (!b.name || b.name === null) {
-                this.errors.push({ message: "Name is required", field: "billName" });
+                this.errors.push({ message: 'Name is required', field: 'billName' });
             }
             //Bill Amount Validation
             if (!b.amount || b.amount === null) {
-                this.errors.push({ message: "Amount is required", field: "billAmount" });
+                this.errors.push({ message: 'Amount is required', field: 'billAmount' });
             }
             //Bill Subcategory
             if (!b.subCategoryId || b.subCategoryId === null) {
-                this.errors.push({ message: "Subcategory is required", field: "billSubcategories" });
+                this.errors.push({ message: 'Subcategory is required', field: 'billSubcategories' });
             }
             return this.errors.length <= 0;
         },

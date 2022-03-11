@@ -12,13 +12,13 @@
             <div class="level-item has-text-centered">
                 <div>
                     <p class="heading">Annual Gross Salary</p>
-                    <p class="title is-4">{{income.salary | currency}}</p>
+                    <p class="title is-4">{{ toCurrency(income.salary) }}</p>
                 </div>
             </div>
             <div v-if="!isMobileDevice()" class="level-item has-text-centered">
                 <div>
                     <p class="heading">Annual Net Salary</p>
-                    <p class="title is-4">{{income.netSalary | currency}}</p>
+                    <p class="title is-4">{{ toCurrency(income.netSalary) }}</p>
                 </div>
             </div>
             <div v-if="!isMobileDevice()" class="level-item has-text-centered">
@@ -37,7 +37,7 @@
                     <BaseIcon name="info"></BaseIcon>
                 </p>
                 <div>&nbsp;</div>
-                <router-link class="is-pulled-left button is-success" :to="{ name: 'edit-income', params: { id: income.id }}">
+                <router-link class="is-pulled-left button is-success" :to="{ name: 'edit-income', params: { incomeId: income.id }}">
                     <p>
                         <BaseIcon name="edit" width="12" height="12"></BaseIcon>
                     </p>
@@ -60,19 +60,19 @@
                             <ul>
                                 <li>
                                     <span>Annual</span>
-                                    <span class="is-pulled-right">{{income.netSalary | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(income.netSalary) }}</span>
                                 </li>
                                 <li>
                                     <span>YTD Earned</span>
-                                    <span class="is-pulled-right">{{netAmountYTD | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(netAmountYTD) }}</span>
                                 </li>
                                 <li>
                                     <span>Remaining</span>
-                                    <span class="is-pulled-right">{{netAmountLeft | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(netAmountLeft) }}</span>
                                 </li>
                                 <li>
                                     <span>Paycheck</span>
-                                    <span class="is-pulled-right">{{netAmountPerCheck | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(netAmountPerCheck) }}</span>
                                 </li>
                             </ul>
                         </article>
@@ -102,15 +102,15 @@
                                 </li>
                                 <li v-if="isHourly">
                                     <span>Hourly Rate</span>
-                                    <span class="is-pulled-right">{{income.hourlyRate | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(income.hourlyRate) }}</span>
                                 </li>
                                 <li v-if="isHourly">
                                     <span>Hours Per Week</span>
-                                    <span class="is-pulled-right">{{income.hoursPerWeek}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(income.hoursPerWeek) }}</span>
                                 </li>
                                 <li v-if="!isHourly">
                                     <span>Annual Salary</span>
-                                    <span class="is-pulled-right">{{income.salary | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(income.salary) }}</span>
                                 </li>
                             </ul>
                         </article>
@@ -126,11 +126,11 @@
                             <ul v-if="!income.isTaxExempt">
                                 <li>
                                     <span>Annual Federal Taxes</span>
-                                    <span class="is-pulled-right">{{federalTaxAmount | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(federalTaxAmount) }}</span>
                                 </li>
                                 <li>
                                     <span>Federal Taxes per paycheck</span>
-                                    <span class="is-pulled-right">{{federalTaxAmount / income.payPeriod | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(federalTaxAmount / income.payPeriod) }}</span>
                                 </li>
                                 <li>
                                     <span>Federal Tax Rate</span>
@@ -138,11 +138,11 @@
                                 </li>
                                 <li>
                                     <span>Annual State Taxes</span>
-                                    <span class="is-pulled-right">{{stateTaxAmount | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(stateTaxAmount) }}</span>
                                 </li>
                                 <li>
                                     <span>State Taxes per paycheck</span>
-                                    <span class="is-pulled-right">{{stateTaxAmount / income.payPeriod | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(stateTaxAmount / income.payPeriod) }}</span>
                                 </li>
                                 <li>
                                     <span>State Tax Rate</span>
@@ -150,11 +150,11 @@
                                 </li>
                                 <li>
                                     <span>Annual FICA Taxes</span>
-                                    <span class="is-pulled-right">{{ficaTaxAmount | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(ficaTaxAmount) }}</span>
                                 </li>
                                 <li>
                                     <span>FICA Taxes per paycheck</span>
-                                    <span class="is-pulled-right">{{ficaTaxAmount / income.payPeriod | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(ficaTaxAmount / income.payPeriod) }}</span>
                                 </li>
                                 <li>
                                     <span>FICA Tax Rate</span>
@@ -178,23 +178,23 @@
                                 </li>
                                 <li v-for="(preDeduction, index) in preTaxDeductions" :key="`prededuction-${index}`">
                                     <span>{{preDeduction.name}}</span>
-                                    <span class="is-pulled-right">{{preDeduction.amount | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(preDeduction.amount) }}</span>
                                 </li>
                                 <li v-if="postTaxDeductions.length > 0" class="is-flex is-justify-content-center">
                                     <span>Post-Tax Deductions</span>
                                 </li>
                                 <li v-for="(postDeduction, index) in postTaxDeductions" :key="`postdeduction-${index}`">
                                     <span>{{postDeduction.name}}</span>
-                                    <span class="is-pulled-right">{{postDeduction.amount | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(postDeduction.amount) }}</span>
                                 </li>
                                 <hr>
                                 <li>
                                     <span>Total per paycheck</span>
-                                    <span class="is-pulled-right">{{deductionsTotal | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(deductionsTotal) }}</span>
                                 </li>
                                 <li>
                                     <span>Annual Deduction Amount</span>
-                                    <span class="is-pulled-right">{{deductionsTotal * income.payPeriod | currency}}</span>
+                                    <span class="is-pulled-right">{{ toCurrency(deductionsTotal * income.payPeriod) }}</span>
                                 </li>
                             </ul>
                             <div v-else class="is-flex is-justify-content-center notification is-info">
@@ -206,29 +206,38 @@
             </div>
         </div>
         <BaseModal v-if="showConfirmDelete">
-            <h3 slot="header">Confirm Delete</h3>
-            <div slot="body">
-                <h4>Delete Income Source: {{selectedIncome.name}}?</h4>
-            </div>
-            <div slot="footer">
-                <button class="is-pulled-right" @click="cancelDelete">Cancel</button>
-                <button class="is-pulled-right" @click="deleteSelectedIncome">Delete</button>
-                <br/><br/>
-            </div>
+            <template #header>
+                <h3>Confirm Delete</h3>
+            </template>
+            <template #body>
+                <div>
+                    <h4>Delete Income Source: {{selectedIncome.name}}?</h4>
+                </div>
+            </template>
+            <template #footer>
+                <div>
+                    <button class="is-pulled-right" @click="cancelDelete">Cancel</button>
+                    <button class="is-pulled-right" @click="deleteSelectedIncome">Delete</button>
+                    <br/><br/>
+                </div>
+            </template>
         </BaseModal>
     </div>
 </template>
 <script>
-import BaseIcon from "./BaseIcon";
-import BaseModal from "./BaseModal";
-import { mobileCheckMixin } from "../mixins/GlobalMixin.js";
+import BaseIcon from './BaseIcon';
+import BaseModal from './BaseModal';
+import { mobileCheckMixin, toCurrencyMixin } from '../mixins/GlobalMixin.js';
 
 export default {
     components: {
         BaseIcon: BaseIcon,
         BaseModal: BaseModal
     },
-    mixins: [mobileCheckMixin],
+    mixins: [
+        mobileCheckMixin,
+        toCurrencyMixin
+    ],
     props: {
         income: Object
     },
@@ -293,10 +302,10 @@ export default {
             let result = null;
             switch (this.income.employmentType) {
                 case 'pt':
-                    result = "Part Time";
+                    result = 'Part Time';
                     break;
                 case 'c': 
-                    result = "Contractor";
+                    result = 'Contractor';
                     break;
                 default:
                     result = 'Full Time';
@@ -308,16 +317,16 @@ export default {
             let result = null;
             switch (this.income.payPeriod) {
                 case 12:
-                    result = "Monthly";
+                    result = 'Monthly';
                     break;
                 case 24: 
-                    result = "Bi-Monthly";
+                    result = 'Bi-Monthly';
                     break;
                 case 26: 
-                    result = "Bi-Weekly";
+                    result = 'Bi-Weekly';
                     break;
                 default:
-                    result = "Weekly";
+                    result = 'Weekly';
                     break;
             }
             return result;
@@ -329,13 +338,13 @@ export default {
             let result = null;
             switch (this.income.filingStatus) {
                 case 'h':
-                    result = "Head of Household";
+                    result = 'Head of Household';
                     break;
                 case 'm': 
-                    result = "Married";
+                    result = 'Married';
                     break;
                 default:
-                    result = "Single";
+                    result = 'Single';
                     break;
             }
             return result;
@@ -371,7 +380,7 @@ export default {
         },
         deleteSelectedIncome() {
             if (this.selectedIncome && this.selectedIncome !== null) {
-                this.$store.dispatch("deleteIncome", this.selectedIncome.id).then(() => {
+                this.$store.dispatch('deleteIncome', this.selectedIncome.id).then(() => {
                     this.toggleShowConfirmDelete();
                     this.selectedIncome = {};
                 });

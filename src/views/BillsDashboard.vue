@@ -4,110 +4,148 @@
         <div>
             <div v-if="this.$store.getters.activeBillCount > 0" class="bill-summary -shadow">
                 <div class="bill-summary-header">Summary</div>
-                <div class="bill-summary-item">Recurring Bills Total: {{ recurringBillsTotal | currency }}</div>
-                <div class="bill-summary-item">Bills Total: {{activeBillsTotal | currency}}</div>
-                <div class="bill-summary-item">Total Paid: {{totalPaid | currency}}</div>
-                <div class="bill-summary-item">Total Due: {{totalDue | currency}}</div>
+                <div class="bill-summary-item">Recurring Bills Total: {{ toCurrency(recurringBillsTotal) }}</div>
+                <div class="bill-summary-item">Bills Total: {{ toCurrency(activeBillsTotal) }}</div>
+                <div class="bill-summary-item">Total Paid: {{ toCurrency(totalPaid) }}</div>
+                <div class="bill-summary-item">Total Due: {{ toCurrency(totalDue) }}</div>
             </div>
             <div v-if="unpaidBills.length > 0 && totalPastDue > 0" class="overdue-bill">
                 <div class='overdue-bill-count'>Past Due Bills: {{totalPastDue}}</div>
-                <div class="overdue-bill-total">Total Past Due: {{totalPastDueTotal | currency}}</div>
+                <div class="overdue-bill-total">Total Past Due: {{totalPastDueTotal}}</div>
             </div>
             <br/>
-            <router-link class="add-bill" :to="{ name: 'create-bill' , params: { id: -1 } }"><BaseIcon name="plus-circle">Add a Bill</BaseIcon></router-link>
+            <router-link class="add-bill" :to="{ name: 'create-bill' , params: { billId: -1 } }">
+                <BaseIcon name="plus-circle">Add a Bill</BaseIcon>
+            </router-link>
             <hr/>
             <div v-if="unpaidBills.length > 0 || paidBills.length > 0">
                 <div class="buttons has-addons is-centered">
                     <button class="button is-rounded" :class="{'is-selected is-sorted' : this.sortMethod === 'dueDate', 'is-dark': this.sortMethod !== 'dueDate'}" @click="setSort('dueDate')">
                         <BaseIcon :name="(this.ascending && this.sortMethod === 'dueDate' ? 'chevron-up' : 'chevron-down')">
-                            <span slot="pre">Date Due</span>
+                            <template #pre>
+                                <span>Date Due</span>
+                            </template>
                         </BaseIcon>
                     </button>
                     <button class="button" :class="{'is-selected is-sorted' : this.sortMethod === 'name', 'is-dark': this.sortMethod !== 'name'}" @click="setSort('name')">
                         <BaseIcon :name="(this.ascending && this.sortMethod === 'name' ? 'chevron-up' : 'chevron-down')">
-                            <span slot="pre">Name</span>
+                            <template #pre>
+                                <span>Name</span>
+                            </template>
                         </BaseIcon>
                     </button>
                     <button class="button is-rounded" :class="{'is-selected is-sorted' : this.sortMethod === 'amount', 'is-dark': this.sortMethod !== 'amount'}" @click="setSort('amount')">
                         <BaseIcon :name="(this.ascending && this.sortMethod === 'amount' ? 'chevron-up' : 'chevron-down')">
-                            <span slot="pre">Amount</span>
+                            <template #pre>
+                                <span>Amount</span>
+                            </template>
                         </BaseIcon>
                     </button>
                 </div>
             </div>
             <br/>
-            <BaseIcon v-if="unpaidBills.length > 0" name="arrow-right-circle"><span slot="pre">Unpaid Bills<span class="badge -fill-gradient">{{unpaidBills.length}} / {{this.$store.getters.activeBillCount}}</span></span></BaseIcon>
+            <BaseIcon v-if="unpaidBills.length > 0" name="arrow-right-circle">
+                <span>Unpaid Bills<span class="badge -fill-gradient">{{unpaidBills.length}} / {{this.$store.getters.activeBillCount}}</span></span>
+            </BaseIcon>
             <br v-if="unpaidBills.length > 0" /><br v-if="unpaidBills.length > 0" />
             <BillCard v-for="bill in unpaidBills" :key="bill.id" :bill="bill" @delete-bill="deleteBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
-            <BaseIcon v-if="paidBills.length > 0" name="arrow-right-circle"><span slot="pre">Paid Bills</span></BaseIcon>
+            <BaseIcon v-if="paidBills.length > 0" name="arrow-right-circle">
+                <span>Paid Bills</span>
+            </BaseIcon>
             <br/><br/>
             <BillCard v-for="bill in paidBills" :key="bill.id" :bill="bill" @delete-bill="deleteBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
             <BaseModal v-if="showBillDeleteModal">
-                <h3 slot="header" style="color:#411159">Delete Bill</h3>
-                <div slot="body">
-                    Delete bill: <b style="color:#411159;">{{this.selectedBill.name}}</b>?
-                </div>
-                <div slot="footer">
-                    <button @click="deleteBillConfirm('confirm')">Confirm</button>
-                    <button @click="deleteBillConfirm('cancel')">Cancel</button>
-                </div>
+                <template #header>
+                    <h3 style="color:#411159">Delete Bill</h3>
+                </template>
+                <template #body>
+                    <div>
+                        Delete bill: <b style="color:#411159;">{{this.selectedBill.name}}</b>?
+                    </div>
+                </template>
+                <template #footer>
+                    <div>
+                        <button @click="deleteBillConfirm('confirm')">Confirm</button>
+                        <button @click="deleteBillConfirm('cancel')">Cancel</button>
+                    </div>
+                </template>
             </BaseModal>
             <BaseModal v-if="showBillAmountModal">
-                <h3 slot="header" style="color:#411159;">Enter Amount</h3>
-                <div slot="body">
-                    <h4>Bill: {{selectedBill.name}}</h4>
-                    <label for="billInputAmount">Amount</label>
-                    <div v-if="validationFailed('billInputAmount')" class="error-detail">{{getErrorMessage('billInputAmount')}}</div>
-                    <input type="number" v-model="selectedBill.amount" :class="{'error-detail-input': validationFailed('billInputAmount')}" />
-                </div>
-                <div slot="footer">
-                    <button @click="updateBillPaidConfirm('confirm')">Confirm</button>
-                    <button @click="updateBillPaidConfirm('cancel')">Cancel</button>
-                </div>
+                <template #header>
+                    <h3 style="color:#411159;">Enter Amount</h3>
+                </template>
+                <template #body>
+                    <div>
+                        <h4>Bill: {{selectedBill.name}}</h4>
+                        <label for="billInputAmount">Amount</label>
+                        <div v-if="validationFailed('billInputAmount')" class="error-detail">{{getErrorMessage('billInputAmount')}}</div>
+                        <input type="number" v-model="selectedBill.amount" :class="{'error-detail-input': validationFailed('billInputAmount')}" />
+                    </div>
+                </template>
+                <template #footer>
+                    <div>
+                        <button @click="updateBillPaidConfirm('confirm')">Confirm</button>
+                        <button @click="updateBillPaidConfirm('cancel')">Cancel</button>
+                    </div>
+                </template>
             </BaseModal>
             <BaseModal v-if="showBillDetailModal">
-                <h3 slot="header" style="color:#C15EF2;">{{selectedBill.name}}</h3>
-                <div slot="body">
-                    <br/>
-                    <div class="bill-detail"><span class="bill-detail-label">Amount</span>{{selectedBill.amount | currency}}</div>
-                    <div class="bill-detail"><span class="bill-detail-label">Created</span>{{selectedBill.dateCreated}}</div>
-                    <div class="bill-detail"><span class="bill-detail-label">Due</span>{{selectedBill.dueDate ? selectedBill.dueDate : "--"}}</div>
-                    <div class="bill-detail"><span class="bill-detail-label">Recurring</span><BaseIcon :name="selectedBill.isRecurring ? 'check' : 'x'"></BaseIcon></div>
-                    <div class="bill-detail"><span class="bill-detail-label">Fixed Amount</span><BaseIcon :name="selectedBill.isFixedAmount ? 'check' : 'x'"></BaseIcon></div>
-                    <div class="bill-detail"><span class="bill-detail-label">Category</span>{{selectedCategory}}</div>
-                    <div class="bill-detail"><span class="bill-detail-label">SubCategory</span>{{selectedSubCategory}}</div>
-                    <div class="bill-detail"><span class="bill-detail-label">Paid</span><i><strong style="color:lightgrey;">{{selectedBill.paidCount}}</strong></i> time{{selectedBill.paidCount === 1 ? '' : 's'}}</div>
-                    <div v-if="selectedBill.datePaidOff !== '' && selectedBill.datePaidOff !== null" class="bill-detail"><span class="bill-detail-label">Paid Off</span><BaseIcon name="check"></BaseIcon></div>
-                </div>
-                <div slot="footer">
-                    <button style="float:right;" @click="showBillDetailModal = false">Ok</button>
-                    <br/><br/>
-                </div>
+                <template #header>
+                    <h3 style="color:#C15EF2;">{{selectedBill.name}}</h3>
+                </template>
+                <template #body>
+                    <div>
+                        <br/>
+                        <div class="bill-detail"><span class="bill-detail-label">Amount</span>{{toCurrency(selectedBill.amount)}}</div>
+                        <div class="bill-detail"><span class="bill-detail-label">Created</span>{{selectedBill.dateCreated}}</div>
+                        <div class="bill-detail"><span class="bill-detail-label">Due</span>{{selectedBill.dueDate ? selectedBill.dueDate : "--"}}</div>
+                        <div class="bill-detail"><span class="bill-detail-label">Recurring</span><BaseIcon :name="selectedBill.isRecurring ? 'check' : 'x'"></BaseIcon></div>
+                        <div class="bill-detail"><span class="bill-detail-label">Fixed Amount</span><BaseIcon :name="selectedBill.isFixedAmount ? 'check' : 'x'"></BaseIcon></div>
+                        <div class="bill-detail"><span class="bill-detail-label">Category</span>{{selectedCategory}}</div>
+                        <div class="bill-detail"><span class="bill-detail-label">SubCategory</span>{{selectedSubCategory}}</div>
+                        <div class="bill-detail"><span class="bill-detail-label">Paid</span><i><strong style="color:lightgrey;">{{selectedBill.paidCount}}</strong></i> time{{selectedBill.paidCount === 1 ? '' : 's'}}</div>
+                        <div v-if="selectedBill.datePaidOff !== '' && selectedBill.datePaidOff !== null" class="bill-detail"><span class="bill-detail-label">Paid Off</span><BaseIcon name="check"></BaseIcon></div>
+                    </div>
+                </template>
+                <template #footer>
+                    <div>
+                        <button style="float:right;" @click="showBillDetailModal = false">Ok</button>
+                        <br/><br/>
+                    </div>
+                </template>
             </BaseModal>
             <BaseModal v-if="showBillPayOffModal">
-                <h3 slot="header">{{selectedBill.name}}</h3>
-                <div slot="body" style="color:whitesmoke;">
-                    Mark bill: <strong style="color:whitesmoke;">{{selectedBill.name}}</strong> as paid off?
-                </div>
-                <div slot="footer">
-                    <button @click="updateBillPayOffConfirm('confirm')">Confirm</button>
-                    <button @click="updateBillPayOffConfirm('cancel')">Cancel</button>
-                </div>
+                <template #header>
+                    <h3>{{selectedBill.name}}</h3>
+                </template>
+                <template #body>
+                    <div style="color:whitesmoke;">
+                        Mark bill: <strong style="color:whitesmoke;">{{selectedBill.name}}</strong> as paid off?
+                    </div>
+                </template>
+                <template #footer>
+                    <div>
+                        <button @click="updateBillPayOffConfirm('confirm')">Confirm</button>
+                        <button @click="updateBillPayOffConfirm('cancel')">Cancel</button>
+                    </div>
+                </template>
             </BaseModal>
         </div>
     </div>
 </template>
 
 <script>
-import BillCard from "../components/BillCard";
-import BaseModal from "../components/BaseModal";
-import BaseIcon from "../components/BaseIcon";
+import BillCard from '../components/BillCard';
+import BaseModal from '../components/BaseModal';
+import BaseIcon from '../components/BaseIcon';
+import { toCurrencyMixin } from '../mixins/GlobalMixin';
 export default {
     components: {
         BillCard: BillCard,
         BaseModal: BaseModal,
         BaseIcon: BaseIcon
     },
+    mixins: [toCurrencyMixin],
     data() {
         return {
             selectedBill: Object,
@@ -118,9 +156,9 @@ export default {
             ascending: true,
             sortMethod: 'dueDate',
             sortType: {
-                NAME: "name",
-                DUEDATE: "dueDate",
-                AMOUNT: "amount"
+                NAME: 'name',
+                DUEDATE: 'dueDate',
+                AMOUNT: 'amount'
             },
             errors: []
         }
@@ -289,7 +327,7 @@ export default {
             this.$store.dispatch('updateBill', bill);
         },
         deleteBillConfirm(choice) {
-            if (choice === "confirm") {
+            if (choice === 'confirm') {
                 this.$store.dispatch('deleteBill', this.selectedBill.id);
             }
             this.showBillDeleteModal = !this.showBillDeleteModal;
@@ -298,9 +336,9 @@ export default {
             this.errors = [];
             //Bill Amount Validation
             if (!this.selectedBill.amount || this.selectedBill.amount === null) {
-                this.errors.push({ message: "Amount is required", field: "billInputAmount" });
+                this.errors.push({ message: 'Amount is required', field: 'billInputAmount' });
             } else if (isNaN(this.selectedBill.amount)) {
-                this.errors.push({ message: "Amount must be a number", field: "billInputAmount" });
+                this.errors.push({ message: 'Amount must be a number', field: 'billInputAmount' });
             }
             return this.errors.length === 0;
         },
@@ -323,7 +361,6 @@ export default {
         showBillDetails(bill) {
             this.selectedBill = bill;
             this.showBillDetailModal = true;
-            console.log("Bill Details shown for: ", this.selectedBill.name);
         }
     }
 }

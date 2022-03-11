@@ -13,7 +13,7 @@
                             <BaseIcon name="help-circle">Details</BaseIcon>
                         </div>
                         <div v-if="bill.datePaidOff === '' || bill.datePaidOff === null" class="dropdown-item">
-                            <router-link :to="{ name: 'edit-bill', params: { id: bill.id } }"><BaseIcon name="edit">Edit</BaseIcon></router-link>
+                            <router-link :to="{ name: 'edit-bill', params: { billId: bill.id } }"><BaseIcon name="edit">Edit</BaseIcon></router-link>
                         </div>
                         <div v-if="bill.datePaidOff === '' || bill.datePaidOff === null" class="dropdown-item">
                             <span @click="deleteBill(bill)"><BaseIcon name="x-circle">Delete</BaseIcon></span>
@@ -30,12 +30,18 @@
             <div class="paid-status" v-if="bill.paid"><BaseIcon name="check">{{new Date(bill.datePaid).toLocaleDateString('en-US', {timeZone: 'UTC'})}} &nbsp;</BaseIcon></div>
             <hr/>
             <div v-if="bill.dueDate" :class="{'bill-past-due' : isPastDue, 'bill-still-due' : !isPastDue}">Due: {{bill.dueDate}}</div>
-            <div :class="{'bill-amount': !bill.paid, 'bill-amount-paid': bill.paid}">Amount {{bill.paid ? 'Paid' : 'Due'}}: {{bill.amount | currency}}</div><br/>
+            <div :class="{'bill-amount': !bill.paid, 'bill-amount-paid': bill.paid}">Amount {{bill.paid ? 'Paid' : 'Due'}}: {{ toCurrency(bill.amount) }}</div><br/>
         </div>
     </div>
 </template>
 <script>
-export default {
+import BaseIcon from './BaseIcon.vue';
+import { toCurrencyMixin } from '../mixins/GlobalMixin';
+export default {    
+    components: {
+        BaseIcon,
+    },
+    mixins: [toCurrencyMixin],
     props: {
         bill: Object
     },
@@ -58,7 +64,7 @@ export default {
             } else {
                 return false;
             }
-        }
+        },
     },
     methods: {
         paidBill(bill) {

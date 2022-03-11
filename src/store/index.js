@@ -1,14 +1,11 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+import { createStore } from 'vuex';
 import ExpenseCategories from '../api/ExpenseCategories';
 import createPersistedState from 'vuex-persistedstate';
 import States from '../api/States';
 import TaxData from '../api/TaxData';
 import Version from '../api/Version';
 
-Vue.use(Vuex)
-
-export default new Vuex.Store({
+const store = createStore({
   state: {
     bills: [], //array of json objects
     income: [],
@@ -60,10 +57,10 @@ export default new Vuex.Store({
         if (found) {
           return found.Name;
         } else {
-          return "Unknown";
+          return 'Unknown';
         }
       } else {
-        return "Unknown";
+        return 'Unknown';
       }
     },
     getCategoryNameById: (state) => (categoryId) => {
@@ -74,13 +71,13 @@ export default new Vuex.Store({
           if (foundCategory) {
             return foundCategory.Name;
           } else {
-            return "Unknown";
+            return 'Unknown';
           }
         } else {
-          return "Unknown";
+          return 'Unknown';
         }
       } else {
-        return "Unknown";
+        return 'Unknown';
       }
     },
     getFederalTaxes: (state) => {
@@ -316,3 +313,5 @@ export default new Vuex.Store({
     }
   }
 })
+
+export default store;

@@ -41,13 +41,22 @@ const _versions = [
     {
         id: 4,
         versionNum: '0.2.3',
-        latest: true,
+        latest: false,
         changes: [
             { change: 'Refactored how income and bills are created and updated', type: 'Feature' },
             { change: 'Added Login teaser', type: 'Feature' },
             { change: 'Changed default sort from "Name", to "Due Date"', type: 'Feature' },
             { change: 'Fixed issue with Displayed incomes not grabbing correct tax rate', type: 'Bug' },
             { change: 'Fixed issue with Bill Pay Off showing up for non-recurring bills', type: 'Bug' }
+        ]
+    },
+    {
+        id: 5,
+        versionNum: '0.2.4',
+        latest: true,
+        changes: [
+            { change: 'Upgraded to use the latest Vue Framework', type: 'Feature' },
+            { change: 'Added firebase to package for authentication', type: 'Feature' }
         ]
     }
 ];

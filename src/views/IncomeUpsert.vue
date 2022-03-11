@@ -139,7 +139,7 @@
                                         </div>
                                         <div class="level-item has-text-centered">
                                             <div>
-                                                <span class="title is-4">{{deduction.amount | currency}}</span>
+                                                <span class="title is-4">{{ toCurrency(deduction.amount) }}</span>
                                             </div>
                                         </div>
                                         <div class="level-item">
@@ -163,7 +163,7 @@
                                         </div>
                                         <div class="level-item has-text-centered">
                                             <div>
-                                                <span class="title is-4">{{deduction.amount | currency}}</span>
+                                                <span class="title is-4">{{ toCurrency(deduction.amount) }}</span>
                                             </div>
                                         </div>
                                         <div class="level-item">
@@ -180,64 +180,78 @@
             </div>
         </div>
         <BaseModal v-if="showIncomePreviewModal">
-            <h3 slot="header">{{income.name}}</h3>
-            <div slot="body">
-                <br/>
-                <label>Gross Income</label><br/>
-                <span>{{income.salary | currency}}</span><br/>
-                <label>Gross Paycheck Amount</label><br/>
-                <span>{{amountGrossPerCheck | currency}}</span><br/>
-                <label>Net Income</label><br/>
-                <span>{{netIncome | currency}}</span><br/>
-                <label>Net Paycheck Amount</label><br/>
-                <span>{{amountPerPaycheck | currency}}</span><br/>
-                <label>Pre-Tax Deductions</label><br/>
-                <span>{{preTaxDeductionTotal | currency}}</span><br/>
-                <label>Post-Tax Deductions</label><br/>
-                <span>{{postTaxDeductionTotal | currency}}</span><br/>
-                <label>Paydays Per Year</label><br/>
-                <span>{{income.payPeriod}}</span>
-            </div>
-            <div slot="footer">
-                <button class="is-pulled-right" @click="toggleShowConfirmModal">Cancel</button>
-                <button class="is-pulled-right" @click="saveIncome()">Save</button>
-                <br/><br/>
-            </div>
+            <template #header>
+                <h3>{{income.name}}</h3>
+            </template>
+            <template #body>
+                <div>
+                    <br/>
+                    <label>Gross Income</label><br/>
+                    <span>{{ toCurrency(income.salary) }}</span><br/>
+                    <label>Gross Paycheck Amount</label><br/>
+                    <span>{{ toCurrency(amountGrossPerCheck) }}</span><br/>
+                    <label>Net Income</label><br/>
+                    <span>{{ toCurrency(netIncome) }}</span><br/>
+                    <label>Net Paycheck Amount</label><br/>
+                    <span>{{ toCurrency(amountPerPaycheck) }}</span><br/>
+                    <label>Pre-Tax Deductions</label><br/>
+                    <span>{{ toCurrency(preTaxDeductionTotal) }}</span><br/>
+                    <label>Post-Tax Deductions</label><br/>
+                    <span>{{ toCurrency(postTaxDeductionTotal) }}</span><br/>
+                    <label>Paydays Per Year</label><br/>
+                    <span>{{income.payPeriod}}</span>
+                </div>
+            </template>
+            <template #footer>
+                <div>
+                    <button class="is-pulled-right" @click="toggleShowConfirmModal">Cancel</button>
+                    <button class="is-pulled-right" @click="saveIncome()">Save</button>
+                    <br/><br/>
+                </div>
+            </template>
         </BaseModal>
         <BaseModal v-if="showIncomeUpdateModal">
-            <h3 slot="header">Confirm Update</h3>
-            <div slot="body">
-                <span>Update <strong><i>{{income.name}}</i></strong>?</span>
-            </div>
-            <div slot="footer">
-                <button class="is-pulled-right" @click="toggleShowConfirmModal">Cancel</button>
-                <button class="is-pulled-right" @click="updateIncome()">Update</button>
-                <br/><br/>
-            </div>
+            <template #header>
+                <h3>Confirm Update</h3>
+            </template>
+            <template #body>
+                <div>
+                    <span>Update <strong><i>{{income.name}}</i></strong>?</span>
+                </div>
+            </template>
+            <template #footer>
+                <div>
+                    <button class="is-pulled-right" @click="toggleShowConfirmModal">Cancel</button>
+                    <button class="is-pulled-right" @click="updateIncome()">Update</button>
+                    <br/><br/>
+                </div>
+            </template>
         </BaseModal>
         <button @click="calculateNetIncome()">{{ upsertButtonLabel }}</button>
         <button @click="cancelIncome">Cancel</button>   
     </div>
 </template>
 <script>
-import BaseModal from "../components/BaseModal";
-import BaseIcon from "../components/BaseIcon";
+import BaseModal from '../components/BaseModal';
+import BaseIcon from '../components/BaseIcon';
+import { toCurrencyMixin } from '../mixins/GlobalMixin';
 
 export default {
     components: {
         BaseModal: BaseModal,
         BaseIcon: BaseIcon
     },
+    mixins: [toCurrencyMixin],
     props: {
-        id: null
+        incomeId: null,
     },
     created() {
         this.federalTaxes = this.$store.getters.getFederalTaxes;
         this.stateTaxes = this.$store.getters.getStateTaxes;
         this.ficaRate = this.$store.getters.getFICA;
         this.states = this.$store.getters.getStates;
-        if (this.id !== null && this.id !== -1) {
-            this.loadIncome(this.id);
+        if (this.incomeId !== null && parseInt(this.incomeId) !== -1) {
+            this.loadIncome(this.incomeId);
         }
     },
     computed: {

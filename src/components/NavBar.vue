@@ -5,13 +5,21 @@
             <router-link class="nav-link" :to="{ name: 'bills' }">Bills</router-link>
             <router-link class="nav-link" :to="{ name: 'income' }">Income</router-link>
         </nav>
-        <div v-if="!triedLoggingIn" class="is-pulled-right profile" @click="toggleLoginTeaser()"><base-icon name="user">Login</base-icon></div>
-        <div v-else class="is-pulled-right profile" @click="toggleLoginTeaser()"><base-icon name="user-x">COMING SOON</base-icon></div>
+        <div v-if="!triedLoggingIn" class="is-pulled-right profile" @click="toggleLoginTeaser()">
+            <BaseIcon name="user">Login</BaseIcon>
+        </div>
+        <div v-else class="is-pulled-right profile" @click="toggleLoginTeaser()">
+            <BaseIcon name="user-x">COMING SOON</BaseIcon>
+        </div>
     </div>
 </template>
 
 <script>
+import BaseIcon from './BaseIcon.vue';
 export default {
+    components: {
+        BaseIcon,
+    },
     data() {
         return {
             triedLoggingIn: false,
