@@ -3,21 +3,21 @@
         <div v-if='summaries === undefined'>
             <div v-if='summaryLink === null' class='base-summary-header'>{{summaryName}}</div>
             <div v-else class='base-summary-header'>{{summaryName}} &nbsp;<router-link :to="{ name: summaryLink }"><BaseIcon :name='"arrow-right-circle"'></BaseIcon></router-link></div>
-            <div :class='{"base-summary-body": amount > 0, "base-summary-body-neg": amount <= 0}'>{{amount | currency}}</div>
+            <div :class='{"base-summary-body": amount > 0, "base-summary-body-neg": amount <= 0}'>{{ amount }}</div>
         </div>
         <div v-else>
             <div class='base-summary-header'>{{summaries.name}}</div>
             <ul v-for="summary in summaries.items" :key="summary.name">
                 <li class='base-summary-body-list'>
                     <span class='base-summary-body-list-label'>{{summary.name}}:</span>&nbsp; 
-                    <span :class='{"base-summary-body-list-amount": summary.amount > 0, "base-summary-body-list-amount-neg": summary.amount <= 0}'>{{summary.amount | currency}}</span>
+                    <span :class='{"base-summary-body-list-amount": summary.amount > 0, "base-summary-body-list-amount-neg": summary.amount <= 0}'>{{ summary.amount }}</span>
                 </li>
             </ul>
         </div>
     </div>
 </template>
 <script>
-import BaseIcon from '../components/BaseIcon'; 
+import BaseIcon from '../components/BaseIcon';
 export default {
     components: {
         BaseIcon: BaseIcon
@@ -25,7 +25,7 @@ export default {
     props: {
         summaryName: {
             type: [String],
-            default: "Default Name"
+            default: 'Default Name'
         },
         amount:{
             type: [Number, String],
@@ -36,7 +36,7 @@ export default {
             default: null
         },
         summaries: Object
-    }
+    },
 }
 </script>
 <style scoped>
