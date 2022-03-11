@@ -20,7 +20,7 @@
             </div>
             <div class="level-right">
                 <div class="level-item">
-                    <router-link class="add-income subtitle is-5" :to="{ name: 'create-income', params: { id: -1 }}"><BaseIcon name="plus-circle">Add an Income</BaseIcon></router-link>
+                    <router-link class="add-income subtitle is-5" :to="{ name: 'create-income', params: { incomeId: -1 }}"><BaseIcon name="plus-circle">Add an Income</BaseIcon></router-link>
                 </div>
             </div>
         </div>
@@ -45,9 +45,9 @@
     </div>
 </template>
 <script>
-import BaseIcon from "../components/BaseIcon";
-import IncomeCard from "../components/IncomeCard";
-import { mobileCheckMixin } from "../mixins/GlobalMixin.js";
+import BaseIcon from '../components/BaseIcon';
+import IncomeCard from '../components/IncomeCard';
+import { mobileCheckMixin } from '../mixins/GlobalMixin.js';
 
 export default {
     components: {

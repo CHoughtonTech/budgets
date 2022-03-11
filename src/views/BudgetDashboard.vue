@@ -13,9 +13,9 @@
                 </div>
             </div>
             <div class='base-summaries'>
-                <BaseSummary :summaryName='"Net Income"' :amount='incomeTotal' :summaryLink='"income"'></BaseSummary>
-                <BaseSummary :summaryName='"Bills"' :amount='expensesTotal' :summaryLink='"bills"'></BaseSummary>
-                <BaseSummary :summaryName='"Remaining"' :amount='remainingTotal'></BaseSummary>
+                <BaseSummary :summaryName='"Net Income"' :amount='toCurrency(incomeTotal)' :summaryLink='"income"'></BaseSummary>
+                <BaseSummary :summaryName='"Bills"' :amount='toCurrency(expensesTotal)' :summaryLink='"bills"'></BaseSummary>
+                <BaseSummary :summaryName='"Remaining"' :amount='toCurrency(remainingTotal)'></BaseSummary>
             </div>
         </div>
         <br/>
@@ -24,10 +24,12 @@
 
 <script>
 import BaseSummary from '../components/BaseSummary';
+import { toCurrencyMixin } from '../mixins/GlobalMixin';
 export default {
     components: {
         BaseSummary: BaseSummary
     },
+    mixins: [toCurrencyMixin],
     computed: {
         expensesTotal() {
             const bills = this.$store.getters.activeBills.filter(b => b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === ''));
@@ -36,8 +38,7 @@ export default {
             bills.forEach(bill => {
                 total += parseFloat(bill.amount);
             });
-            const result = total * summaryMult;
-            return result;
+            return total * summaryMult;
         },
         incomeTotal() {
             const income = this.$store.getters.getIncomes.filter(i => i.isActive === true);
@@ -71,15 +72,15 @@ export default {
         selectedSummaryLabel() {
             switch (parseInt(this.selectedSummary)) {
                 case 1:
-                    return "Monthly";         
+                    return 'Monthly';         
                 case 3:
-                    return "Quarterly";
+                    return 'Quarterly';
                 case 6:
-                    return "Semi-Annual";
+                    return 'Semi-Annual';
                 case 12: 
-                    return "Annual";   
+                    return 'Annual';   
                 default:
-                    return "Monthly";
+                    return 'Monthly';
             }
         }
     },

@@ -5,25 +5,29 @@
     <hr/>
     <div class="copyright">&copy; {{currentYear}} OxSoft Solutions</div>
     <BaseModal v-if="showChangeLog" @close="confirmVersion()">
-      <h2 slot="header" class="notification is-warning">Change Log</h2>
-      <div slot="body" style="color:whitesmoke;">
-        <h1 class="notification is-success" v-if="hasVersionFeatures">Features</h1>
-        <ol v-if="hasVersionFeatures">
-          <li v-for="(c, index) in versionFeatures" :key="`feature-${index}`">{{c.change}}</li>
-        </ol>
-        <br>
-        <h1 class='notification is-danger' v-if="hasVersionBugs">Bugs Fixed</h1>
-        <ol v-if="hasVersionBugs">
-          <li v-for="(c, index) in versionBugs" :key="`bug-${index}`">{{c.change}}</li>
-        </ol>
-      </div>
+      <template #header>
+        <h2 class="notification is-warning">Change Log</h2>
+      </template>
+      <template #body>
+        <div style="color:whitesmoke;">
+          <h1 class="notification is-success" v-if="hasVersionFeatures">Features</h1>
+          <ol v-if="hasVersionFeatures">
+            <li v-for="(c, index) in versionFeatures" :key="`feature-${index}`">{{c.change}}</li>
+          </ol>
+          <br>
+          <h1 class='notification is-danger' v-if="hasVersionBugs">Bugs Fixed</h1>
+          <ol v-if="hasVersionBugs">
+            <li v-for="(c, index) in versionBugs" :key="`bug-${index}`">{{c.change}}</li>
+          </ol>
+        </div>
+      </template>
     </BaseModal>
   </div>
 </template>
 
 <script>
-import NavBar from "./components/NavBar";
-import BaseModal from "./components/BaseModal.vue";
+import NavBar from './components/NavBar';
+import BaseModal from './components/BaseModal';
 
 export default {
   components: {
@@ -32,13 +36,13 @@ export default {
   },
   created() {
     let self = this;
-    self.$store.dispatch("getCategories");
-    self.$store.dispatch("getSubcategories");
-    self.$store.dispatch("getStateData");
-    self.$store.dispatch("getFederalTaxes");
-    self.$store.dispatch("getStateTaxes");
-    self.$store.dispatch("getFICARate");
-    self.$store.dispatch("getVersionData").catch(e => {
+    self.$store.dispatch('getCategories');
+    self.$store.dispatch('getSubcategories');
+    self.$store.dispatch('getStateData');
+    self.$store.dispatch('getFederalTaxes');
+    self.$store.dispatch('getStateTaxes');
+    self.$store.dispatch('getFICARate');
+    self.$store.dispatch('getVersionData').catch(e => {
       console.log(e);
     });
     if (self.$store.state.activeMonth?.name !== self.currentMonth.name || self.$store.state.activeMonth?.id !== self.currentMonth.id) {
@@ -60,13 +64,13 @@ export default {
               b.paid = false;
               b.datePaid = null;
             }
-            promiseArr.push(this.$store.dispatch("updateBill", b));
+            promiseArr.push(this.$store.dispatch('updateBill', b));
           });
           Promise.all(promiseArr).then(() => {
-            self.$store.dispatch("updateActiveMonth", this.currentMonth);
+            self.$store.dispatch('updateActiveMonth', this.currentMonth);
           });
         } else {
-          self.$store.dispatch("updateActiveMonth", this.currentMonth);
+          self.$store.dispatch('updateActiveMonth', this.currentMonth);
         }
       }
   },

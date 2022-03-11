@@ -1,13 +1,9 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
 import BudgetDashboard from '../views/BudgetDashboard';
 import BillsDashboard from '../views/BillsDashboard';
-import Bills from '../views/Bills';
+import BillsUpsert from '../views/BillsUpsert';
 import IncomeDashboard from '../views/IncomeDashboard';
-import Income from '../views/Income';
-
-
-Vue.use(VueRouter)
+import IncomeUpsert from '../views/IncomeUpsert';
 
 const routes = [
   {
@@ -23,13 +19,13 @@ const routes = [
   {
     path: '/bills/create',
     name: 'create-bill',
-    component: Bills,
+    component: BillsUpsert,
     props: true
   },
   {
-    path: '/bills/:id',
+    path: '/bills/:billId',
     name: 'edit-bill',
-    component: Bills,
+    component: BillsUpsert,
     props: true
   },
   {
@@ -40,20 +36,23 @@ const routes = [
   {
     path: '/income/create',
     name: 'create-income',
-    component: Income,
-    props: true
+    component: IncomeUpsert,
+    props: true,
   },
   {
-    path: '/income/:id',
+    path: '/income/:incomeId',
     name: 'edit-income',
-    component: Income,
-    props: true
+    component: IncomeUpsert,
+    props: true,
   }
 ]
 
-const router = new VueRouter({
-  mode: "history",
-  routes
-})
+const router = new createRouter({
+  history: createWebHistory(),
+  routes: routes
+});
 
-export default router
+export default function registerRouter(app) {
+  app.use(router);
+  return router;
+}
