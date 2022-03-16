@@ -56,11 +56,11 @@
             <BillCard v-for="bill in paidBills" :key="bill.id" :bill="bill" @delete-bill="deleteBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
             <BaseModal v-if="showBillDeleteModal">
                 <template #header>
-                    <h3 style="color:#411159">Delete Bill</h3>
+                    <h3 style="color:#C15EF2">Delete Bill</h3>
                 </template>
                 <template #body>
-                    <div>
-                        Delete bill: <b style="color:#411159;">{{this.selectedBill.name}}</b>?
+                    <div style="color:whitesmoke;">
+                        Delete bill: <b style="color:#C15EF2;">{{this.selectedBill.name}}</b>?
                     </div>
                 </template>
                 <template #footer>

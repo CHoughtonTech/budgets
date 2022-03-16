@@ -1,6 +1,6 @@
 <template>
     <div class='dashboard-view'>
-        <h1 style="color:lightgrey;">Your Budget</h1>
+        <h1 style="color:lightgrey;">{{ userName }} Budget</h1>
         <div class='summary-group'>
             <div class='summary-group-header'>
                 <div class="select is-rounded is-medium">
@@ -39,6 +39,10 @@ export default {
                 total += parseFloat(bill.amount);
             });
             return total * summaryMult;
+        },
+        userName() {
+            const loggedInUsername = this.$store.getters.getUserName;
+            return loggedInUsername ? `${loggedInUsername}'s` : 'Your';
         },
         incomeTotal() {
             const income = this.$store.getters.getIncomes.filter(i => i.isActive === true);

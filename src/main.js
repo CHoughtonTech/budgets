@@ -26,15 +26,14 @@ requireComponent.keys().forEach(fileName => {
 
 const firebaseConfig = {
   apiKey: process.env.VUE_APP_FIREBASE_API_KEY,
-  authDomain: 'oxsoftsolutions.firebaseapp.com',
+  authDomain: process.env.VUE_APP_AUTH_DOMAIN,
   projectId: process.env.VUE_APP_PROJECT_ID,
-  storageBucket: 'oxsoftsolutions.appspot.com',
+  storageBucket: process.env.VUE_APP_STORAGE_BUCKET,
+  databaseURL: process.env.VUE_APP_DATABASE_URL,
   messagingSenderId: process.env.VUE_APP_MESSAGING_SENDER_ID,
   appId: process.env.VUE_APP_FIREBASE_APP_ID,
   measurementId: process.env.VUE_APP_MEASUREMENT_ID,
 };
-
-console.log(firebaseConfig);
 
 initializeApp(firebaseConfig);
 

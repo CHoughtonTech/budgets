@@ -3,11 +3,14 @@ import ExpenseCategories from '../api/ExpenseCategories';
 import createPersistedState from 'vuex-persistedstate';
 import States from '../api/States';
 import TaxData from '../api/TaxData';
-import Version from '../api/Version';
+import { getDatabase } from 'firebase/database';
+import BudgetService from '@/services/BudgetService';
+
+const DEFAULT_USER_ID = 'oxsoftsolutions-budgets-notLoggedIn';
 
 const store = createStore({
   state: {
-    bills: [], //array of json objects
+    bills: [],
     income: [],
     activeMonth: null,
     categories: [],
@@ -18,11 +21,13 @@ const store = createStore({
     federalTaxBrackets: [],
     stateTaxBrackets: [],
     ficaRate: [],
-    confirmedVersion: null,
-    currentVersion: null
+    user: null,
   },
   plugins: [createPersistedState()],
   getters: {
+    getBills(state) {
+      return state.bills;
+    },
     hasBills(state) {
       return state.bills && state.bills.length > 0;
     },
@@ -95,21 +100,31 @@ const store = createStore({
     getIncomes: (state) =>{
       return state.income;
     },
-    getVersionIsConfirmed: (state) => {
-      if (state.currentVersion && state.currentVersion !== null && state.confirmedVersion && state.confirmedVersion !== null) {
-        return state.currentVersion.versionNum === state.confirmedVersion.versionNum;
-      } else {
-        return false;
-      }
+    getUserName: (state) => {
+      if (!state.user) return null;
+      return state.user.displayName;
     },
-    getVersionChanges: (state) => {
-      return state.currentVersion.changes;
+    getEmail: (state) => {
+      if (!state.user) return null;
+      return state.user.email;
+    },
+    getUserPhoto: (state) => {
+      if (!state.user) return null;
+      return state.user.photoURL;
+    },
+    getUserId: (state) => {
+      if (!state.user) return DEFAULT_USER_ID;
+      return state.user.uid;
     }
   },
   mutations: {
+    setBills(state, bills) {
+      state.bills = bills;
+    },
     updateBill(state, bill) {
       state.bills.forEach(b => {
         if (b.id === bill.id) {
+          b.userId = bill.userId,
           b.name =  bill.name,
           b.paid =  bill.paid,
           b.amount =  parseFloat(bill.amount),
@@ -130,12 +145,16 @@ const store = createStore({
     createBill(state, bill) {
       state.bills.push(bill);
     },
+    setIncomes(state, income) {
+      state.income = income;
+    },
     createIncome(state, income) {
       state.income.push(income);
     },
     updateIncome(state, income) {
       state.income.forEach(i => {
         if (i.id === income.id) {
+          i.userId = income.userId,
           i.name = income.name,
           i.type = income.type,
           i.salary = income.salary,
@@ -185,16 +204,31 @@ const store = createStore({
     setStates(state, stateList) {
       state.states = stateList;
     },
-    setConfirmedVersion(state) {
-      state.confirmedVersion = state.currentVersion;
+    setUser(state, user) {
+      state.user = user;
     },
-    setLatestVersionData(state, versionData) {
-      state.currentVersion = versionData;
+    clearUser(state) {
+      state.user = null;
+    },
+    clearStore(state) {
+      state.bills = [];
+      state.income = [];
     }
   },
   actions: {
-    confirmNewVersion({commit}) {
-      commit('setConfirmedVersion');
+    // eslint-disable-next-line no-unused-vars
+    userConfirmedTOS({commit}, hasUserConfirmed) {
+      if (this.getters.getUserId !== DEFAULT_USER_ID)
+        BudgetService.userConfirmedTOS(getDatabase(), this.state.user.uid, hasUserConfirmed);
+    },
+    setUser({commit}, user) {
+      commit('setUser', user);
+    },
+    clearUser({commit}) {
+      commit('clearUser');
+    },
+    clearStore({commit}) {
+      commit('clearStore');
     },
     getBillById({commit}, id) {
       return new Promise((resolve, reject) => {
@@ -207,17 +241,31 @@ const store = createStore({
         }
       });
     },
+    getUserBills({commit}) {
+      BudgetService.getBills(getDatabase(), this.state.user.uid)
+        .then((bills) => {
+          if (bills && bills.length > 0) {
+            commit('setBills', bills);
+          }
+        });
+    },
     updateBill({commit}, bill) {
       commit('updateBill', bill);
+      if (this.getters.getUserId !== DEFAULT_USER_ID)
+        BudgetService.upsertBill(getDatabase(), this.state.user.uid, bill);
     },
     deleteBill({commit, state}, billId) {
       const billIndex = state.bills.findIndex(b => b.id === billId);
       if (billIndex > -1) {
         commit('removeBill', billIndex);
+        if (this.getters.getUserId !== DEFAULT_USER_ID)
+          BudgetService.deleteBill(getDatabase(), this.state.user.uid, billId);
       }
     },
     createBill({commit}, bill) {
       commit('createBill', bill);
+      if (this.getters.getUserId !== DEFAULT_USER_ID)
+        BudgetService.upsertBill(getDatabase(), this.state.user.uid, bill);
     },
     getIncomeById({commit}, id) {
       return new Promise((resolve, reject) => {
@@ -230,20 +278,28 @@ const store = createStore({
         }
       });
     },
+    getUserIncomes({commit}) {
+      BudgetService.getIncomes(getDatabase(), this.state.user.uid)
+        .then((data) => {
+          if (data && data.length > 0){
+            commit('setIncomes', data);
+          }
+        });
+    },
     createIncome({commit}, income) {
       commit('createIncome', income);
+      BudgetService.upsertIncome(getDatabase(), this.state.user.uid, income);
     },
     updateIncome({commit}, income) {
       commit('updateIncome', income);
+      BudgetService.upsertIncome(getDatabase(), this.state.user.uid, income);
     },
     deleteIncome({commit, state}, incomeId) {
       const index = state.income.findIndex(i => i.id === incomeId);
       if (index > -1) {
+        BudgetService.deleteIncome(getDatabase(), this.state.user.uid, incomeId);
         commit('removeIncome', index);
       }
-    },
-    getActiveMonth() {
-      console.log(this.state.activeMonth);
     },
     updateActiveMonth({commit}, activeMonth) {
       commit('updateActiveMonth', activeMonth);
@@ -293,21 +349,6 @@ const store = createStore({
         TaxData.getFICATaxRate(fica => {
           commit('setFICARate', fica);
           resolve();
-        });
-      });
-    },
-    getVersionData({commit}) {
-      return new Promise((resolve, reject) => {
-        let versionInfo = [];
-        Version.getVersions(v => { 
-          let filteredVersion = v.filter(vers => vers.latest === true);
-          if(filteredVersion && filteredVersion.length > 0 && filteredVersion.length <= 1) {
-            versionInfo = v.filter(vers => vers.latest === true)[0];
-            commit('setLatestVersionData', versionInfo);
-            resolve();
-          } else {
-            reject('No version data is available');
-          }
         });
       });
     }
