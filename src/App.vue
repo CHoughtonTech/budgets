@@ -4,35 +4,24 @@
     <router-view id="main-view"/>
     <hr/>
     <div class="copyright">&copy; {{currentYear}} OxSoft Solutions</div>
-    <BaseModal v-if="showChangeLog" @close="confirmVersion()">
-      <template #header>
-        <h2 class="notification is-warning">Change Log</h2>
-      </template>
-      <template #body>
-        <div style="color:whitesmoke;">
-          <h1 class="notification is-success" v-if="hasVersionFeatures">Features</h1>
-          <ol v-if="hasVersionFeatures">
-            <li v-for="(c, index) in versionFeatures" :key="`feature-${index}`">{{c.change}}</li>
-          </ol>
-          <br>
-          <h1 class='notification is-danger' v-if="hasVersionBugs">Bugs Fixed</h1>
-          <ol v-if="hasVersionBugs">
-            <li v-for="(c, index) in versionBugs" :key="`bug-${index}`">{{c.change}}</li>
-          </ol>
-        </div>
-      </template>
-    </BaseModal>
+    <div class="is-flex is-justify-content-center term-of-use">
+      <a :href="privacyPolicyLink">Privacy Policy</a> &nbsp;|&nbsp; 
+      <a :href="termsOfUseLink">Term of Use</a> &nbsp;|&nbsp; 
+      <a :href="contactUsLink">Contact Us</a>
+    </div>
+    <div class="is-flex is-justify-content-center attribution-credit">
+      <a href="https://www.vecteezy.com/free-vector/ox">Ox Vectors by Vecteezy</a> &nbsp;|&nbsp;
+      <a target="_blank" href="https://icons8.com/icon/112554/bull">Bull</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+    </div>
   </div>
 </template>
 
 <script>
 import NavBar from './components/NavBar';
-import BaseModal from './components/BaseModal';
-
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 export default {
   components: {
-    NavBar,
-    BaseModal
+    NavBar
   },
   created() {
     let self = this;
@@ -42,13 +31,10 @@ export default {
     self.$store.dispatch('getFederalTaxes');
     self.$store.dispatch('getStateTaxes');
     self.$store.dispatch('getFICARate');
-    self.$store.dispatch('getVersionData').catch(e => {
-      console.log(e);
-    });
     if (self.$store.state.activeMonth?.name !== self.currentMonth.name || self.$store.state.activeMonth?.id !== self.currentMonth.id) {
         let promiseArr = [];
         if (self.$store.getters.hasBills) {
-          self.$store.state.bills.forEach(b => {
+          self.$store.getters.getBills.forEach(b => {
             if (b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === '')) {
               if (b.dueDate && b.dueDate !== null) {
                 let currentDueDate = new Date(b.dueDate);
@@ -73,28 +59,34 @@ export default {
           self.$store.dispatch('updateActiveMonth', this.currentMonth);
         }
       }
+      onAuthStateChanged(getAuth(), (user) => {
+        if (user) {
+          const storeUser = this.$store.state.user;
+          if (!storeUser || storeUser === null) {
+            this.$store.dispatch('setUser', user);
+            this.$store.dispatch('getUserIncomes');
+            this.$store.dispatch('getUserBills');
+          }
+        } else {
+          this.$store.dispatch('clearUser');
+        }
+      });
   },
   computed: {
     currentYear() {
       return  new Date().getFullYear();
     },
-    versionChanges() {
-      return this.$store.getters.getVersionChanges;
+    privacyPolicyLink() {
+      let routeData = this.$router.resolve({ name: 'privacy-policy' });
+      return routeData.href;
     },
-    versionBugs() {
-      return this.versionChanges.filter(f => f.type === 'Bug');
+    termsOfUseLink() {
+      let routeData = this.$router.resolve({ name: 'terms-and-conditions' });
+      return routeData.href;
     },
-    versionFeatures() {
-      return this.versionChanges.filter(f => f.type === 'Feature');
-    },
-    hasVersionFeatures() {
-      return this.versionFeatures.length > 0;
-    },
-    hasVersionBugs() {
-      return this.versionBugs.length > 0;
-    },
-    showChangeLog() {
-      return this.$store.getters.getVersionIsConfirmed === false;
+    contactUsLink() {
+      let routeData = this.$router.resolve({ name: 'contact-dashboard' });
+      return routeData.href;
     }
   },
   data() {
@@ -102,14 +94,6 @@ export default {
       currentMonth: {
           name: new Date().toLocaleString('default', { month: 'long' }),
           id: new Date().getMonth()
-      }
-    }
-  },
-  methods: {
-    confirmVersion() {
-      this.$store.dispatch('confirmNewVersion');
-      if (this.$route.name !== 'budget-dashboard') {
-        this.$router.push('/');
       }
     }
   }
@@ -373,5 +357,12 @@ select::ms-expand {
 .copyright {
   color:lightgrey;
   text-align: center;
+}
+.term-of-use {
+  color: #A755C2;
+}
+.attribution-credit {
+  font-size:10px;
+  color: #A755C2;
 }
 </style>
