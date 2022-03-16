@@ -255,6 +255,9 @@ export default {
         }
     },
     computed: {
+        userId() {
+            return this.$store.getters.getUserId;
+        },
         selectedStateTaxes() {
             return this.stateTaxes.filter(s => s.state === this.income.state && s.filing_status === this.selectedStateFilingStatus);
         },
@@ -391,6 +394,7 @@ export default {
             netIncome: 0,
             isLoaded: false,
             income: {
+                userId: null,
                 id: null,
                 name: null,
                 type: null,
@@ -460,6 +464,7 @@ export default {
             if (this.validateIncomeFields()) {
                 if (!this.isLoaded) 
                     this.income.id = this.getIncomeID();
+                this.income.userId = this.userId;
                 this.income.salary = this.toFixedNumber(this.income.type === 'h' ? (this.regularPay + this.overTimePay) : parseFloat(this.salary), 2);
                 const preTaxDeductedIncome = this.income.salary - (this.preTaxDeductionTotal * this.income.payPeriod);
                 this.setFederalTaxRate(preTaxDeductedIncome);
@@ -489,6 +494,7 @@ export default {
                 } else {
                     const i = this.$store.state.editedIncome;
                     this.income = {
+                        userId: i.userId,
                         id: i.id,
                         name: i.name,
                         type: i.type,
@@ -657,13 +663,12 @@ export default {
                 this.income.deductions.splice(index, 1);
             }
         },
-        getIncomeID(existingIds = this.$store.state.income.map(i => i.id)) {
+        getIncomeID(existingIds = this.$store.getters.getIncomes.map(i => i.id)) {
             let isUniqueId = false;
             let max = 9999999;
             let maxRetries = 1000;
             let count = 0;
             let id = Math.floor(Math.random() * Math.floor(max));
-            console.log({'newId': id,'currentIncomeIds':existingIds});
             while (!isUniqueId) {
                 isUniqueId = existingIds.find(bill => bill.id === id) === undefined;
                 if (!isUniqueId) {

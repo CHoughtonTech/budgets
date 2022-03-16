@@ -8,7 +8,7 @@
         <div v-if="validationFailed('billAmount')" class="error-detail">{{getErrorMessage('billAmount')}}</div>
         <input id="billAmount" type="number" v-model="bill.amount" placeholder="0.00" :class="{'error-detail-input': validationFailed('billAmount')}" />
         <label for="billDueDate">Due Date</label>
-        <DatePicker v-model="selectedDueDate" :format="format" :enableTimePicker="false" autoApply @update:modelValue="logInfo()"></DatePicker>
+        <DatePicker v-model="selectedDueDate" :format="format" :enableTimePicker="false" autoApply></DatePicker>
         <label for="billFixedAmount" style="margin-right: 25px">Is fixed amount?</label>
         <input id="billFixedAmount" type="checkbox" v-model="bill.isFixedAmount" /><br/>
         <label for="billRecurring" style="margin-right: 25px">Is recurring?</label>
@@ -80,6 +80,9 @@ export default {
         }
     },
     computed: {
+        userId() {
+            return this.$store.getters.getUserId;
+        },
         activeSubCategories() {
             return this.$store.getters.getSubCategoriesByCategoryId(this.selectedCategoryId);
         },
@@ -99,6 +102,7 @@ export default {
     data() {
         return {
             bill: {
+                userId: null,
                 id: null,
                 name: null,
                 paid: false,
@@ -122,9 +126,6 @@ export default {
         }
     },
     methods: {
-        logInfo() {
-            console.log(this.selectedDueDate);
-        },
         loadBill(id) {
             const billId = typeof id !== 'number' ? parseInt(id) : id;
             this.$store.dispatch('getBillById', billId).then(() => {
@@ -134,6 +135,7 @@ export default {
                     this.$router.push('/bills');
                 } else {
                     this.bill = {
+                        userId: b.userId,
                         id: b.id,
                         name: b.name,
                         paid:  b.paid,
@@ -160,6 +162,7 @@ export default {
         createBill() {
             if (this.validateFields()) {
                 this.bill.id = this.getBillID();
+                this.bill.userId = this.userId;
                 this.bill.amount = this.toFixedNumber(parseFloat(this.bill.amount), 2);
                 this.bill.dateCreated = new Date().toLocaleDateString();
                 this.bill.dueDate = this.selectedDueDate.toLocaleDateString();
@@ -170,6 +173,8 @@ export default {
         },
         updateBill() {
             if (this.validateFields()) {
+                if (!this.bill.userId)
+                    this.bill.userId = this.userId;
                 this.toggleShowConfirmModal();
             }
         },
@@ -190,7 +195,7 @@ export default {
             let count = 0;
             let id = Math.floor(Math.random() * Math.floor(max));
             while (!isUniqueId) {
-                isUniqueId = this.$store.state.bills.find(bill => bill.id === id) === undefined;
+                isUniqueId = this.$store.getters.getBills.find(bill => bill.id === id) === undefined;
                 if (!isUniqueId) {
                     id = Math.floor(Math.random() * Math.floor(max));
                 }

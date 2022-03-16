@@ -51,7 +51,6 @@ import { mobileCheckMixin } from '../mixins/GlobalMixin.js';
 
 export default {
     components: {
-        // BaseModal: BaseModal,
         BaseIcon: BaseIcon,
         IncomeCard: IncomeCard
     },
