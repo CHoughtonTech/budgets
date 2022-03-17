@@ -92,7 +92,6 @@ export default {
                     })
                     .catch((error) => {
                         this.messageErrors.push(error);
-                        console.log({ Error: error });
                     });
             }
         },
@@ -133,7 +132,6 @@ export default {
         const loggedInUser = this.$store.state.user;
         if (loggedInUser && loggedInUser !== null)
             this.user = loggedInUser;
-            console.log(this.user);
     }
 }
 </script>
