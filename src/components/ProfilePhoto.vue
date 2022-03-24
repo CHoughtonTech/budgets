@@ -1,6 +1,6 @@
 <script>
     import { defineComponent } from 'vue';
-    import { Cropper } from 'vue-advanced-cropper';
+    import { Cropper, Preview } from 'vue-advanced-cropper';
     import { getStorage, ref, uploadBytes } from 'firebase/storage';
     import ox from '@/assets/small-ox.jpg';
     import 'vue-advanced-cropper/dist/style.css';
@@ -8,6 +8,7 @@
     export default defineComponent({
     components: {
         Cropper,
+        Preview,
     },
     props: {
         userId: undefined,
@@ -19,6 +20,10 @@
                 type: 'image/jpg',
             },
             storage: null,
+            result: {
+                coordinates: null,
+                image: null,
+            }
         };
     },
     computed: {
@@ -27,6 +32,12 @@
         }
     },
     methods: {
+        onChange({coordinates, image}) {
+            this.result = {
+                coordinates,
+                image
+            };
+        },
         cancelImageUpload() {
             this.image = {
                 src: ox,
@@ -85,7 +96,7 @@
 <template>
     <div id="profilePhoto">
         <h4 class="is-flex is-justify-content-center">Update Profile Photo</h4>
-        <cropper ref="cropper" class="cropper" :src="image.src" :stencil-props="{ scalable: true, aspectRatio: 1/1 }" :image-restriction="stencil" />
+        <cropper ref="cropper" class="cropper" :src="image.src" :debounce="false" :stencil-props="{ scalable: true, aspectRatio: 1/1 }" :image-restriction="stencil" @change="onChange"/>
         <div class="button-wrapper">
             <button class="button" @click="$refs.file.click()">
                 <input
@@ -99,6 +110,18 @@
             </button>
             <button :class="hasSelectedImage ? 'button' : 'button-disabled'" @click="cropImage()" :disabled="!hasSelectedImage">Set Photo</button>
             <button class="button" style="width:25%" @click="cancelImageUpload()">Cancel</button>
+        </div>
+        <div class="is-flex is-justify-content-center">
+            <h4>Preview</h4>
+        </div>
+        <div class="is-flex is-justify-content-center">
+            <preview 
+                :width="128"
+                :height="128"
+                :image="result.image"
+                :coordinates="result.coordinates"
+                style="border-radius:50%"
+            />
         </div>
   </div>
 </template>
