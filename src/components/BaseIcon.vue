@@ -1,7 +1,7 @@
 <template>
-  <div class="icon-wrapper">
+  <div class="icon-wrapper" :style="style">
     <slot name="pre"></slot>
-    <svg class="icon" :width="width" :height="height">
+    <svg class="iconBase" :class="!style ? 'icon' : ''" :style="style" :width="width" :height="height">
       <use v-bind="{ 'xlink:href': '/feather-sprite.svg#' + name }" />
     </svg>
     <slot></slot>
@@ -20,6 +20,10 @@ export default {
     height: {
       type: [Number, String],
       default: 24
+    },
+    style: {
+      type: String,
+      default: null
     }
   }
 };
@@ -34,12 +38,15 @@ export default {
   font-size: 1rem;
   font-weight: 600;
 }
-.icon {
-  stroke: lightgrey;
+.iconBase {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
+  margin-left: 6px;
   margin-right: 6px;
+}
+.icon {
+  stroke: lightgrey;
 }
 </style>

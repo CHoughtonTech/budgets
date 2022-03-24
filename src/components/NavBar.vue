@@ -8,11 +8,12 @@
             <router-link v-else class="nav-link is-pulled-right" :to="{ name: 'user-profile', params: { isRegisteringNewUser: 'false' } }">
                 <BaseIcon v-if="!isLoggedIn" name="user">Profile</BaseIcon>
                 <div v-else>
-                    <article class="media is-flex is-justify-content-center">
+                    <article class="media">
                         <figure class="media-center">
-                            <p class="image is-24x24">
-                                <img class="is-rounded" :src="profilePhoto" alt="Profile Photo">
-                            </p>
+                            <div class="image is-24x24 is-pulled-left">
+                                <img class="is-rounded" :src="profilePhoto">
+                            </div>
+                            <span style="margin-left:6px;">{{ userName }}</span>
                         </figure>
                     </article>
                 </div>
