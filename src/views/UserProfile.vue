@@ -265,7 +265,7 @@ export default {
         },
         verifyEmail() {
             const actionCodeSettings = {
-                url: `http://localhost:8080/verifyCallback/${this.userEmail}`,
+                url: `https://stg--oxsoftsolutions-budgets.netlify.app/verifyCallback/${this.userEmail}`,
             };
             sendEmailVerification(this.user, actionCodeSettings)
                 .then(() => {
