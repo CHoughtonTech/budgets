@@ -265,7 +265,7 @@ export default {
         },
         verifyEmail() {
             const actionCodeSettings = {
-                url: `https://stg--oxsoftsolutions-budgets.netlify.app/verifyCallback/${this.userEmail}`,
+                url: `https://www.oxsoftbudgets.com/verifyCallback/${this.userEmail}`,
             };
             sendEmailVerification(this.user, actionCodeSettings)
                 .then(() => {
