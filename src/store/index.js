@@ -288,17 +288,20 @@ const store = createStore({
     },
     createIncome({commit}, income) {
       commit('createIncome', income);
-      BudgetService.upsertIncome(getDatabase(), this.state.user.uid, income);
+      if (this.getters.getUserId !== DEFAULT_USER_ID)
+        BudgetService.upsertIncome(getDatabase(), this.state.user.uid, income);
     },
     updateIncome({commit}, income) {
       commit('updateIncome', income);
-      BudgetService.upsertIncome(getDatabase(), this.state.user.uid, income);
+      if (this.getters.getUserId !== DEFAULT_USER_ID)
+        BudgetService.upsertIncome(getDatabase(), this.state.user.uid, income);
     },
     deleteIncome({commit, state}, incomeId) {
       const index = state.income.findIndex(i => i.id === incomeId);
       if (index > -1) {
-        BudgetService.deleteIncome(getDatabase(), this.state.user.uid, incomeId);
         commit('removeIncome', index);
+        if (this.getters.getUserId !== DEFAULT_USER_ID)
+          BudgetService.deleteIncome(getDatabase(), this.state.user.uid, incomeId);
       }
     },
     updateActiveMonth({commit}, activeMonth) {

@@ -1,10 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { defineComponent } from 'vue';
-import BudgetDashboard from '../views/BudgetDashboard';
-import BillsDashboard from '../views/BillsDashboard';
-import BillsUpsert from '../views/BillsUpsert';
-import IncomeDashboard from '../views/IncomeDashboard';
-import IncomeUpsert from '../views/IncomeUpsert';
+import { getAuth, signOut } from 'firebase/auth';
+import BudgetDashboard from '@/views/BudgetDashboard';
+import BillsDashboard from '@/views/BillsDashboard';
+import BillsUpsert from '@/views/BillsUpsert';
+import IncomeDashboard from '@/views/IncomeDashboard';
+import IncomeUpsert from '@/views/IncomeUpsert';
 import UserRegistration from '@/views/UserRegistration';
 import UserProfile from '@/views/UserProfile';
 import PrivacyPolicy from '@/views/PrivacyPolicy';
@@ -69,9 +70,22 @@ const routes = [
     props: true
   },
   {
-    path: '/verify-callback/:email',
+    path: '/verifyCallback/:email',
     name: 'verify-callback',
+    props: true,
     component: defineComponent({
+      props: {
+        email: null
+      },
+      mounted() {
+        if (this.email) {
+          const auth = getAuth();
+          signOut(auth);
+          this.$router.push('/login');
+        } else {
+          this.$router.push('/profile');
+        }
+      }
 
     }),
   },
@@ -94,7 +108,7 @@ const routes = [
 
 const router = new createRouter({
   history: createWebHistory(),
-  routes: routes
+  routes: routes,
 });
 
 export default function registerRouter(app) {
