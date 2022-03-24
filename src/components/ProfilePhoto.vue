@@ -56,7 +56,7 @@
                         this.$emit('upload-image-success', userPhoto);
                     })
                     .catch((error) => {
-                        alert(error);
+                        console.error(error);
                     });
             }, this.image.type);
         },
