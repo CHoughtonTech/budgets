@@ -11,7 +11,7 @@
                 <p class="image is-128x128">
                     <img class="is-rounded" :src="profilePhoto" alt="Profile Photo">
                 </p>
-                <div v-if="isUserEmailVerified && userPhoto !== ox" style="cursor:pointer;">
+                <div v-if="isUserEmailVerified && hasUserProfilePhoto" style="cursor:pointer;">
                     <BaseIcon @click="removeUserPhoto()" name="x-circle" :style="'fill:crimson;stroke:whitesmoke;'" class="is-pulled-right"></BaseIcon>
                 </div>
                 <div v-if="isUserEmailVerified" style="cursor:pointer;">
@@ -143,9 +143,12 @@ export default {
         isUserEmailVerified() {
             return this.user?.emailVerified;
         },
+        hasUserProfilePhoto() {
+            return this.profilePhoto !== ox && this.profilePhoto !== '';
+        },
         profilePhoto() {
             const photoURL = this.$store.getters.getUserPhoto;
-            return photoURL ? photoURL : this.userPhoto ? this.userPhoto : ox;
+            return photoURL && photoURL !== '' ? photoURL : this.userPhoto ? this.userPhoto : ox;
         },
         userId() {
             return this.user ? this.user.uid : undefined;
@@ -232,7 +235,7 @@ export default {
             deleteObject(photoRef).then(() => {
                 const profileData = {
                     displayName: this.userName,
-                    photoURL: null,
+                    photoURL: '',
                 };
                 this.updateUserInfo(profileData);
             }).catch((error) => {
