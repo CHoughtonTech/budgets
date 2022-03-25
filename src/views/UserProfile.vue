@@ -4,6 +4,7 @@
             <h1 v-if="!isEditing">{{ profileName }}</h1>
             <input v-else id="userName" type="text" :placeholder="profileName" v-model="userName" class="edit-username"/>
             <BaseIcon v-if="isUserEmailVerified" @click="!isEditing ? toggleIsEditing() : setUsername(userName)" :name="isEditing ? 'check-circle' : 'edit-2'" :style="isEditing ? 'stroke:forestgreen;cursor:pointer;' : 'stroke:whitesmoke;fill:whitesmoke;cursor:pointer;'"></BaseIcon>
+            <BaseIcon v-if="isUserEmailVerified && isEditing" name="x-circle" @click="toggleIsEditing()" :style="'stroke:crimson;cursor:pointer;'"></BaseIcon>
         </div>
         <article v-if="!isUploadingPhoto" class="media is-flex is-justify-content-center">
             <figure class="media-center">
@@ -227,7 +228,7 @@ export default {
         },
         removeUserPhoto() {
             const storage = getStorage();
-            const photoRef = ref(storage, this.auth.currentUser.uid);
+            const photoRef = ref(storage, `${this.auth.currentUser.uid}/ProfilePhoto`);
             deleteObject(photoRef).then(() => {
                 const profileData = {
                     displayName: this.userName,

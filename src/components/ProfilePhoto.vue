@@ -52,7 +52,8 @@
             result.canvas.toBlob((blob) => {
                 uploadBytes(this.storage, blob)
                     .then((result) => {
-                        const userPhoto = `https://firebasestorage.googleapis.com/v0/b/${result.metadata.bucket}/o/${result.metadata.fullPath}?alt=media`;
+                        const urlPath = result.metadata.fullPath.replace('/', '%2F');
+                        const userPhoto = `https://firebasestorage.googleapis.com/v0/b/${result.metadata.bucket}/o/${urlPath}?alt=media`;
                         this.$emit('upload-image-success', userPhoto);
                     })
                     .catch((error) => {
@@ -83,7 +84,7 @@
     mounted() {
         const storageBucket = getStorage();
         if (this.userId)
-            this.storage = ref(storageBucket, this.userId);
+            this.storage = ref(storageBucket, `${this.userId}/ProfilePhoto`);
     },
     unmounted() {
         // Revoke the object URL, to allow the garbage collector to destroy the uploaded before file
