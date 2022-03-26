@@ -32,15 +32,20 @@
         <div v-if="validationFailed('userPassword')" class="error-detail">
             {{ getErrorMessage('userPassword') }}
         </div>
-        <input id="userPassword" type="password" placeholder="Password" v-model="password" />
+        <div>
+            <input id="userPassword" :type="showPasswords ? 'text' : 'password'" placeholder="Password" v-model="password" style="width:85%"/>
+            <button @click="toggleShowPasswords()" class="is-pulled-right"><BaseIcon :name="showPasswords ? 'eye' : 'eye-off'"></BaseIcon></button>
+        </div>
         <div v-if="isRegistering">
             <label for="confirmPassword">Confirm Password</label>
             <div v-if="validationFailed('confirmPassword')" class="error-detail" >
                 {{ getErrorMessage('confirmPassword') }}
             </div>
-            <input id="confirmPassword" type="password" placeholder="Confirm Password" v-model="confirmedPassword" />
+            <div>
+                <input id="confirmPassword" :type="showPasswords ? 'text' : 'password'" placeholder="Confirm Password" v-model="confirmedPassword" style="width:85%"/>
+                <button @click="toggleShowPasswords()" class="is-pulled-right"><BaseIcon :name="showPasswords ? 'eye' : 'eye-off'"></BaseIcon></button>
+            </div>
         </div>
-        <br><br>
         <label v-if="isRegistering" for="userAcknowledged" class="acknowledgement">
             <span>
                 By checking this box, you hereby agree to the 
@@ -51,13 +56,19 @@
             </span>
         </label>
         <input v-if="isRegistering" id="userAcknowledged" type="checkbox" v-model="hasUserAcknowledgedTOS" /><br>
-        <button :class="disableRegisterButton ? 'button-disabled' : ''" @click="isRegistering ? register() : login()" :disabled="disableRegisterButton">{{ loginRegisterLabel }}</button>
+        <button :class="disableRegisterButton ? 'button-disabled' : ''" @click="isRegistering ? register() : login()" :disabled="disableRegisterButton">{{ loginRegisterLabel }}</button> 
+        <input id="staySignedIn" v-if="!isRegistering" type="checkbox" v-model="isUserStayingSignedIn" style="cursor:pointer;" /> 
+        <label v-if="!isRegistering" for="staySignedIn" style="cursor:pointer;">Stay Signed In</label><br>
         <button @click="toggleRegisterUser()">{{ toggleRegisterUserLabel }}</button>
     </div>
 </template>
 <script>
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, setPersistence, browserLocalPersistence, inMemoryPersistence } from 'firebase/auth';
+import BaseIcon from '@/components/BaseIcon.vue';
 export default {
+    components: {
+        BaseIcon,
+    },
     data() {
         return {
             email: '',
@@ -68,6 +79,8 @@ export default {
             user: null,
             isRegistering: false,
             hasUserAcknowledgedTOS: false,
+            showPasswords: false,
+            isUserStayingSignedIn: false,
             errors: [],
         }
     },
@@ -97,10 +110,13 @@ export default {
         },
         passwordStrengthText() {
             switch (this.passwordStrength) {
-                case 1,2:
+                case 1:
+                case 2:
+                case 3:
                     return 'Weak';
-                case 3,4,5:
+                case 4:
                     return 'Moderate';
+                case 5:
                 case 6:
                     return 'Strong';
                 case 7:
@@ -111,10 +127,13 @@ export default {
         },
         passwordStrengthStyle() {
             switch (this.passwordStrength) {
-                case 1,2:
+                case 1:
+                case 2:
+                case 3:
                     return 'weak-style';
-                case 3,4,5:
+                case 4:
                     return 'moderate-style';
+                case 5:
                 case 6:
                     return 'strong-style';
                 case 7:
@@ -125,6 +144,9 @@ export default {
         }
     },
     methods: {
+        toggleShowPasswords() {
+            this.showPasswords = !this.showPasswords;
+        },
         register() {
             if (this.disableRegisterButton) return;
             if (this.validateFields()) {
@@ -138,7 +160,7 @@ export default {
                             this.$store.dispatch('setUser', this.user);
                             this.$router.push({ name: 'user-profile', params: { isRegisteringNewUser: 'true' }});
                         }).catch((error) => {
-                            alert(error);
+                            console.log(error);
                         });
                     })
                     .catch((error) => {
@@ -149,7 +171,8 @@ export default {
         },
         login() {
             if (this.validateFields()) {
-                setPersistence(this.auth, browserLocalPersistence)
+                const persistenceType = this.isUserStayingSignedIn ? browserLocalPersistence : inMemoryPersistence;
+                setPersistence(this.auth, persistenceType)
                     .then(() => {
                         signInWithEmailAndPassword(this.auth, this.email, this.password)
                             .then(() => {
@@ -186,6 +209,7 @@ export default {
             this.errors = [];
             this.password = '';
             this.userName = '';
+            this.showPasswords = false;
         },
         validateFields() {
             this.errors = [];
@@ -249,6 +273,9 @@ input {
 }
 button {
     border-radius: 20px;
+}
+.password-field {
+    border-radius: 20px 0px 0px 20px;
 }
 .passwordPolicy {
     min-width: 250px;
