@@ -3,7 +3,8 @@
         <div class="is-flex is-justify-content-center">
             <h1 v-if="!isEditing">{{ profileName }}</h1>
             <input v-else id="userName" type="text" :placeholder="profileName" v-model="userName" class="edit-username"/>
-            <BaseIcon v-if="isUserEmailVerified" @click="!isEditing ? toggleIsEditing() : setUsername(userName)" :name="isEditing ? 'check-circle' : 'edit-2'" :style="isEditing ? 'stroke:forestgreen;cursor:pointer;' : 'stroke:whitesmoke;fill:whitesmoke;cursor:pointer;'"></BaseIcon>
+            <BaseIcon v-if="isUserEmailVerified && !isEditing" @click="toggleIsEditing()" name="edit-2" :style="'stroke:whitesmoke;fill:whitesmoke;cursor:pointer;'"></BaseIcon>
+            <BaseIcon v-if="isUserEmailVerified && userNameChanged && isEditing" @click="setUsername(userName)" name="check-circle" :style="'stroke:forestgreen;cursor:pointer;'"></BaseIcon>
             <BaseIcon v-if="isUserEmailVerified && isEditing" name="x-circle" @click="toggleIsEditing()" :style="'stroke:crimson;cursor:pointer;'"></BaseIcon>
         </div>
         <article v-if="!isUploadingPhoto" class="media is-flex is-justify-content-center">
@@ -133,6 +134,9 @@ export default {
         isRegisteringNewUser: null,
     },
     computed: {
+        userNameChanged() {
+            return this.userName !== this.profileName && this.userName !== '';
+        },
         profileName() {
             const userName = this.$store.getters.getUserName;
             return userName ? userName : this.userName;
@@ -206,6 +210,8 @@ export default {
     },
     methods: {
         toggleIsEditing() {
+            if (this.userName === '' || this.userName === null) 
+                this.userName = this.profileName;
             this.isEditing = !this.isEditing;
         },
         toggleShowPreferences() {
