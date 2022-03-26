@@ -268,8 +268,9 @@ export default {
             });
         },
         verifyEmail() {
+            const originURL = window.location.origin;
             const actionCodeSettings = {
-                url: `https://www.oxsoftbudgets.com/verifyCallback/${this.userEmail}`,
+                url: `${originURL}/verifyCallback/${this.userEmail}`,
             };
             sendEmailVerification(this.user, actionCodeSettings)
                 .then(() => {
