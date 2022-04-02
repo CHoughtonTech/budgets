@@ -1,361 +1,234 @@
-import { createStore } from 'vuex';
-import ExpenseCategories from '../api/ExpenseCategories';
-import createPersistedState from 'vuex-persistedstate';
-import States from '../api/States';
-import TaxData from '../api/TaxData';
+import { defineStore } from 'pinia';
+import ExpenseCategories from '@/api/ExpenseCategories';
+import States from '@/api/States';
+import TaxData from '@/api/TaxData';
 import { getDatabase } from 'firebase/database';
 import BudgetService from '@/services/BudgetService';
 
 const DEFAULT_USER_ID = 'oxsoftsolutions-budgets-notLoggedIn';
 
-const store = createStore({
-  state: {
-    bills: [],
-    income: [],
-    activeMonth: null,
-    categories: [],
-    subCategories: [],
-    editedBill: null,
-    editedIncome: null,
-    states: [],
-    federalTaxBrackets: [],
-    stateTaxBrackets: [],
-    ficaRate: [],
-    user: null,
-  },
-  plugins: [createPersistedState()],
+const rootState = {
+  bills: [],
+  income: [],
+  activeMonth: null,
+  categories: [],
+  subCategories: [],
+  states: [],
+  federalTaxBrackets: [],
+  stateTaxBrackets: [],
+  ficaRate: [],
+  user: null,
+};
+
+const mainStore = defineStore('main', {
+  state: () => rootState,
   getters: {
-    getBills(state) {
-      return state.bills;
+    hasBills: (state) => state.bills && state.bills.length > 0,
+    activeBills: (state) => {
+      return state.bills.filter((bill) => {
+        const dateCreated = new Date(bill.dateCreated);
+        const datePaidOff = new Date(bill.datePaidOff);
+        const thisYear = new Date().getFullYear();
+        return (bill.isRecurring || dateCreated.getMonth() === state.activeMonth?.id && dateCreated.getFullYear() === thisYear)
+          || (bill.datePaidOff === null || bill.datePaidOff === '' || (datePaidOff.getMonth() === state.activeMonth?.id && datePaidOff.getFullYear() === thisYear));
+      });
     },
-    hasBills(state) {
-      return state.bills && state.bills.length > 0;
-    },
-    activeBills(state) {
-      return state.bills.filter(bill => 
-        (bill.isRecurring 
-          || new Date(bill.dateCreated).getMonth() === state.activeMonth?.id && new Date(bill.dateCreated).getFullYear() === new Date().getFullYear()) 
-        && (bill.datePaidOff === null 
-            || bill.datePaidOff === '' 
-            || (new Date(bill.datePaidOff).getMonth() === state.activeMonth?.id && new Date(bill.datePaidOff).getFullYear() === new Date().getFullYear())));
-    },
-    activeBillCount(state, getters) {
-      return getters.activeBills.length;
+    activeBillCount: (state) => {
+      return state.activeBills.length;
     },
     getSubCategoriesByCategoryId: (state) => (categoryId) => {
-      if (categoryId !== null) {
-        let filteredArray = state.subCategories.filter(subCategory => subCategory.CategoryId == categoryId);
-        return filteredArray.sort(function(a,b) { 
+      if (categoryId === null) return [];
+      return state.subCategories.filter(subCategory => subCategory.CategoryId == categoryId)
+        .sort(function(a,b) { 
           let x = a.Name.toLowerCase();
           let y = b.Name.toLowerCase();
           if (x < y) { return -1; }
           if (x > y) { return 1; }
           return 0;
         });
-      } else {
-        return [];
-      }
     },
     getSubCategoryNameById: (state) => (subCategoryId) => {
-      if (subCategoryId && subCategoryId !== null) {
-        let found = state.subCategories.find(sc => sc.id === subCategoryId);
-        if (found) {
-          return found.Name;
-        } else {
-          return 'Unknown';
-        }
-      } else {
-        return 'Unknown';
-      }
+      if (!subCategoryId || subCategoryId === null) return 'Unknown';
+      const subCategory = state.subCategories.find(sc => sc.id === subCategoryId);
+      return subCategory ? subCategory.Name : 'Unknown';
     },
     getCategoryNameById: (state) => (categoryId) => {
-      if (categoryId && categoryId !== null) {
-        let foundSubCategory = state.subCategories.find(sc => sc.id === categoryId);
-        if (foundSubCategory) {
-          let foundCategory = state.categories.find(c => c.id === foundSubCategory.CategoryId)
-          if (foundCategory) {
-            return foundCategory.Name;
-          } else {
-            return 'Unknown';
-          }
-        } else {
-          return 'Unknown';
-        }
-      } else {
-        return 'Unknown';
-      }
+      if (!categoryId || categoryId == null) return 'Unknown';
+      const subCategory = state.subCategories.find(sc => sc.id === categoryId);
+      if (!subCategory) return 'Unknown';
+      const category = state.categories.find(c => c.id === subCategory.CategoryId);
+      return category ? category.Name : 'Unknown';
     },
-    getFederalTaxes: (state) => {
-      return state.federalTaxBrackets;
-    },
-    getStateTaxes: (state) => {
-      return state.stateTaxBrackets;
-    },
-    getFICA: (state) => {
-      return state.ficaRate;
-    },
-    getStates: (state) => {
-      return state.states;
-    },
-    getIncomes: (state) =>{
-      return state.income;
-    },
-    getUserName: (state) => {
-      if (!state.user) return null;
-      return state.user.displayName;
-    },
-    getEmail: (state) => {
-      if (!state.user) return null;
-      return state.user.email;
-    },
-    getUserPhoto: (state) => {
-      if (!state.user) return null;
-      return state.user.photoURL;
-    },
-    getUserId: (state) => {
-      if (!state.user) return DEFAULT_USER_ID;
+    getUserId: (state)  => {
+      if (!state.user || state.user === null) return DEFAULT_USER_ID;
       return state.user.uid;
     }
   },
-  mutations: {
-    setBills(state, bills) {
-      state.bills = bills;
-    },
-    updateBill(state, bill) {
-      state.bills.forEach(b => {
-        if (b.id === bill.id) {
-          b.userId = bill.userId,
-          b.name =  bill.name,
-          b.paid =  bill.paid,
-          b.amount =  parseFloat(bill.amount),
-          b.datePaid =  bill.datePaid,
-          b.dateCreated =  bill.dateCreated,
-          b.isRecurring =  bill.isRecurring,
-          b.paidCount =  bill.paidCount,
-          b.isFixedAmount =  bill.isFixedAmount,
-          b.datePaidOff =  bill.datePaidOff,
-          b.subCategoryId  =  bill.subCategoryId,
-          b.dueDate =  bill.dueDate
-        }
-      });
-    },
-    removeBill(state, index) {
-      state.bills.splice(index,1);
-    },
-    createBill(state, bill) {
-      state.bills.push(bill);
-    },
-    setIncomes(state, income) {
-      state.income = income;
-    },
-    createIncome(state, income) {
-      state.income.push(income);
-    },
-    updateIncome(state, income) {
-      state.income.forEach(i => {
-        if (i.id === income.id) {
-          i.userId = income.userId,
-          i.name = income.name,
-          i.type = income.type,
-          i.salary = income.salary,
-          i.netSalary = income.netSalary,
-          i.hourlyRate = income.hourlyRate,
-          i.hoursPerWeek = income.hoursPerWeek,
-          i.employmentType = income.employmentType,
-          i.filingStatus = income.filingStatus,
-          i.payPeriod = income.payPeriod,
-          i.state = income.state,
-          i.isActive = income.isActive,
-          i.isTaxExempt = income.isTaxExempt,
-          i.deductions = income.deductions.map(d => { return d; })
-        }
-      });
-    },
-    removeIncome(state, index) {
-      state.income.splice(index, 1);
-    },
-    foundIncome(state, income) {
-      state.editedIncome = income;
-    },
-    setEditedBill(state, bill) {
-      state.editedBill = bill;
-    },
-    setActiveMonth(state, month){
-      state.activeMonth = month;
-    },
-    updateActiveMonth(state, month) {
-      state.activeMonth = month;
-    },
-    setCategories(state, categories) {
-      state.categories = categories;
-    },
-    setSubcategories(state, subcategories) {
-      state.subCategories = subcategories;
-    },
-    setFederalTaxes(state, fedTaxes) {
-      state.federalTaxBrackets = fedTaxes;
-    },
-    setStateTaxes(state, stateTaxes) {
-      state.stateTaxBrackets = stateTaxes;
-    },
-    setFICARate(state, fica) {
-      state.ficaRate = fica;
-    },
-    setStates(state, stateList) {
-      state.states = stateList;
-    },
-    setUser(state, user) {
-      state.user = user;
-    },
-    clearUser(state) {
-      state.user = null;
-    },
-    clearStore(state) {
-      state.bills = [];
-      state.income = [];
-    }
-  },
   actions: {
-    // eslint-disable-next-line no-unused-vars
-    userConfirmedTOS({commit}, hasUserConfirmed) {
-      if (this.getters.getUserId !== DEFAULT_USER_ID)
-        BudgetService.userConfirmedTOS(getDatabase(), this.state.user.uid, hasUserConfirmed);
+    userConfirmedTOS(hasUserConfirmed) {
+      if (this.user && this.getUserId !== DEFAULT_USER_ID)
+        BudgetService.userConfirmedTOS(getDatabase(), this.user.uid, hasUserConfirmed);
     },
-    setUser({commit}, user) {
-      commit('setUser', user);
+    setUser(user) {
+      this.user = user;
     },
-    clearUser({commit}) {
-      commit('clearUser');
+    clearUser() {
+      this.user = null;
     },
-    clearStore({commit}) {
-      commit('clearStore');
+    clearStore() {
+      this.bills = [];
+      this.income = [];
+      this.activeMonth = null;
+      this.categories = [];
+      this.subCategories = [];
+      this.states = [];
+      this.federalTaxBrackets = [];
+      this.stateTaxBrackets = [];
+      this.ficaRate = [];
+      this.user = null;
     },
-    getBillById({commit}, id) {
+    getBillById(id) {
       return new Promise((resolve, reject) => {
-        let foundBill = this.state.bills.find(b => b.id === id);
-        if(foundBill) {
-          commit('setEditedBill', foundBill);
-          resolve();
-        } else {
-          reject({ message: 'Bill not found for Id: ' + id});
-        }
+        const foundBill = this.bills.find(b => b.id === id);
+        if (foundBill) resolve(foundBill);
+        if (!foundBill) reject({ message: 'Bill not found for Id: ' + id});
       });
     },
-    getUserBills({commit}) {
-      BudgetService.getBills(getDatabase(), this.state.user.uid)
-        .then((bills) => {
-          if (bills && bills.length > 0) {
-            commit('setBills', bills);
-          }
-        });
-    },
-    updateBill({commit}, bill) {
-      commit('updateBill', bill);
-      if (this.getters.getUserId !== DEFAULT_USER_ID)
-        BudgetService.upsertBill(getDatabase(), this.state.user.uid, bill);
-    },
-    deleteBill({commit, state}, billId) {
-      const billIndex = state.bills.findIndex(b => b.id === billId);
-      if (billIndex > -1) {
-        commit('removeBill', billIndex);
-        if (this.getters.getUserId !== DEFAULT_USER_ID)
-          BudgetService.deleteBill(getDatabase(), this.state.user.uid, billId);
+    getUserBills() {
+      if (!this.user || this.user === null) {
+        this.bills = [];
+        return;
       }
-    },
-    createBill({commit}, bill) {
-      commit('createBill', bill);
-      if (this.getters.getUserId !== DEFAULT_USER_ID)
-        BudgetService.upsertBill(getDatabase(), this.state.user.uid, bill);
-    },
-    getIncomeById({commit}, id) {
-      return new Promise((resolve, reject) => {
-        let foundIncome = this.state.income.find(i => i.id === id);
-        if (foundIncome) {
-          commit('foundIncome', foundIncome);
-          resolve();
-        } else {
-          reject({ message: 'Income not found for Id: ' + id});
-        }
-      });
-    },
-    getUserIncomes({commit}) {
-      BudgetService.getIncomes(getDatabase(), this.state.user.uid)
+      BudgetService.getBills(getDatabase(), this.user.uid)
         .then((data) => {
-          if (data && data.length > 0){
-            commit('setIncomes', data);
-          }
+          this.bills = data && data.length > 0 ? data : [];
         });
     },
-    createIncome({commit}, income) {
-      commit('createIncome', income);
-      if (this.getters.getUserId !== DEFAULT_USER_ID)
-        BudgetService.upsertIncome(getDatabase(), this.state.user.uid, income);
+    updateBill(bill) {
+      return new Promise((resolve, reject) => {
+        if (this.getUserId !== DEFAULT_USER_ID)
+          BudgetService.upsertBill(getDatabase(), this.user.uid, bill);
+        const index = this.bills.findIndex(x => x.id === bill.id);
+        if (index > -1){
+          this.bills[index] = bill;
+          resolve();
+        } else {
+          reject();
+        }
+      });
     },
-    updateIncome({commit}, income) {
-      commit('updateIncome', income);
-      if (this.getters.getUserId !== DEFAULT_USER_ID)
-        BudgetService.upsertIncome(getDatabase(), this.state.user.uid, income);
+    deleteBill(billId) {
+      return new Promise((resolve, reject) => {
+        if (this.getUserId !== DEFAULT_USER_ID)
+          BudgetService.deleteBill(getDatabase(), this.user.uid, billId);
+        const index = this.bills.findIndex(b => b.id === billId);
+        if (index > -1) {
+          this.bills.splice(index, 1);
+          resolve();
+        } else {
+          reject();
+        }
+      });
     },
-    deleteIncome({commit, state}, incomeId) {
-      const index = state.income.findIndex(i => i.id === incomeId);
-      if (index > -1) {
-        commit('removeIncome', index);
-        if (this.getters.getUserId !== DEFAULT_USER_ID)
-          BudgetService.deleteIncome(getDatabase(), this.state.user.uid, incomeId);
+    createBill(bill) {
+      return new Promise((resolve) => {
+        if (this.getUserId !== DEFAULT_USER_ID)
+          BudgetService.upsertBill(getDatabase(), this.user.uid, bill);
+        this.bills.push(bill);
+        resolve();
+      });
+    },
+    getIncomeById(id) {
+      return new Promise((resolve, reject) => {
+        const foundIncome = this.income.find(i => i.id === id);
+        if (foundIncome) resolve(foundIncome);
+        if (!foundIncome) reject({ message: 'Income not found for Id: ' + id});
+      });
+    },
+    getUserIncomes() {
+      if (!this.user || this.user === null) {
+        this.income = [];
+        return;
       }
-    },
-    updateActiveMonth({commit}, activeMonth) {
-      commit('updateActiveMonth', activeMonth);
-    },
-    getCategories({commit}) {
-      return new Promise((resolve) => {
-        ExpenseCategories.getCategories(categories => {
-          commit('setCategories', categories);
-          resolve();
+      BudgetService.getIncomes(getDatabase(), this.user.uid)
+        .then((data) => {
+          this.income = data && data.length > 0 ? data : [];
         });
+    },
+    createIncome(income) {
+      return new Promise((resolve) => {
+        if (this.getUserId !== DEFAULT_USER_ID)
+          BudgetService.upsertIncome(getDatabase(), this.user.uid, income);
+        this.income.push(income);
+        resolve();
+      });      
+    },
+    updateIncome(income) {
+      return new Promise((resolve, reject) => {
+        if (this.getUserId !== DEFAULT_USER_ID)
+          BudgetService.upsertIncome(getDatabase(), this.user.uid, income);
+        const index = this.income.findIndex(x => x.id === income.id);
+        if (index > -1) {
+          this.income[index] = income;
+          resolve();
+        } else {
+          reject();
+        }
       });
     },
-    getSubcategories({commit}) {
-      return new Promise((resolve) => {
-        ExpenseCategories.getSubCategories(subcategories => {
-          commit('setSubcategories', subcategories);
+    deleteIncome(incomeId) {
+      return new Promise((resolve, reject) => {
+        if (this.getUserId !== DEFAULT_USER_ID)
+            BudgetService.deleteIncome(getDatabase(), this.user.uid, incomeId);
+        const index = this.income.findIndex(i => i.id === incomeId);
+        if (index > -1) {
+          this.income.splice(index, 1);
           resolve();
-        });
+        } else {
+          reject();
+        }
       });
     },
-    getStateData({commit}) {
-      return new Promise((resolve) => {
-        States.getAllStates(states => {
-          commit('setStates', states);
-          resolve();
-        });
+    updateActiveMonth(activeMonth) {
+      this.activeMonth = activeMonth;
+    },
+    setCategories() {
+      ExpenseCategories.getCategories(categories => {
+        this.categories = categories;
       });
     },
-    getFederalTaxes({commit}) {
-      return new Promise((resolve) => {
-        TaxData.getFederalTaxBracket(federal => {
-          commit('setFederalTaxes', federal);
-          resolve();
-        });
+    setSubcategories() {
+      ExpenseCategories.getSubCategories(subCategories => {
+        this.subCategories = subCategories;
       });
     },
-    getStateTaxes({commit}) {
-      return new Promise((resolve) => {
-        TaxData.getStateTaxBracket(state => {
-          commit('setStateTaxes', state);
-          resolve();
-        });
+    setStateData() {
+      States.getAllStates(states => {
+        this.states = states;
       });
     },
-    getFICARate({commit}) {
-      return new Promise((resolve) => {
-        TaxData.getFICATaxRate(fica => {
-          commit('setFICARate', fica);
-          resolve();
-        });
+    setFederalTaxes() {
+      TaxData.getFederalTaxBracket(federal => {
+        this.federalTaxBrackets = federal;
+      });
+    },
+    setStateTaxes() {
+      TaxData.getStateTaxBracket(states => {
+        this.stateTaxBrackets = states;
+      });
+    },
+    setFICARate() {
+      TaxData.getFICATaxRate(fica => {
+        this.ficaRate = fica;
       });
     }
   }
-})
+});
 
-export default store;
+export default mainStore;
+
+// export type AppStore = ReturnType<typeof mainStore>;
+
+// export const getDefaultState = () : typeof rootState => JSON.parse(
+//   JSON.stringify(rootState);
+// );

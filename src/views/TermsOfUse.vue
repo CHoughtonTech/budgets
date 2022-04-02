@@ -1,3 +1,7 @@
+<script>
+import { defineComponent } from 'vue';
+export default defineComponent({})
+</script>
 <template>
     <div class="terms-of-use-view">
         <h2>Website Terms of Use</h2>
@@ -75,9 +79,6 @@
         <p><a href="https://www.oxsoftbudgets.com/contact">https://www.oxsoftbudgets.com/contact</a></p>
     </div>
 </template>
-<script>
-export default {}
-</script>
 <style scoped>
 .terms-of-use-view {
     min-width: 500px;

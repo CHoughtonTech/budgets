@@ -1,15 +1,6 @@
-<template>
-  <div class="icon-wrapper" :style="style">
-    <slot name="pre"></slot>
-    <svg class="iconBase" :class="!style ? 'icon' : ''" :style="style" :width="width" :height="height">
-      <use v-bind="{ 'xlink:href': '/feather-sprite.svg#' + name }" />
-    </svg>
-    <slot></slot>
-  </div>
-</template>
-
 <script>
-export default {
+import { defineComponent } from 'vue';
+export default defineComponent({
   name: 'BaseIcon',
   props: {
     name: String,
@@ -26,9 +17,17 @@ export default {
       default: null
     }
   }
-};
+})
 </script>
-
+<template>
+  <div class="icon-wrapper" :style="style">
+    <slot name="pre"></slot>
+    <svg class="iconBase" :class="!style ? 'icon' : ''" :style="style" :width="width" :height="height">
+      <use v-bind="{ 'xlink:href': '/feather-sprite.svg#' + name }" />
+    </svg>
+    <slot></slot>
+  </div>
+</template>
 <style scoped>
 .icon-wrapper {
   display: inline-flex;

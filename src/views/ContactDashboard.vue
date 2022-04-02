@@ -1,49 +1,17 @@
-<template>
-    <div class="contact-view">
-        <h1>Contact Us</h1>
-        <h3>Please let us know what you think of the site!</h3>
-        <hr>
-        <label for="subject">Subject</label>
-        <div v-if="validationFailed('subject')" class="error-detail">
-            {{ getErrorMessage('subject') }}
-        </div>
-        <input type="text" placeholder="Feedback, Issue" v-model="subject" />
-        <div v-if="!isLoggedInUserEmailVerified">
-            <label for="email">Email</label>
-            <div v-if="validationFailed('email')" class="error-detail">
-                {{ getErrorMessage('email') }}
-            </div>
-            <input type="text" placeholder="john.doe@example.com" v-model="email" />
-        </div>
-        <label for="message">Message:</label>
-        <div v-if="validationFailed('message')" class="error-detail">
-            {{ getErrorMessage('message') }}
-        </div>
-        <span :class="hasNoRemainingCharacters ? 'max-characters-exceeded' : 'max-characters'" class='is-pulled-right max-characters'>{{ remainingCharacters }} remaining</span>
-        <textarea name="userMessage" id="message" style="max-width:100%;" placeholder="Here's some feedback" rows="10" v-model="message"></textarea>
-        <div style="margin-bottom: 25px;">
-            <button :class="hasNoRemainingCharacters ? 'disabled-button' : ''" class="is-pulled-right" @click="sendMessage()" :disabled="hasNoRemainingCharacters">
-                <BaseIcon name='send'>
-                    <template #pre>
-                        &nbsp;Send&nbsp;
-                    </template>
-                </BaseIcon>
-            </button>
-        </div>
-        <br>
-        <p v-if="isMessageSentSuccessfully" class='is-flex is-justify-content-center success-message'>Message sent successfully!</p>
-    </div>
-</template>
-
 <script>
+import { defineComponent } from 'vue';
 import BaseIcon from '@/components/BaseIcon.vue';
 import BudgetService from '@/services/BudgetService';
 import { getDatabase } from '@firebase/database';
-export default {
+import { mapState } from 'pinia';
+import mainStore from '@/store';
+
+export default defineComponent({
     components: {
         BaseIcon,
     },
     computed: {
+        ...mapState(mainStore, ['user']),
         isUserLoggedIn() {
             return this.user !== null;
         },
@@ -55,15 +23,10 @@ export default {
         },
         hasNoRemainingCharacters() {
             return this.remainingCharacters < 0;
-        },
-        userId() {
-            if (!this.user || this.user === null) return null;
-            return this.user.uid;
         }
     },
     data() {
         return {
-            user: null,
             subject: null,
             email: '',
             message: '',
@@ -85,7 +48,7 @@ export default {
                     message: this.message,
                     timestamp: Date.now().toString(),
                 };
-                BudgetService.sendMessage(getDatabase(), this.userId, messageData)
+                BudgetService.sendMessage(getDatabase(), this.user?.uid , messageData)
                     .then(() => {
                         this.isMessageSentSuccessfully = true;
                         this.resetForm();
@@ -127,14 +90,45 @@ export default {
             this.email = '';
             this.message = '';
         }
-    },
-    mounted() {
-        const loggedInUser = this.$store.state.user;
-        if (loggedInUser && loggedInUser !== null)
-            this.user = loggedInUser;
     }
-}
+})
 </script>
+<template>
+    <div class="contact-view">
+        <h1>Contact Us</h1>
+        <h3>Please let us know what you think of the site!</h3>
+        <hr>
+        <label for="subject">Subject</label>
+        <div v-if="validationFailed('subject')" class="error-detail">
+            {{ getErrorMessage('subject') }}
+        </div>
+        <input type="text" placeholder="Feedback, Issue" v-model="subject" />
+        <div v-if="!isLoggedInUserEmailVerified">
+            <label for="email">Email</label>
+            <div v-if="validationFailed('email')" class="error-detail">
+                {{ getErrorMessage('email') }}
+            </div>
+            <input type="text" placeholder="john.doe@example.com" v-model="email" />
+        </div>
+        <label for="message">Message:</label>
+        <div v-if="validationFailed('message')" class="error-detail">
+            {{ getErrorMessage('message') }}
+        </div>
+        <span :class="hasNoRemainingCharacters ? 'max-characters-exceeded' : 'max-characters'" class='is-pulled-right max-characters'>{{ remainingCharacters }} remaining</span>
+        <textarea name="userMessage" id="message" style="max-width:100%;" placeholder="Here's some feedback" rows="10" v-model="message"></textarea>
+        <div style="margin-bottom: 25px;">
+            <button :class="hasNoRemainingCharacters ? 'disabled-button' : ''" class="is-pulled-right" @click="sendMessage()" :disabled="hasNoRemainingCharacters">
+                <BaseIcon name='send'>
+                    <template #pre>
+                        &nbsp;Send&nbsp;
+                    </template>
+                </BaseIcon>
+            </button>
+        </div>
+        <br>
+        <p v-if="isMessageSentSuccessfully" class='is-flex is-justify-content-center success-message'>Message sent successfully!</p>
+    </div>
+</template>
 <style scoped>
 .contact-view {
     min-width: 500px;

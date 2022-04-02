@@ -1,43 +1,9 @@
-<template>
-    <div>
-        <div class="bill-card -shadow" :class="{'paid-bill' : isPaidBill, 'new-bill' : isNewBill, 'existing-bill': !isNewBill && !isPaidBill}">
-            <div class="dropdown is-hoverable">
-                <div class="dropdown-trigger">
-                    <div>
-                        <BaseIcon aria-haspopup="true" v-bind:aria-controls="'dropdown-menu' + bill.id" name="menu"></BaseIcon>
-                    </div>
-                </div>
-                <div class="dropdown-menu" v-bind:id="'dropdown-menu' + bill.id" role="menu">
-                    <div class="dropdown-content">
-                        <div class="dropdown-item" @click="showBillDetails(bill)">
-                            <BaseIcon name="help-circle">Details</BaseIcon>
-                        </div>
-                        <div v-if="bill.datePaidOff === '' || bill.datePaidOff === null" class="dropdown-item">
-                            <router-link :to="{ name: 'edit-bill', params: { billId: bill.id } }"><BaseIcon name="edit">Edit</BaseIcon></router-link>
-                        </div>
-                        <div v-if="bill.datePaidOff === '' || bill.datePaidOff === null" class="dropdown-item">
-                            <span @click="deleteBill(bill)"><BaseIcon name="x-circle">Delete</BaseIcon></span>
-                        </div>
-                        <div v-if="(bill.datePaidOff === '' || bill.datePaidOff === null) && bill.isRecurring" class="dropdown-item">
-                            <span @click="payOffBill(bill)"><BaseIcon name="stop-circle">Pay Off</BaseIcon></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <span style="color:lightgrey;">{{bill.name}}</span>
-            <span class="paid-button" v-if="!bill.paid" @click="paidBill(bill)" ><BaseIcon name="check-circle"></BaseIcon></span>
-            <span class="undo-button" v-if="bill.paid && (bill.datePaidOff === null || bill.datePaidOff === '')" @click="undoBillPaid(bill)"><BaseIcon name="rotate-ccw"></BaseIcon></span>
-            <div class="paid-status" v-if="bill.paid"><BaseIcon name="check">{{new Date(bill.datePaid).toLocaleDateString('en-US', {timeZone: 'UTC'})}} &nbsp;</BaseIcon></div>
-            <hr/>
-            <div v-if="bill.dueDate" :class="{'bill-past-due' : isPastDue, 'bill-still-due' : !isPastDue}">Due: {{bill.dueDate}}</div>
-            <div :class="{'bill-amount': !bill.paid, 'bill-amount-paid': bill.paid}">Amount {{bill.paid ? 'Paid' : 'Due'}}: {{ toCurrency(bill.amount) }}</div><br/>
-        </div>
-    </div>
-</template>
 <script>
 import BaseIcon from './BaseIcon.vue';
 import { toCurrencyMixin } from '../mixins/GlobalMixin';
-export default {    
+import { defineComponent } from 'vue';
+
+export default defineComponent({    
     components: {
         BaseIcon,
     },
@@ -85,8 +51,44 @@ export default {
             this.$emit('payoff-bill', bill);
         }
     }
-};
+})
 </script>
+<template>
+    <div>
+        <div class="bill-card -shadow" :class="{'paid-bill' : isPaidBill, 'new-bill' : isNewBill, 'existing-bill': !isNewBill && !isPaidBill}">
+            <div class="dropdown is-hoverable">
+                <div class="dropdown-trigger">
+                    <div>
+                        <BaseIcon aria-haspopup="true" v-bind:aria-controls="'dropdown-menu' + bill.id" name="menu"></BaseIcon>
+                    </div>
+                </div>
+                <div class="dropdown-menu" v-bind:id="'dropdown-menu' + bill.id" role="menu">
+                    <div class="dropdown-content">
+                        <div class="dropdown-item" @click="showBillDetails(bill)">
+                            <BaseIcon name="help-circle">Details</BaseIcon>
+                        </div>
+                        <div v-if="bill.datePaidOff === '' || bill.datePaidOff === null" class="dropdown-item">
+                            <router-link :to="{ name: 'edit-bill', params: { billId: bill.id } }"><BaseIcon name="edit">Edit</BaseIcon></router-link>
+                        </div>
+                        <div v-if="bill.datePaidOff === '' || bill.datePaidOff === null" class="dropdown-item">
+                            <span @click="deleteBill(bill)"><BaseIcon name="x-circle">Delete</BaseIcon></span>
+                        </div>
+                        <div v-if="(bill.datePaidOff === '' || bill.datePaidOff === null) && bill.isRecurring" class="dropdown-item">
+                            <span @click="payOffBill(bill)"><BaseIcon name="stop-circle">Pay Off</BaseIcon></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <span style="color:lightgrey;">{{bill.name}}</span>
+            <span class="paid-button" v-if="!bill.paid" @click="paidBill(bill)" ><BaseIcon name="check-circle"></BaseIcon></span>
+            <span class="undo-button" v-if="bill.paid && (bill.datePaidOff === null || bill.datePaidOff === '')" @click="undoBillPaid(bill)"><BaseIcon name="rotate-ccw"></BaseIcon></span>
+            <div class="paid-status" v-if="bill.paid"><BaseIcon name="check">{{new Date(bill.datePaid).toLocaleDateString('en-US', {timeZone: 'UTC'})}} &nbsp;</BaseIcon></div>
+            <hr/>
+            <div v-if="bill.dueDate" :class="{'bill-past-due' : isPastDue, 'bill-still-due' : !isPastDue}">Due: {{bill.dueDate}}</div>
+            <div :class="{'bill-amount': !bill.paid, 'bill-amount-paid': bill.paid}">Amount {{bill.paid ? 'Paid' : 'Due'}}: {{ toCurrency(bill.amount) }}</div><br/>
+        </div>
+    </div>
+</template>
 <style scoped>
 .bill-card {
   padding: 20px;

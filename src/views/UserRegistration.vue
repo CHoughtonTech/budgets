@@ -1,71 +1,11 @@
-<template>
-    <div class="user-view" @keyup.enter="isRegistering ? register() : login()">
-        <h1 v-if="isRegistering">Create an Account</h1>
-        <h1 v-else>Login</h1>
-        <div v-if="isRegistering">
-            <p class="passwordPolicy">
-                <ul>
-                    Password Policy:
-                    <li>* No spaces</li>
-                    <li>* At least 6 characters</li>
-                    <li>* No more than 20 characters</li>
-                    <li>* Must contain one numeric digits</li>
-                    <li>* Must contain one uppercase</li>
-                    <li>* Must contain one lowercase</li>
-                </ul>
-            </p>
-            <label for="userName">Username</label>
-            <div v-if="validationFailed('userName')" class="error-detail">
-                {{ getErrorMessage('userName') }}
-            </div>
-            <input ref="username" id='userName' type="text" placeholder="Bruce Wayne" v-model="userName">
-        </div>
-        <label for="userEmail">Email</label>
-        <div  ref="email" v-if="validationFailed('userEmail')" class="error-detail">
-            {{ getErrorMessage('userEmail') }}
-        </div>
-        <input id="userEmail" type="text" placeholder="user@example.com" v-model="email" />
-        <label for="userPassword">Password</label>
-        <label class="is-pulled-right" v-if="isRegistering && password !== ''">
-            Strength:&nbsp;<span :class="passwordStrengthStyle">{{ passwordStrengthText }}</span>
-        </label>
-        <div v-if="validationFailed('userPassword')" class="error-detail">
-            {{ getErrorMessage('userPassword') }}
-        </div>
-        <div>
-            <input id="userPassword" :type="showPasswords ? 'text' : 'password'" placeholder="Password" v-model="password" style="width:85%"/>
-            <button @click="toggleShowPasswords()" class="is-pulled-right"><BaseIcon :name="showPasswords ? 'eye' : 'eye-off'"></BaseIcon></button>
-        </div>
-        <div v-if="isRegistering">
-            <label for="confirmPassword">Confirm Password</label>
-            <div v-if="validationFailed('confirmPassword')" class="error-detail" >
-                {{ getErrorMessage('confirmPassword') }}
-            </div>
-            <div>
-                <input id="confirmPassword" :type="showPasswords ? 'text' : 'password'" placeholder="Confirm Password" v-model="confirmedPassword" style="width:85%"/>
-                <button @click="toggleShowPasswords()" class="is-pulled-right"><BaseIcon :name="showPasswords ? 'eye' : 'eye-off'"></BaseIcon></button>
-            </div>
-        </div>
-        <label v-if="isRegistering" for="userAcknowledged" class="acknowledgement">
-            <span>
-                By checking this box, you hereby agree to the 
-                <strong class="acknowledgement-link" @click="goToPrivacyPolicy()">Privacy Policy</strong>
-                 and 
-                <strong class="acknowledgement-link" @click="goToTermsAndConditions()">Terms Of Use</strong>
-                 of this site.
-            </span>
-        </label>
-        <input v-if="isRegistering" id="userAcknowledged" type="checkbox" v-model="hasUserAcknowledgedTOS" /><br>
-        <button :class="disableRegisterButton ? 'button-disabled' : ''" @click="isRegistering ? register() : login()" :disabled="disableRegisterButton">{{ loginRegisterLabel }}</button> 
-        <input id="staySignedIn" v-if="!isRegistering" type="checkbox" v-model="isUserStayingSignedIn" style="cursor:pointer;" /> 
-        <label v-if="!isRegistering" for="staySignedIn" style="cursor:pointer;">Stay Signed In</label><br>
-        <button @click="toggleRegisterUser()">{{ toggleRegisterUserLabel }}</button>
-    </div>
-</template>
 <script>
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, setPersistence, browserLocalPersistence, inMemoryPersistence } from 'firebase/auth';
 import BaseIcon from '@/components/BaseIcon.vue';
-export default {
+import { defineComponent } from 'vue';
+import { mapActions, mapState } from 'pinia';
+import mainStore from '@/store';
+
+export default defineComponent({
     components: {
         BaseIcon,
     },
@@ -76,7 +16,6 @@ export default {
             confirmedPassword: '',
             userName: '',
             auth: null,
-            user: null,
             isRegistering: false,
             hasUserAcknowledgedTOS: false,
             showPasswords: false,
@@ -88,6 +27,7 @@ export default {
         this.auth = getAuth();
     },
     computed: {
+        ...mapState(mainStore, ['user']),
         toggleRegisterUserLabel() {
             return this.isRegistering ? 'Login Instead' : 'New to the site? Register here';
         },
@@ -144,6 +84,7 @@ export default {
         }
     },
     methods: {
+        ...mapActions(mainStore, ['setUser', 'clearStore']),
         toggleShowPasswords() {
             this.showPasswords = !this.showPasswords;
         },
@@ -152,12 +93,12 @@ export default {
             if (this.validateFields()) {
                 createUserWithEmailAndPassword(this.auth, this.email, this.password)
                     .then(() => {
-                        this.user = this.auth.currentUser;
-                        updateProfile(this.user, {
+                        let authUser = this.auth.currentUser;
+                        updateProfile(authUser, {
                             displayName: this.userName
                         }).then(() => {
-                            this.user.displayName = this.userName;
-                            this.$store.dispatch('setUser', this.user);
+                            authUser.displayName = this.userName;
+                            this.setUser(authUser);
                             this.$router.push({ name: 'user-profile', params: { isRegisteringNewUser: 'true' }});
                         }).catch((error) => {
                             console.log(error);
@@ -176,9 +117,9 @@ export default {
                     .then(() => {
                         signInWithEmailAndPassword(this.auth, this.email, this.password)
                             .then(() => {
-                                this.user = this.auth.currentUser;
-                                this.$store.dispatch('setUser', this.user);
-                                this.$store.dispatch('clearStore');
+                                let authUser = this.auth.currentUser;
+                                this.setUser(authUser);
+                                this.clearStore();
                                 this.$router.push('/profile');
                             })
                             .catch((error) => {
@@ -261,8 +202,72 @@ export default {
             return errorMessage ? `*${ errorMessage.message }` : `No errors for '${field}'`;
         },
     }
-}
+})
 </script>
+<template>
+    <div class="user-view" @keyup.enter="isRegistering ? register() : login()">
+        <h1 v-if="isRegistering">Create an Account</h1>
+        <h1 v-else>Login</h1>
+        <div v-if="isRegistering">
+            <p class="passwordPolicy">
+                <ul>
+                    Password Policy:
+                    <li>* No spaces</li>
+                    <li>* At least 6 characters</li>
+                    <li>* No more than 20 characters</li>
+                    <li>* Must contain one numeric digits</li>
+                    <li>* Must contain one uppercase</li>
+                    <li>* Must contain one lowercase</li>
+                </ul>
+            </p>
+            <label for="userName">Username</label>
+            <div v-if="validationFailed('userName')" class="error-detail">
+                {{ getErrorMessage('userName') }}
+            </div>
+            <input ref="username" id='userName' type="text" placeholder="Bruce Wayne" v-model="userName">
+        </div>
+        <label for="userEmail">Email</label>
+        <div  ref="email" v-if="validationFailed('userEmail')" class="error-detail">
+            {{ getErrorMessage('userEmail') }}
+        </div>
+        <input id="userEmail" type="text" placeholder="user@example.com" v-model="email" />
+        <label for="userPassword">Password</label>
+        <label class="is-pulled-right" v-if="isRegistering && password !== ''">
+            Strength:&nbsp;<span :class="passwordStrengthStyle">{{ passwordStrengthText }}</span>
+        </label>
+        <div v-if="validationFailed('userPassword')" class="error-detail">
+            {{ getErrorMessage('userPassword') }}
+        </div>
+        <div>
+            <input id="userPassword" :type="showPasswords ? 'text' : 'password'" placeholder="Password" v-model="password" style="width:85%"/>
+            <button @click="toggleShowPasswords()" class="is-pulled-right"><BaseIcon :name="showPasswords ? 'eye' : 'eye-off'"></BaseIcon></button>
+        </div>
+        <div v-if="isRegistering">
+            <label for="confirmPassword">Confirm Password</label>
+            <div v-if="validationFailed('confirmPassword')" class="error-detail" >
+                {{ getErrorMessage('confirmPassword') }}
+            </div>
+            <div>
+                <input id="confirmPassword" :type="showPasswords ? 'text' : 'password'" placeholder="Confirm Password" v-model="confirmedPassword" style="width:85%"/>
+                <button @click="toggleShowPasswords()" class="is-pulled-right"><BaseIcon :name="showPasswords ? 'eye' : 'eye-off'"></BaseIcon></button>
+            </div>
+        </div>
+        <label v-if="isRegistering" for="userAcknowledged" class="acknowledgement">
+            <span>
+                By checking this box, you hereby agree to the 
+                <strong class="acknowledgement-link" @click="goToPrivacyPolicy()">Privacy Policy</strong>
+                 and 
+                <strong class="acknowledgement-link" @click="goToTermsAndConditions()">Terms Of Use</strong>
+                 of this site.
+            </span>
+        </label>
+        <input v-if="isRegistering" id="userAcknowledged" type="checkbox" v-model="hasUserAcknowledgedTOS" /><br>
+        <button :class="disableRegisterButton ? 'button-disabled' : ''" @click="isRegistering ? register() : login()" :disabled="disableRegisterButton">{{ loginRegisterLabel }}</button> 
+        <input id="staySignedIn" v-if="!isRegistering" type="checkbox" v-model="isUserStayingSignedIn" style="cursor:pointer;" /> 
+        <label v-if="!isRegistering" for="staySignedIn" style="cursor:pointer;">Stay Signed In</label><br>
+        <button @click="toggleRegisterUser()">{{ toggleRegisterUserLabel }}</button>
+    </div>
+</template>
 <style scoped>
 .user-view {
     min-width: 500px;

@@ -1,3 +1,95 @@
+<script>
+import NavBar from './components/NavBar';
+import { defineComponent } from 'vue';
+import { mapActions, mapState } from 'pinia';
+import mainStore from '@/store';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+
+export default defineComponent({
+  components: {
+    NavBar,
+  },
+  mounted() {
+    const vuexStorage = localStorage.getItem('vuex');
+    if (vuexStorage && vuexStorage !== null)
+      localStorage.removeItem('vuex');
+    this.setCategories();
+    this.setSubcategories();
+    this.setStateData();
+    this.setFederalTaxes();
+    this.setStateTaxes();
+    this.setFICARate();
+    if (this.activeMonth?.name !== this.currentMonth.name || this.activeMonth?.id !== this.currentMonth.id) {
+        let promiseArr = [];
+        if (this.hasBills) {
+          this.bills.forEach(b => {
+            if (b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === '')) {
+              if (b.dueDate && b.dueDate !== null) {
+                let currentDueDate = new Date(b.dueDate);
+                let newDueDate = new Date(b.dueDate);
+                if (currentDueDate.getMonth() !== self.currentMonth.id) {
+                  newDueDate.setMonth(self.currentMonth.id);
+                }
+                if (currentDueDate.getFullYear() !== this.currentYear) {
+                  newDueDate.setFullYear(this.currentYear);
+                }
+                b.dueDate = newDueDate.toLocaleDateString();
+              }
+              b.paid = false;
+              b.datePaid = null;
+            }
+            promiseArr.push(this.updateBill(b));
+          });
+          Promise.all(promiseArr).then(() => {
+            this.updateActiveMonth(this.currentMonth);
+          });
+        } else {
+          this.updateActiveMonth(this.currentMonth);
+        }
+      }
+      onAuthStateChanged(getAuth(), (user) => {
+        if (user) {
+          if (!this.user || this.user === null) {
+            this.setUser(user);
+            this.getUserIncomes();
+            this.getUserBills();
+          }
+        } else {
+          this.clearUser();
+        }
+      });
+  },
+  computed: {
+    ...mapState(mainStore, ['activeMonth', 'user', 'bills', 'hasBills']),
+    currentYear() {
+      return  new Date().getFullYear();
+    },
+    privacyPolicyLink() {
+      let routeData = this.$router.resolve({ name: 'privacy-policy' });
+      return routeData.href;
+    },
+    termsOfUseLink() {
+      let routeData = this.$router.resolve({ name: 'terms-and-conditions' });
+      return routeData.href;
+    },
+    contactUsLink() {
+      let routeData = this.$router.resolve({ name: 'contact-dashboard' });
+      return routeData.href;
+    }
+  },
+  methods: {
+    ...mapActions(mainStore, ['updateActiveMonth', 'updateBill', 'setUser', 'clearUser', 'getUserIncomes', 'getUserBills', 'setCategories', 'setSubcategories', 'setStateData', 'setFederalTaxes', 'setStateTaxes', 'setFICARate']),
+  },
+  data() {
+    return {
+      currentMonth: {
+          name: new Date().toLocaleString('default', { month: 'long' }),
+          id: new Date().getMonth()
+      }
+    }
+  }
+});
+</script>
 <template>
   <div id="app">
     <NavBar/>
@@ -15,91 +107,6 @@
     </div>
   </div>
 </template>
-
-<script>
-import NavBar from './components/NavBar';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-export default {
-  components: {
-    NavBar
-  },
-  created() {
-    let self = this;
-    self.$store.dispatch('getCategories');
-    self.$store.dispatch('getSubcategories');
-    self.$store.dispatch('getStateData');
-    self.$store.dispatch('getFederalTaxes');
-    self.$store.dispatch('getStateTaxes');
-    self.$store.dispatch('getFICARate');
-    if (self.$store.state.activeMonth?.name !== self.currentMonth.name || self.$store.state.activeMonth?.id !== self.currentMonth.id) {
-        let promiseArr = [];
-        if (self.$store.getters.hasBills) {
-          self.$store.getters.getBills.forEach(b => {
-            if (b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === '')) {
-              if (b.dueDate && b.dueDate !== null) {
-                let currentDueDate = new Date(b.dueDate);
-                let newDueDate = new Date(b.dueDate);
-                if (currentDueDate.getMonth() !== self.currentMonth.id) {
-                  newDueDate.setMonth(self.currentMonth.id);
-                }
-                if (currentDueDate.getFullYear() !== this.currentYear) {
-                  newDueDate.setFullYear(this.currentYear);
-                }
-                b.dueDate = newDueDate.toLocaleDateString();
-              }
-              b.paid = false;
-              b.datePaid = null;
-            }
-            promiseArr.push(this.$store.dispatch('updateBill', b));
-          });
-          Promise.all(promiseArr).then(() => {
-            self.$store.dispatch('updateActiveMonth', this.currentMonth);
-          });
-        } else {
-          self.$store.dispatch('updateActiveMonth', this.currentMonth);
-        }
-      }
-      onAuthStateChanged(getAuth(), (user) => {
-        if (user) {
-          const storeUser = this.$store.state.user;
-          if (!storeUser || storeUser === null) {
-            this.$store.dispatch('setUser', user);
-            this.$store.dispatch('getUserIncomes');
-            this.$store.dispatch('getUserBills');
-          }
-        } else {
-          this.$store.dispatch('clearUser');
-        }
-      });
-  },
-  computed: {
-    currentYear() {
-      return  new Date().getFullYear();
-    },
-    privacyPolicyLink() {
-      let routeData = this.$router.resolve({ name: 'privacy-policy' });
-      return routeData.href;
-    },
-    termsOfUseLink() {
-      let routeData = this.$router.resolve({ name: 'terms-and-conditions' });
-      return routeData.href;
-    },
-    contactUsLink() {
-      let routeData = this.$router.resolve({ name: 'contact-dashboard' });
-      return routeData.href;
-    }
-  },
-  data() {
-    return {
-      currentMonth: {
-          name: new Date().toLocaleString('default', { month: 'long' }),
-          id: new Date().getMonth()
-      }
-    }
-  }
-}
-</script>
-
 <style>
 html {
   -webkit-text-size-adjust: 100%;

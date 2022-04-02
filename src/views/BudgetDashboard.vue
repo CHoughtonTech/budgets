@@ -1,38 +1,19 @@
-<template>
-    <div class='dashboard-view'>
-        <h1 style="color:lightgrey;">{{ userName }} Budget</h1>
-        <div class='summary-group'>
-            <div class='summary-group-header'>
-                <div class="select is-rounded is-medium">
-                    <select v-model="selectedSummary">
-                        <option value="1">Monthly</option>
-                        <option value="3">Quarterly</option>
-                        <option value="6">Semi-Annual</option>
-                        <option value="12">Annual</option>
-                    </select>
-                </div>
-            </div>
-            <div class='base-summaries'>
-                <BaseSummary :summaryName='"Net Income"' :amount='toCurrency(incomeTotal)' :summaryLink='"income"'></BaseSummary>
-                <BaseSummary :summaryName='"Bills"' :amount='toCurrency(expensesTotal)' :summaryLink='"bills"'></BaseSummary>
-                <BaseSummary :summaryName='"Remaining"' :amount='toCurrency(remainingTotal)'></BaseSummary>
-            </div>
-        </div>
-        <br/>
-    </div>
-</template>
-
 <script>
+import { defineComponent } from 'vue';
 import BaseSummary from '../components/BaseSummary';
 import { toCurrencyMixin } from '../mixins/GlobalMixin';
-export default {
+import { mapState } from 'pinia';
+import mainStore from '@/store';
+
+export default defineComponent({
     components: {
         BaseSummary: BaseSummary
     },
     mixins: [toCurrencyMixin],
     computed: {
+        ...mapState(mainStore, ['activeBills', 'user', 'income']),
         expensesTotal() {
-            const bills = this.$store.getters.activeBills.filter(b => b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === ''));
+            const bills = this.activeBills.filter(b => b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === ''));
             let total = 0;
             const summaryMult = parseInt(this.selectedSummary);
             bills.forEach(bill => {
@@ -41,11 +22,10 @@ export default {
             return total * summaryMult;
         },
         userName() {
-            const loggedInUsername = this.$store.getters.getUserName;
-            return loggedInUsername ? `${loggedInUsername}'s` : 'Your';
+            return this.user?.displayName ? `${this.user.displayName}'s` : 'Your';
         },
         incomeTotal() {
-            const income = this.$store.getters.getIncomes.filter(i => i.isActive === true);
+            const income = this.income.filter(i => i.isActive === true);
             const summaryMult = parseInt(this.selectedSummary);
             let total = 0;
             income.forEach(i => {
@@ -93,8 +73,31 @@ export default {
             selectedSummary: 1
         }
     }
-}
+})
 </script>
+<template>
+    <div class='dashboard-view'>
+        <h1 style="color:lightgrey;">{{ userName }} Budget</h1>
+        <div class='summary-group'>
+            <div class='summary-group-header'>
+                <div class="select is-rounded is-medium">
+                    <select v-model="selectedSummary">
+                        <option value="1">Monthly</option>
+                        <option value="3">Quarterly</option>
+                        <option value="6">Semi-Annual</option>
+                        <option value="12">Annual</option>
+                    </select>
+                </div>
+            </div>
+            <div class='base-summaries'>
+                <BaseSummary :summaryName='"Net Income"' :amount='toCurrency(incomeTotal)' :summaryLink='"income"'></BaseSummary>
+                <BaseSummary :summaryName='"Bills"' :amount='toCurrency(expensesTotal)' :summaryLink='"bills"'></BaseSummary>
+                <BaseSummary :summaryName='"Remaining"' :amount='toCurrency(remainingTotal)'></BaseSummary>
+            </div>
+        </div>
+        <br/>
+    </div>
+</template>
 <style scoped>
 .dashboard-view {
     width: 50%;
