@@ -1,3 +1,37 @@
+<script>
+import BaseIcon from './BaseIcon.vue';
+import { defineComponent } from 'vue';
+import ox from '@/assets/small-ox.jpg';
+import { mapState } from 'pinia';
+import mainStore from '@/store';
+
+export default defineComponent({
+    components: {
+        BaseIcon,
+    },
+    computed: {
+        ...mapState(mainStore, ['user']),
+        userName() {
+            if (!this.user || this.user === null) return null;
+            return this.user.displayName ?? null;
+        },
+        profilePhoto() {
+            if (this.user) {
+                if (this.user.photoURL && this.user.photoURL !== ox) {
+                    return this.user.photoURL;
+                } else {
+                    return ox;
+                }
+            } else {
+                return ox;
+            }
+        },
+        isLoggedIn() {
+            return this.user !== null;
+        }
+    }
+});
+</script>
 <template>
     <div id="nav" class="nav">
         <nav>
@@ -21,28 +55,6 @@
         </nav>
     </div>
 </template>
-
-<script>
-import BaseIcon from './BaseIcon.vue';
-import ox from '@/assets/small-ox.jpg';
-export default {
-    components: {
-        BaseIcon,
-    },
-    computed: {
-        userName() {
-            return this.$store.getters.getUserName;
-        },
-        profilePhoto() {
-            const photo = this.$store.getters.getUserPhoto;
-            return photo ? photo : ox;
-        },
-        isLoggedIn() {
-            return this.$store.state.user !== null;
-        }
-    }
-}
-</script>
 <style>
 .nav {
     overflow:hidden;

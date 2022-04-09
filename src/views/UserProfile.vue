@@ -1,3 +1,244 @@
+<script>
+import { getAuth, sendEmailVerification, updateProfile } from 'firebase/auth';
+import { getStorage, ref, deleteObject } from 'firebase/storage'
+import BaseIcon from '@/components/BaseIcon.vue';
+import BaseModal from '@/components/BaseModal.vue';
+import ProfilePhoto from '@/components/ProfilePhoto.vue';
+import ox from '@/assets/small-ox.jpg';
+import { mapActions, mapState } from 'pinia';
+import mainStore from '@/store';
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+    components: {
+        BaseIcon,
+        BaseModal,
+        ProfilePhoto,
+    },
+    props: {
+        isRegisteringNewUser: null,
+    },
+    computed: {
+        ...mapState(mainStore, ['user', 'bills', 'income']),
+        userNameChanged() {
+            return this.userName !== this.profileName && this.userName !== '';
+        },
+        profileName() {
+            return this.user ? this.user.displayName : this.userName;
+        },
+        userEmail() {
+            return this.user?.email;
+        },
+        isUserEmailVerified() {
+            return this.user?.emailVerified;
+        },
+        hasUserProfilePhoto() {
+            return this.profilePhoto !== ox && this.profilePhoto !== '';
+        },
+        profilePhoto() {
+            if (this.user) {
+                if (this.user.photoURL && this.user.photoURL !== ox) {
+                    return this.user.photoURL;
+                } else {
+                    return this.userPhoto;
+                }
+            } else {
+                return ox;
+            }
+        },
+        userId() {
+            return this.user ? this.user.uid : undefined;
+        },
+        billsCount() {
+            return this.bills.length;
+        },
+        incomeCount() {
+            return this.income.length;
+        },
+        hasUnsavedBillsOrIncomes() {
+            const hasBills = this.bills.length > 0;
+            const hasNotCreatedBills = this.bills.filter((bill) => bill.userId === this.user.uid).length <= 0;
+            const hasIncomes = this.income.length > 0;
+            const hasNotCreatedIncomes = this.income.filter((income) => income.userId === this.user.uid).length <= 0;
+            return (hasBills || hasIncomes) && hasNotCreatedBills && hasNotCreatedIncomes;
+        }
+    },
+    data() {
+        return {
+            userName: null,
+            userPhoto: null,
+            auth: null,
+            isEditing: false,
+            isUploadingPhoto: false,
+            showUpdateBillsAndIncomes: false,
+            showConfirmDeclineModal: false,
+            showSuccessModal: false,
+            showEmailVerificationSent: false,
+            showAccountSettings: false,
+            showPreferences: false,
+            verifiedEmailStyle: 'stroke:forestgreen;color:whitesmoke;font-style:italic;fill:forestgreen;',
+        }
+    },
+    mounted() {
+        this.auth = getAuth();
+        if (!this.user && this.auth.currentUser) {
+            this.setUser();
+        }
+        if (this.user) {
+            this.userName = this.user.displayName;
+            this.userPhoto = this.user.photoURL ?? ox;
+            const confirmedIsRegisteringNewUser = this.isRegisteringNewUser === 'true';
+            if (confirmedIsRegisteringNewUser) {
+                this.userConfirmedTOS('true');
+            }
+            if (this.hasUnsavedBillsOrIncomes && confirmedIsRegisteringNewUser) {
+                this.toggleShowUpdateBillsAndIncomes();
+            } else {
+                if (this.bills.length <= 0)
+                    this.getUserIncomes();
+                if (this.income.length <= 0)
+                    this.getUserBills();
+            }
+        }
+    },
+    methods: {
+        ...mapActions(mainStore, ['userConfirmedTOS', 'getUserIncomes', 'getUserBills', 'setUser', 'clearUser', 'updateBill', 'updateIncome', 'clearStore']),
+        toggleIsEditing() {
+            if (this.userName === '' || this.userName === null) 
+                this.userName = this.profileName;
+            this.isEditing = !this.isEditing;
+        },
+        toggleShowPreferences() {
+            this.showPreferences = !this.showPreferences;
+        },
+        toggleShowAccountSettings() {
+            this.showAccountSettings = !this.showAccountSettings;
+        },
+        toggleShowUpdateBillsAndIncomes() {
+            this.showUpdateBillsAndIncomes = !this.showUpdateBillsAndIncomes;
+        },
+        toggleShowConfirmDeclineModal() {
+            this.showConfirmDeclineModal = !this.showConfirmDeclineModal;
+        },
+        toggleShowSuccessModal() {
+            this.showSuccessModal = !this.showSuccessModal;
+        },
+        toggleShowEmailVerificationSent() {
+            this.showEmailVerificationSent = !this.showEmailVerificationSent;
+        },
+        toggleUploadPhoto() {
+            this.isUploadingPhoto = !this.isUploadingPhoto;
+        },
+        removeUserPhoto() {
+            const storage = getStorage();
+            const photoRef = ref(storage, `${this.auth.currentUser.uid}/ProfilePhoto`);
+            deleteObject(photoRef).then(() => {
+                const profileData = {
+                    displayName: this.userName,
+                    photoURL: ox,
+                };
+                this.updateUserInfo(profileData);
+            }).catch((error) => {
+                console.error(error);
+            });
+        },
+        setUserProfilePhoto(profileURL) {
+            this.toggleUploadPhoto();
+            const profileData = {
+                displayName: this.userName, 
+                photoURL: profileURL,
+            };
+            this.updateUserInfo(profileData);
+        },
+        setUsername(username) {
+            this.toggleIsEditing();
+            const profileData = {
+                displayName: username, 
+                photoURL: this.userPhoto,
+            };
+            this.updateUserInfo(profileData);  
+        },
+        updateUserInfo(profileData) {
+            let authUser = this.auth.currentUser;
+            updateProfile(authUser, profileData).then(() => {
+                authUser.displayName = profileData.displayName;
+                authUser.photoURL = profileData.photoURL;
+                this.userName = authUser.displayName;
+                this.userPhoto = authUser.photoURL;
+                this.setUser(authUser);
+            });
+        },
+        verifyEmail() {
+            const originURL = window.location.origin;
+            const actionCodeSettings = {
+                url: `${originURL}/verifyCallback/${this.userEmail}`,
+            };
+            sendEmailVerification(this.user, actionCodeSettings)
+                .then(() => {
+                    this.toggleShowEmailVerificationSent()
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+        },
+        confirmSuccess() {
+            this.toggleShowSuccessModal();
+            this.$router.push('/');
+        },
+        logout() {
+            this.auth.signOut();
+            this.clearUser();
+            this.clearUserStore();
+        },
+        updateExistingBillsAndIncomes() {
+            this.bills.forEach((bill) => {
+                const newBill = {
+                    userId: this.user.uid,
+                    id: bill.id,
+                    name: bill.name,
+                    paid:  bill.paid,
+                    amount: bill.amount,
+                    datePaid:  bill.datePaid,
+                    dateCreated:  bill.dateCreated,
+                    isRecurring:  bill.isRecurring,
+                    paidCount:  bill.paidCount,
+                    isFixedAmount: bill.isFixedAmount,
+                    datePaidOff: bill.datePaidOff,
+                    subCategoryId: bill.subCategoryId,
+                    dueDate: bill.dueDate === undefined ? new Date('1/1/2019') : bill.dueDate,
+                };
+                this.updateBill(newBill);
+            });
+            this.income.forEach((i) => {
+                const newIncome = {
+                    userId: this.user.uid,
+                    id: i.id,
+                    name: i.name,
+                    type: i.type,
+                    salary: i.salary,
+                    netSalary: i.netSalary,
+                    hourlyRate: i.hourlyRate,
+                    hoursPerWeek: i.hoursPerWeek,
+                    employmentType: i.employmentType,
+                    filingStatus: i.filingStatus,
+                    payPeriod: i.payPeriod,
+                    state: i.state,
+                    isActive: i.isActive,
+                    isTaxExempt: i.isTaxExempt === undefined ? false : i.isTaxExempt,
+                    deductions: i.deductions.map(d => { return d; })
+                };
+                this.updateIncome(newIncome);
+            });
+            this.toggleShowUpdateBillsAndIncomes();
+            this.toggleShowSuccessModal();
+        },
+        clearUserStore() {
+            this.clearStore();
+            this.$router.push('/');
+        }
+    }
+});
+</script>
 <template>
     <div class='profile-view'>
         <div class="is-flex is-justify-content-center">
@@ -117,233 +358,6 @@
         </BaseModal>
     </div>
 </template>
-<script>
-import { getAuth, sendEmailVerification, updateProfile } from 'firebase/auth';
-import { getStorage, ref, deleteObject } from 'firebase/storage'
-import BaseIcon from '@/components/BaseIcon.vue';
-import BaseModal from '@/components/BaseModal.vue';
-import ProfilePhoto from '@/components/ProfilePhoto.vue';
-import ox from '../assets/small-ox.jpg';
-export default {
-    components: {
-        BaseIcon,
-        BaseModal,
-        ProfilePhoto,
-    },
-    props: {
-        isRegisteringNewUser: null,
-    },
-    computed: {
-        userNameChanged() {
-            return this.userName !== this.profileName && this.userName !== '';
-        },
-        profileName() {
-            const userName = this.$store.getters.getUserName;
-            return userName ? userName : this.userName;
-        },
-        userEmail() {
-            return this.$store.getters.getEmail;
-        },
-        isUserEmailVerified() {
-            return this.user?.emailVerified;
-        },
-        hasUserProfilePhoto() {
-            return this.profilePhoto !== ox && this.profilePhoto !== '';
-        },
-        profilePhoto() {
-            const photoURL = this.$store.getters.getUserPhoto;
-            return photoURL && photoURL !== '' ? photoURL : this.userPhoto ? this.userPhoto : ox;
-        },
-        userId() {
-            return this.user ? this.user.uid : undefined;
-        },
-        billsCount() {
-            return this.$store.getters.getBills.length;
-        },
-        incomeCount() {
-            return this.$store.getters.getIncomes.length;
-        },
-        hasUnsavedBillsOrIncomes() {
-            const hasBills = this.$store.getters.getBills.length > 0;
-            const hasNotCreatedBills = this.$store.getters.getBills.filter((bill) => bill.userId === this.user.uid).length <= 0;
-            const hasIncomes = this.$store.getters.getIncomes.length > 0;
-            const hasNotCreatedIncomes = this.$store.getters.getIncomes.filter((income) => income.userId === this.user.uid).length <= 0;
-            return (hasBills || hasIncomes) && hasNotCreatedBills && hasNotCreatedIncomes;
-        }
-    },
-    data() {
-        return {
-            userName: null,
-            userPhoto: null,
-            user: null,
-            auth: null,
-            isEditing: false,
-            isUploadingPhoto: false,
-            showUpdateBillsAndIncomes: false,
-            showConfirmDeclineModal: false,
-            showSuccessModal: false,
-            showEmailVerificationSent: false,
-            showAccountSettings: false,
-            showPreferences: false,
-            verifiedEmailStyle: 'stroke:forestgreen;color:whitesmoke;font-style:italic;fill:forestgreen;',
-        }
-    },
-    mounted() {
-        this.auth = getAuth();
-        this.user = this.$store.state.user;
-        if (this.user) {
-            this.userName = this.user.displayName;
-            this.userPhoto = this.user.photoURL;
-            const confirmedIsRegisteringNewUser = this.isRegisteringNewUser === 'true';
-            if (confirmedIsRegisteringNewUser) {
-                this.$store.dispatch('userConfirmedTOS', 'true');
-            }
-            if (this.hasUnsavedBillsOrIncomes && confirmedIsRegisteringNewUser) {
-                this.toggleShowUpdateBillsAndIncomes();
-            } else {
-                if (this.$store.getters.getBills.length <= 0)
-                    this.$store.dispatch('getUserIncomes');
-                if (this.$store.getters.getIncomes.length <= 0)
-                    this.$store.dispatch('getUserBills');
-            }
-        }
-    },
-    methods: {
-        toggleIsEditing() {
-            if (this.userName === '' || this.userName === null) 
-                this.userName = this.profileName;
-            this.isEditing = !this.isEditing;
-        },
-        toggleShowPreferences() {
-            this.showPreferences = !this.showPreferences;
-        },
-        toggleShowAccountSettings() {
-            this.showAccountSettings = !this.showAccountSettings;
-        },
-        toggleShowUpdateBillsAndIncomes() {
-            this.showUpdateBillsAndIncomes = !this.showUpdateBillsAndIncomes;
-        },
-        toggleShowConfirmDeclineModal() {
-            this.showConfirmDeclineModal = !this.showConfirmDeclineModal;
-        },
-        toggleShowSuccessModal() {
-            this.showSuccessModal = !this.showSuccessModal;
-        },
-        toggleShowEmailVerificationSent() {
-            this.showEmailVerificationSent = !this.showEmailVerificationSent;
-        },
-        toggleUploadPhoto() {
-            this.isUploadingPhoto = !this.isUploadingPhoto;
-        },
-        removeUserPhoto() {
-            const storage = getStorage();
-            const photoRef = ref(storage, `${this.auth.currentUser.uid}/ProfilePhoto`);
-            deleteObject(photoRef).then(() => {
-                const profileData = {
-                    displayName: this.userName,
-                    photoURL: '',
-                };
-                this.updateUserInfo(profileData);
-            }).catch((error) => {
-                console.error(error);
-            });
-        },
-        setUserProfilePhoto(profileURL) {
-            this.toggleUploadPhoto();
-            const profileData = {
-                displayName: this.userName, 
-                photoURL: profileURL,
-            };
-            this.updateUserInfo(profileData);
-        },
-        setUsername(username) {
-            this.toggleIsEditing();
-            const profileData = {
-                displayName: username, 
-                photoURL: this.userPhoto,
-            };
-            this.updateUserInfo(profileData);  
-        },
-        updateUserInfo(profileData) {
-            let user = getAuth().currentUser;
-            updateProfile(user, profileData).then(() => {
-                user.displayName = profileData.displayName;
-                user.photoURL = profileData.photoURL;
-                this.$store.dispatch('setUser', user);
-                this.$router.go();
-            });
-        },
-        verifyEmail() {
-            const originURL = window.location.origin;
-            const actionCodeSettings = {
-                url: `${originURL}/verifyCallback/${this.userEmail}`,
-            };
-            sendEmailVerification(this.user, actionCodeSettings)
-                .then(() => {
-                    this.toggleShowEmailVerificationSent()
-                })
-                .catch((error) => {
-                    console.log(error);
-                });
-        },
-        confirmSuccess() {
-            this.toggleShowSuccessModal();
-            this.$router.push('/');
-        },
-        logout() {
-            this.auth.signOut();
-            this.$store.dispatch('clearUser');
-            this.clearStore();
-        },
-        updateExistingBillsAndIncomes() {
-            this.$store.getters.getBills.forEach((bill) => {
-                const newBill = {
-                    userId: this.user.uid,
-                    id: bill.id,
-                    name: bill.name,
-                    paid:  bill.paid,
-                    amount: bill.amount,
-                    datePaid:  bill.datePaid,
-                    dateCreated:  bill.dateCreated,
-                    isRecurring:  bill.isRecurring,
-                    paidCount:  bill.paidCount,
-                    isFixedAmount: bill.isFixedAmount,
-                    datePaidOff: bill.datePaidOff,
-                    subCategoryId: bill.subCategoryId,
-                    dueDate: bill.dueDate === undefined ? new Date('1/1/2019') : bill.dueDate,
-                };
-                this.$store.dispatch('updateBill', newBill);
-            });
-            this.$store.getters.getIncomes.forEach((income) => {
-                const newIncome = {
-                    userId: this.user.uid,
-                    id: income.id,
-                    name: income.name,
-                    type: income.type,
-                    salary: income.salary,
-                    netSalary: income.netSalary,
-                    hourlyRate: income.hourlyRate,
-                    hoursPerWeek: income.hoursPerWeek,
-                    employmentType: income.employmentType,
-                    filingStatus: income.filingStatus,
-                    payPeriod: income.payPeriod,
-                    state: income.state,
-                    isActive: income.isActive,
-                    isTaxExempt: income.isTaxExempt === undefined ? false : income.isTaxExempt,
-                    deductions: income.deductions.map(d => { return d; })
-                };
-                this.$store.dispatch('updateIncome', newIncome);
-            });
-            this.toggleShowUpdateBillsAndIncomes();
-            this.toggleShowSuccessModal();
-        },
-        clearStore() {
-            this.$store.dispatch('clearStore');
-            this.$router.push('/');
-        }
-    }
-}
-</script>
 <style scoped>
 .profile-view {
     min-width: 500px;

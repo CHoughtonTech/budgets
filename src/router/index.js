@@ -1,16 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { defineComponent } from 'vue';
 import { getAuth, signOut } from 'firebase/auth';
-import BudgetDashboard from '@/views/BudgetDashboard';
 import BillsDashboard from '@/views/BillsDashboard';
 import BillsUpsert from '@/views/BillsUpsert';
+import BudgetDashboard from '@/views/BudgetDashboard';
+import ContactDashboard from '@/views/ContactDashboard';
+import NotFoundPage from '@/views/NotFoundPage';
+import PrivacyPolicy from '@/views/PrivacyPolicy';
 import IncomeDashboard from '@/views/IncomeDashboard';
 import IncomeUpsert from '@/views/IncomeUpsert';
+import TermsAndConditions from '@/views/TermsOfUse';
 import UserRegistration from '@/views/UserRegistration';
 import UserProfile from '@/views/UserProfile';
-import PrivacyPolicy from '@/views/PrivacyPolicy';
-import TermsAndConditions from '@/views/TermsOfUse';
-import ContactDashboard from '@/views/ContactDashboard';
 
 const routes = [
   {
@@ -103,6 +104,16 @@ const routes = [
     path: '/contact',
     name: 'contact-dashboard',
     component: ContactDashboard,
+  },
+  {
+    path: '/404',
+    name: 'not-found-page',
+    component: NotFoundPage,
+    props: true,
+  },
+  {
+    path: '/:pathMatch(.*)',
+    redirect: '/404'
   }
 ]
 

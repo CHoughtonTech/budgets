@@ -1,3 +1,252 @@
+<script>
+import BaseIcon from './BaseIcon';
+import BaseModal from './BaseModal';
+import { mapActions, mapState } from 'pinia';
+import mainStore from '@/store';
+import { defineComponent } from 'vue';
+import { mobileCheckMixin, toCurrencyMixin } from '../mixins/GlobalMixin.js';
+
+export default defineComponent({
+    components: {
+        BaseIcon,
+        BaseModal,
+    },
+    mixins: [
+        mobileCheckMixin,
+        toCurrencyMixin
+    ],
+    props: {
+        income: Object
+    },
+    created() {
+        this.setTaxRates();
+    },
+    computed: {
+        ...mapState(mainStore, ['federalTaxBrackets', 'stateTaxBrackets', 'ficaRate', 'states']),
+        isHourly() {
+            return this.income.type === 'h';
+        },
+        hasDeductions() {
+            return this.income.deductions.length > 0;
+        },
+        netAmountPerCheck() {
+            return this.toFixedNumber(this.income.netSalary / this.income.payPeriod, 2);
+        },
+        netAmountYTD() {
+            let totalPayPeriods = this.getPayPeriodsPassed();
+            return this.toFixedNumber(totalPayPeriods * (this.income.netSalary / this.income.payPeriod), 2);
+        },
+        netAmountLeft() {
+            return this.income.netSalary - this.netAmountYTD;
+        },
+        preTaxDeductions() {
+            let preTaxDeductionArr = this.income.deductions?.filter(d => d.type === 'pretax');
+            return preTaxDeductionArr;
+        },
+        postTaxDeductions() {
+            return this.income.deductions?.filter(d => d.type === 'posttax');
+        },
+        preTaxDeductedIncome() {
+            let result = 0;
+            this.preTaxDeductions.forEach(p => {
+                result += p.amount;
+            })
+            result = this.income.salary - (result * this.income.payPeriod);
+            return result;
+        },
+        deductionsTotal() {
+            let result = 0;
+            this.income.deductions.forEach(d => {
+                result += d.amount;
+            });
+            return result;
+        },
+        filingStateName() {
+            const foundState = this.states.find(s => s.abbreviation === this.income.state);
+            if (foundState && foundState !== null) {
+                return foundState.name;
+            } else {
+                return null;
+            }
+        },
+        hasFilingState() {
+            let foundState = this.states.find(s => s.abbreviation === this.income.state);
+            return foundState && foundState !== null;
+        },
+        employmentType() {
+            let result = null;
+            switch (this.income.employmentType) {
+                case 'pt':
+                    result = 'Part Time';
+                    break;
+                case 'c': 
+                    result = 'Contractor';
+                    break;
+                default:
+                    result = 'Full Time';
+                    break;
+            }
+            return result;
+        },
+        payPeriodFrequency() {
+            let result = null;
+            switch (this.income.payPeriod) {
+                case 12:
+                    result = 'Monthly';
+                    break;
+                case 24: 
+                    result = 'Bi-Monthly';
+                    break;
+                case 26: 
+                    result = 'Bi-Weekly';
+                    break;
+                default:
+                    result = 'Weekly';
+                    break;
+            }
+            return result;
+        },
+        hasFilingStatus() {
+            return this.income.filingStatus !== null;
+        },
+        filingStatus() {
+            let result = null;
+            switch (this.income.filingStatus) {
+                case 'h':
+                    result = 'Head of Household';
+                    break;
+                case 'm': 
+                    result = 'Married';
+                    break;
+                default:
+                    result = 'Single';
+                    break;
+            }
+            return result;
+        }
+    },
+    data() {
+        return {
+            selectedIncome: {},
+            showConfirmDelete: false,
+            showSelectedIncomeDetails: false,
+            federalTaxRate: 0,
+            stateTaxRate: 0,
+            ficaTaxRate: 0,
+            federalTaxAmount: 0,
+            stateTaxAmount: 0,
+            ficaTaxAmount: 0
+        };
+    },
+    methods: {
+        ...mapActions(mainStore, ['deleteIncome']),
+        confirmDelete(income) {
+            this.selectedIncome = income;
+            this.toggleShowConfirmDelete();
+        },
+        showIncomeDetails(income) {
+            this.selectedIncome = income;
+            this.toggleShowIncomeDetails();
+        },
+        toggleShowConfirmDelete() {
+            this.showConfirmDelete = !this.showConfirmDelete;
+        },
+        toggleShowIncomeDetails() {
+            this.showSelectedIncomeDetails = !this.showSelectedIncomeDetails;
+        },
+        deleteSelectedIncome() {
+            if (this.selectedIncome && this.selectedIncome !== null) {
+                this.deleteIncome(this.selectedIncome.id).then(() => {
+                    this.toggleShowConfirmDelete();
+                    this.selectedIncome = {};
+                });
+            }
+        },
+        cancelDelete() {
+            this.selectedIncome = {};
+            this.toggleShowConfirmDelete();
+        },
+        toFixedNumber(num, digits, base){
+            var pow = Math.pow(base||10, digits);
+            return Math.round(num*pow) / pow;
+        },
+        getWeekNum() {
+            const currentDate = new Date();
+            const msInDay = 24 * 60 * 60 * 1000;
+            let oneJan = new Date(currentDate.getFullYear(), 0, 1);
+            let result = Math.floor((((currentDate.getTime() - oneJan.getTime()) / msInDay) + oneJan.getDay() + 1) / 7) - 1;
+            return result;
+        },
+        getDaysInMonth(month, year) {
+            return new Date(year, month, 0).getDate();
+        },
+        getPayPeriodsPassed() {
+            let result = 0;
+            const numMonths = new Date().getMonth() + 1;
+            const thisYear = new Date().getFullYear();
+            const today = new Date().getDate();
+            for (let i = 0; i < this.getWeekNum(); i++) {
+                switch (this.income.payPeriod) {
+                    case 26:
+                    case 52:
+                        if (i % (52 / this.income.payPeriod) === 0) {
+                            result++;
+                        }
+                        break;
+                    case 24:
+                        result = 0;
+                        result = (numMonths * 2);
+                        if (today < Math.ceil(this.getDaysInMonth(numMonths, thisYear) / 2)) {
+                            result--;
+                        }
+                        break;
+                    case 12:
+                        result = numMonths;
+                        break;                
+                    default:
+                        break;
+                }
+            }
+            return result;
+        },
+        getStateFilingStatus() {
+            switch (this.income.filingStatus) {
+                case 'm':
+                    return 'm';
+                case 'h': 
+                case 's':
+                    return 's';
+                default:
+                    return null;
+            }
+        },
+        setTaxRates() {
+            if (this.income.isTaxExempt)
+                return;
+            this.federalTaxRate = this.federalTaxBrackets.filter(ft => ft.filing_status === this.income.filingStatus && ft.incomeMin < this.income.salary && ft.incomeMax > this.income.salary)[0].rate;
+            this.stateTaxRate = this.stateTaxBrackets.filter(s => s.filing_status === this.getStateFilingStatus() && s.incomeMin < this.income.salary && s.state === this.income.state).sort((a,b) => {
+                    let x = typeof a.rate === 'number' ? a.rate : parseFloat(a.rate);
+                    let y = typeof b.rate === 'number' ? b.rate : parseFloat(b.rate);
+                    if (x < y) { return 1 }
+                    if (x > y) { return -1 }
+                    return 0;
+                })[0].rate;
+            this.ficaRate.forEach(fica => {
+                this.ficaTaxRate += fica.rate;
+            });
+            this.setTaxAmounts();
+        },
+        setTaxAmounts() {
+            const fedTaxRatePct = this.federalTaxRate / 100;
+            const stateTaxRatePct = this.stateTaxRate / 100;
+            const ficaTaxRatePct = this.ficaTaxRate / 100;
+            this.stateTaxAmount = this.toFixedNumber(this.preTaxDeductedIncome * stateTaxRatePct, 2);
+            this.federalTaxAmount = this.toFixedNumber(this.preTaxDeductedIncome * fedTaxRatePct, 2);
+            this.ficaTaxAmount = this.toFixedNumber(this.preTaxDeductedIncome * ficaTaxRatePct, 2);
+        }
+    }
+})
+</script>
 <template>
     <div style="margin: 0px 0px 40px 0px">
         <div class="level is-mobile" :class="{'income-is-active' : income.isActive, 'income-is-inactive' : !income.isActive}">
@@ -158,7 +407,7 @@
                                 </li>
                                 <li>
                                     <span>FICA Tax Rate</span>
-                                    <span class="is-pulled-right">{{ficaRate}}%</span>
+                                    <span class="is-pulled-right">{{ficaTaxRate}}%</span>
                                 </li>
                             </ul>
                             <div v-else class="is-flex is-justify-content-center notification is-info">
@@ -224,253 +473,6 @@
         </BaseModal>
     </div>
 </template>
-<script>
-import BaseIcon from './BaseIcon';
-import BaseModal from './BaseModal';
-import { mobileCheckMixin, toCurrencyMixin } from '../mixins/GlobalMixin.js';
-
-export default {
-    components: {
-        BaseIcon: BaseIcon,
-        BaseModal: BaseModal
-    },
-    mixins: [
-        mobileCheckMixin,
-        toCurrencyMixin
-    ],
-    props: {
-        income: Object
-    },
-    created() {
-        let federalTaxes = this.$store.getters.getFederalTaxes;
-        let stateTaxes = this.$store.getters.getStateTaxes;
-        let ficaRate = this.$store.getters.getFICA;
-        this.setTaxRates(federalTaxes, stateTaxes, ficaRate);
-    },
-    computed: {
-        isHourly() {
-            return this.income.type === 'h';
-        },
-        hasDeductions() {
-            return this.income.deductions.length > 0;
-        },
-        netAmountPerCheck() {
-            return this.toFixedNumber(this.income.netSalary / this.income.payPeriod, 2);
-        },
-        netAmountYTD() {
-            let totalPayPeriods = this.getPayPeriodsPassed();
-            return this.toFixedNumber(totalPayPeriods * (this.income.netSalary / this.income.payPeriod), 2);
-        },
-        netAmountLeft() {
-            return this.income.netSalary - this.netAmountYTD;
-        },
-        preTaxDeductions() {
-            let preTaxDeductionArr = this.income.deductions?.filter(d => d.type === 'pretax');
-            return preTaxDeductionArr;
-        },
-        postTaxDeductions() {
-            return this.income.deductions?.filter(d => d.type === 'posttax');
-        },
-        preTaxDeductedIncome() {
-            let result = 0;
-            this.preTaxDeductions.forEach(p => {
-                result += p.amount;
-            })
-            result = this.income.salary - (result * this.income.payPeriod);
-            return result;
-        },
-        deductionsTotal() {
-            let result = 0;
-            this.income.deductions.forEach(d => {
-                result += d.amount;
-            });
-            return result;
-        },
-        filingStateName() {
-            const foundState = this.$store.getters.getStates.find(s => s.abbreviation === this.income.state);
-            if (foundState && foundState !== null) {
-                return foundState.name;
-            } else {
-                return null;
-            }
-        },
-        hasFilingState() {
-            let foundState = this.$store.getters.getStates.find(s => s.abbreviation === this.income.state);
-            return foundState && foundState !== null;
-        },
-        employmentType() {
-            let result = null;
-            switch (this.income.employmentType) {
-                case 'pt':
-                    result = 'Part Time';
-                    break;
-                case 'c': 
-                    result = 'Contractor';
-                    break;
-                default:
-                    result = 'Full Time';
-                    break;
-            }
-            return result;
-        },
-        payPeriodFrequency() {
-            let result = null;
-            switch (this.income.payPeriod) {
-                case 12:
-                    result = 'Monthly';
-                    break;
-                case 24: 
-                    result = 'Bi-Monthly';
-                    break;
-                case 26: 
-                    result = 'Bi-Weekly';
-                    break;
-                default:
-                    result = 'Weekly';
-                    break;
-            }
-            return result;
-        },
-        hasFilingStatus() {
-            return this.income.filingStatus !== null;
-        },
-        filingStatus() {
-            let result = null;
-            switch (this.income.filingStatus) {
-                case 'h':
-                    result = 'Head of Household';
-                    break;
-                case 'm': 
-                    result = 'Married';
-                    break;
-                default:
-                    result = 'Single';
-                    break;
-            }
-            return result;
-        }
-    },
-    data() {
-        return {
-            selectedIncome: {},
-            showConfirmDelete: false,
-            showSelectedIncomeDetails: false,
-            federalTaxRate: 0,
-            stateTaxRate: 0,
-            ficaRate: 0,
-            federalTaxAmount: 0,
-            stateTaxAmount: 0,
-            ficaTaxAmount: 0
-        };
-    },
-    methods: {
-        confirmDelete(income) {
-            this.selectedIncome = income;
-            this.toggleShowConfirmDelete();
-        },
-        showIncomeDetails(income) {
-            this.selectedIncome = income;
-            this.toggleShowIncomeDetails();
-        },
-        toggleShowConfirmDelete() {
-            this.showConfirmDelete = !this.showConfirmDelete;
-        },
-        toggleShowIncomeDetails() {
-            this.showSelectedIncomeDetails = !this.showSelectedIncomeDetails;
-        },
-        deleteSelectedIncome() {
-            if (this.selectedIncome && this.selectedIncome !== null) {
-                this.$store.dispatch('deleteIncome', this.selectedIncome.id).then(() => {
-                    this.toggleShowConfirmDelete();
-                    this.selectedIncome = {};
-                });
-            }
-        },
-        cancelDelete() {
-            this.selectedIncome = {};
-            this.toggleShowConfirmDelete();
-        },
-        toFixedNumber(num, digits, base){
-            var pow = Math.pow(base||10, digits);
-            return Math.round(num*pow) / pow;
-        },
-        getWeekNum() {
-            const currentDate = new Date();
-            const msInDay = 24 * 60 * 60 * 1000;
-            let oneJan = new Date(currentDate.getFullYear(), 0, 1);
-            let result = Math.floor((((currentDate.getTime() - oneJan.getTime()) / msInDay) + oneJan.getDay() + 1) / 7) - 1;
-            return result;
-        },
-        getDaysInMonth(month, year) {
-            return new Date(year, month, 0).getDate();
-        },
-        getPayPeriodsPassed() {
-            let result = 0;
-            const numMonths = new Date().getMonth() + 1;
-            const thisYear = new Date().getFullYear();
-            const today = new Date().getDate();
-            for (let i = 0; i < this.getWeekNum(); i++) {
-                switch (this.income.payPeriod) {
-                    case 26:
-                    case 52:
-                        if (i % (52 / this.income.payPeriod) === 0) {
-                            result++;
-                        }
-                        break;
-                    case 24:
-                        result = 0;
-                        result = (numMonths * 2);
-                        if (today < Math.ceil(this.getDaysInMonth(numMonths, thisYear) / 2)) {
-                            result--;
-                        }
-                        break;
-                    case 12:
-                        result = numMonths;
-                        break;                
-                    default:
-                        break;
-                }
-            }
-            return result;
-        },
-        getStateFilingStatus() {
-            switch (this.income.filingStatus) {
-                case 'm':
-                    return 'm';
-                case 'h': 
-                case 's':
-                    return 's';
-                default:
-                    return null;
-            }
-        },
-        setTaxRates(federalTaxes, stateTaxes, ficaRate) {
-            if (this.income.isTaxExempt)
-                return;
-            this.federalTaxRate = federalTaxes.filter(ft => ft.filing_status === this.income.filingStatus && ft.incomeMin < this.income.salary && ft.incomeMax > this.income.salary)[0].rate;
-            this.stateTaxRate = stateTaxes.filter(s => s.filing_status === this.getStateFilingStatus() && s.incomeMin < this.income.salary && s.state === this.income.state).sort((a,b) => {
-                    let x = typeof a.rate === 'number' ? a.rate : parseFloat(a.rate);
-                    let y = typeof b.rate === 'number' ? b.rate : parseFloat(b.rate);
-                    if (x < y) { return 1 }
-                    if (x > y) { return -1 }
-                    return 0;
-                })[0].rate;
-            ficaRate.forEach(fica => {
-                this.ficaRate += fica.rate;
-            });
-            this.setTaxAmounts();
-        },
-        setTaxAmounts() {
-            const fedTaxRatePct = this.federalTaxRate / 100;
-            const stateTaxRatePct = this.stateTaxRate / 100;
-            const ficaTaxRatePct = this.ficaRate / 100;
-            this.stateTaxAmount = this.toFixedNumber(this.preTaxDeductedIncome * stateTaxRatePct, 2);
-            this.federalTaxAmount = this.toFixedNumber(this.preTaxDeductedIncome * fedTaxRatePct, 2);
-            this.ficaTaxAmount = this.toFixedNumber(this.preTaxDeductedIncome * ficaTaxRatePct, 2);
-        }
-    }
-}
-</script>
 <style scoped>
 div {
     color:whitesmoke;
