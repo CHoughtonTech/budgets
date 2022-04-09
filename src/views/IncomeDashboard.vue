@@ -12,8 +12,14 @@ export default defineComponent({
         IncomeCard: IncomeCard
     },
     mixins: [mobileCheckMixin],
+    mounted() {
+        if (!this.isStoreInitialized)
+            this.initStore();
+        if (this.user && this.user !== null)
+            this.getUserIncomes();
+    },
     computed: {
-        ...mapState(mainStore, ['income']),
+        ...mapState(mainStore, ['income', 'isStoreInitialized', 'user']),
         activeIncomesCount() {
             let activeIncomesCount = 0;
             if (this.income && this.income.length > 0) {
@@ -48,7 +54,7 @@ export default defineComponent({
         }
     },
     methods: {
-        ...mapActions(mainStore, ['deleteIncome']),
+        ...mapActions(mainStore, ['deleteIncome', 'initStore', 'getUserIncomes']),
         deleteIncome(income) {
             this.deleteIncome(income.id).then(() => {
                 this.$router.push('/');

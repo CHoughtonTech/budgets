@@ -13,12 +13,8 @@ export default defineComponent({
     const vuexStorage = localStorage.getItem('vuex');
     if (vuexStorage && vuexStorage !== null)
       localStorage.removeItem('vuex');
-    this.setCategories();
-    this.setSubcategories();
-    this.setStateData();
-    this.setFederalTaxes();
-    this.setStateTaxes();
-    this.setFICARate();
+    if (!this.isStoreInitialized)
+      this.initStore();
     if (this.activeMonth?.name !== this.currentMonth.name || this.activeMonth?.id !== this.currentMonth.id) {
         let promiseArr = [];
         if (this.hasBills) {
@@ -60,7 +56,7 @@ export default defineComponent({
       });
   },
   computed: {
-    ...mapState(mainStore, ['activeMonth', 'user', 'bills', 'hasBills']),
+    ...mapState(mainStore, ['activeMonth', 'user', 'bills', 'hasBills', 'isStoreInitialized']),
     currentYear() {
       return  new Date().getFullYear();
     },
@@ -78,7 +74,7 @@ export default defineComponent({
     }
   },
   methods: {
-    ...mapActions(mainStore, ['updateActiveMonth', 'updateBill', 'setUser', 'clearUser', 'getUserIncomes', 'getUserBills', 'setCategories', 'setSubcategories', 'setStateData', 'setFederalTaxes', 'setStateTaxes', 'setFICARate']),
+    ...mapActions(mainStore, ['updateActiveMonth', 'updateBill', 'setUser', 'clearUser', 'getUserIncomes', 'getUserBills', 'initStore']),
   },
   data() {
     return {
@@ -95,7 +91,7 @@ export default defineComponent({
     <NavBar/>
     <router-view id="main-view"/>
     <hr/>
-    <div class="copyright">&copy; {{currentYear}} OxSoft Solutions</div>
+    <div class="copyright">&copy; {{currentYear}} OxSoft Budgets</div>
     <div class="is-flex is-justify-content-center term-of-use">
       <a :href="privacyPolicyLink">Privacy Policy</a> &nbsp;|&nbsp; 
       <a :href="termsOfUseLink">Term of Use</a> &nbsp;|&nbsp; 
@@ -103,7 +99,7 @@ export default defineComponent({
     </div>
     <div class="is-flex is-justify-content-center attribution-credit">
       <a href="https://www.vecteezy.com/free-vector/ox">Ox Vectors by Vecteezy</a> &nbsp;|&nbsp;
-      <a target="_blank" href="https://icons8.com/icon/112554/bull">Bull</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+      <a target="_blank" href="https://icons8.com/icon/112554/bull">Bull</a> &nbsp;icon by&nbsp; <a target="_blank" href="https://icons8.com">Icons8</a>
     </div>
   </div>
 </template>
@@ -140,6 +136,9 @@ a {
   color: #A755C2;
   font-weight: 600;
   background-color: transparent;
+}
+a:hover {
+  color: whitesmoke;
 }
 img {
   border-style: none;

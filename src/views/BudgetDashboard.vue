@@ -2,7 +2,7 @@
 import { defineComponent } from 'vue';
 import BaseSummary from '../components/BaseSummary';
 import { toCurrencyMixin } from '../mixins/GlobalMixin';
-import { mapState } from 'pinia';
+import { mapState, mapActions } from 'pinia';
 import mainStore from '@/store';
 
 export default defineComponent({
@@ -10,8 +10,15 @@ export default defineComponent({
         BaseSummary: BaseSummary
     },
     mixins: [toCurrencyMixin],
+    mounted() {
+        if (!this.isStoreInitialized)
+            this.initStore();
+    },
+    methods: {
+        ...mapActions(mainStore, ['initStore'])
+    },
     computed: {
-        ...mapState(mainStore, ['activeBills', 'user', 'income']),
+        ...mapState(mainStore, ['activeBills', 'user', 'income', 'isStoreInitialized']),
         expensesTotal() {
             const bills = this.activeBills.filter(b => b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === ''));
             let total = 0;

@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia';
-import ExpenseCategories from '@/api/ExpenseCategories';
-import States from '@/api/States';
-import TaxData from '@/api/TaxData';
 import { getDatabase } from 'firebase/database';
 import BudgetService from '@/services/BudgetService';
+import taxData from '@/api/TaxData';
+import expenseCategories from '@/api/ExpenseCategories';
+import states from '@/api/States';
 
 const DEFAULT_USER_ID = 'oxsoftsolutions-budgets-notLoggedIn';
 
@@ -32,6 +32,10 @@ const mainStore = defineStore('main', {
         return (bill.isRecurring || dateCreated.getMonth() === state.activeMonth?.id && dateCreated.getFullYear() === thisYear)
           || (bill.datePaidOff === null || bill.datePaidOff === '' || (datePaidOff.getMonth() === state.activeMonth?.id && datePaidOff.getFullYear() === thisYear));
       });
+    },
+    isStoreInitialized: (state) => {
+      return state.federalTaxBrackets.length > 0 && state.stateTaxBrackets.length > 0 && state.states.length > 0 
+        && state.categories.length > 0 && state.subCategories.length > 0 && state.ficaRate.length > 0;
     },
     activeBillCount: (state) => {
       return state.activeBills.length;
@@ -192,35 +196,13 @@ const mainStore = defineStore('main', {
     updateActiveMonth(activeMonth) {
       this.activeMonth = activeMonth;
     },
-    setCategories() {
-      ExpenseCategories.getCategories(categories => {
-        this.categories = categories;
-      });
-    },
-    setSubcategories() {
-      ExpenseCategories.getSubCategories(subCategories => {
-        this.subCategories = subCategories;
-      });
-    },
-    setStateData() {
-      States.getAllStates(states => {
-        this.states = states;
-      });
-    },
-    setFederalTaxes() {
-      TaxData.getFederalTaxBracket(federal => {
-        this.federalTaxBrackets = federal;
-      });
-    },
-    setStateTaxes() {
-      TaxData.getStateTaxBracket(states => {
-        this.stateTaxBrackets = states;
-      });
-    },
-    setFICARate() {
-      TaxData.getFICATaxRate(fica => {
-        this.ficaRate = fica;
-      });
+    initStore() {
+      this.ficaRate = taxData.ficaTaxRate;
+      this.federalTaxBrackets = taxData.federalTaxBracket;
+      this.stateTaxBrackets = taxData.stateTaxBracket;
+      this.categories = expenseCategories.categories;
+      this.subCategories = expenseCategories.subCategories;
+      this.states = states;
     }
   }
 });

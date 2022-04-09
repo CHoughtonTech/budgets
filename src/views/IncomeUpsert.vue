@@ -16,14 +16,6 @@ export default defineComponent({
         incomeId: null,
     },
     created() {
-        if (this.federalTaxBrackets.length <= 0)
-            this.setFederalTaxes();
-        if (this.stateTaxBrackets.length <= 0)
-            this.setStateTaxes();
-        if (this.ficaRate.length <= 0)
-            this.setFICARate();
-        if (this.states.length <= 0)
-            this.setStateData();
         if (this.incomeId !== null && parseInt(this.incomeId) !== -1) {
             this.loadIncome(this.incomeId);
         }
@@ -209,7 +201,7 @@ export default defineComponent({
         }
     },
     methods: {
-        ...mapActions(mainStore, ['setFederalTaxes', 'setStateTaxes', 'setFICARate', 'setStateData', 'createIncome', 'updateIncome', 'getIncomeById']),
+        ...mapActions(mainStore, ['createIncome', 'updateIncome', 'getIncomeById']),
         addDeduction() {
             if (this.validateDeductionFields()) {
                 this.deduction.amount = this.toFixedNumber(this.deduction.amount, 2);
@@ -451,7 +443,7 @@ export default defineComponent({
 </script>
 <template>
     <div>
-        <h1>Your Income</h1>
+        <h1>{{isLoaded ? `${userIncome.name} Income` : 'New Income'}}</h1>
         <div class="tile is-ancestor">
             <div class="tile is-parent">
                 <div class="tile is-3 is-child">

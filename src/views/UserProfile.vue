@@ -37,7 +37,7 @@ export default defineComponent({
         },
         profilePhoto() {
             if (this.user) {
-                if (this.user.photoURL && this.user.photoURL !== '') {
+                if (this.user.photoURL && this.user.photoURL !== ox) {
                     return this.user.photoURL;
                 } else {
                     return this.userPhoto;
@@ -81,9 +81,12 @@ export default defineComponent({
     },
     mounted() {
         this.auth = getAuth();
+        if (!this.user && this.auth.currentUser) {
+            this.setUser();
+        }
         if (this.user) {
             this.userName = this.user.displayName;
-            this.userPhoto = this.user.photoURL;
+            this.userPhoto = this.user.photoURL ?? ox;
             const confirmedIsRegisteringNewUser = this.isRegisteringNewUser === 'true';
             if (confirmedIsRegisteringNewUser) {
                 this.userConfirmedTOS('true');
@@ -132,7 +135,7 @@ export default defineComponent({
             deleteObject(photoRef).then(() => {
                 const profileData = {
                     displayName: this.userName,
-                    photoURL: '',
+                    photoURL: ox,
                 };
                 this.updateUserInfo(profileData);
             }).catch((error) => {
@@ -156,7 +159,7 @@ export default defineComponent({
             this.updateUserInfo(profileData);  
         },
         updateUserInfo(profileData) {
-            let authUser = getAuth().currentUser;
+            let authUser = this.auth.currentUser;
             updateProfile(authUser, profileData).then(() => {
                 authUser.displayName = profileData.displayName;
                 authUser.photoURL = profileData.photoURL;

@@ -29,7 +29,7 @@ export default defineComponent({
     computed: {
         ...mapState(mainStore, ['user']),
         toggleRegisterUserLabel() {
-            return this.isRegistering ? 'Login Instead' : 'New to the site? Register here';
+            return this.isRegistering ? 'Login' : 'Register';
         },
         loginRegisterLabel() {
             return this.isRegistering ? 'Register' : 'Login';
@@ -84,7 +84,7 @@ export default defineComponent({
         }
     },
     methods: {
-        ...mapActions(mainStore, ['setUser', 'clearStore']),
+        ...mapActions(mainStore, ['setUser', 'clearStore', 'initStore']),
         toggleShowPasswords() {
             this.showPasswords = !this.showPasswords;
         },
@@ -99,6 +99,7 @@ export default defineComponent({
                         }).then(() => {
                             authUser.displayName = this.userName;
                             this.setUser(authUser);
+                            this.initStore();
                             this.$router.push({ name: 'user-profile', params: { isRegisteringNewUser: 'true' }});
                         }).catch((error) => {
                             console.log(error);
@@ -118,8 +119,9 @@ export default defineComponent({
                         signInWithEmailAndPassword(this.auth, this.email, this.password)
                             .then(() => {
                                 let authUser = this.auth.currentUser;
-                                this.setUser(authUser);
                                 this.clearStore();
+                                this.setUser(authUser);
+                                this.initStore();
                                 this.$router.push('/profile');
                             })
                             .catch((error) => {
@@ -189,6 +191,9 @@ export default defineComponent({
                     break;
                 case 'auth/email-already-in-use':
                     errorMessage = 'Email is already registered';
+                    break;
+                case 'auth/wrong-password': 
+                    errorMessage = 'Email or password was incorrect';
                     break;
                 default:
                     errorMessage = 'Email or password was incorrect';
@@ -262,10 +267,14 @@ export default defineComponent({
             </span>
         </label>
         <input v-if="isRegistering" id="userAcknowledged" type="checkbox" v-model="hasUserAcknowledgedTOS" /><br>
-        <button :class="disableRegisterButton ? 'button-disabled' : ''" @click="isRegistering ? register() : login()" :disabled="disableRegisterButton">{{ loginRegisterLabel }}</button> 
-        <input id="staySignedIn" v-if="!isRegistering" type="checkbox" v-model="isUserStayingSignedIn" style="cursor:pointer;" /> 
-        <label v-if="!isRegistering" for="staySignedIn" style="cursor:pointer;">Stay Signed In</label><br>
-        <button @click="toggleRegisterUser()">{{ toggleRegisterUserLabel }}</button>
+        <div class="is-flex is-justify-content-center">
+            <label v-if="!isRegistering" for="staySignedIn" style="cursor:pointer;">Remember me</label>&nbsp;&nbsp;
+            <input id="staySignedIn" v-if="!isRegistering" type="checkbox" v-model="isUserStayingSignedIn" style="cursor:pointer;" /> 
+        </div>
+        <div class="is-flex is-justify-content-center">
+            <button :class="disableRegisterButton ? 'button-disabled' : ''" @click="isRegistering ? register() : login()" :disabled="disableRegisterButton">{{ loginRegisterLabel }}</button> 
+            <button @click="toggleRegisterUser()">{{ toggleRegisterUserLabel }}</button>
+        </div>
     </div>
 </template>
 <style scoped>

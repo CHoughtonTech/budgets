@@ -31,8 +31,14 @@ export default defineComponent({
             errors: []
         }
     },
+    mounted() {
+        if (!this.isStoreInitialized)
+            this.initStore();
+        if (this.user && this.user !== null)
+            this.getUserBills();
+    },
     computed: {
-        ...mapState(mainStore, ['activeBills', 'activeMonth', 'getCategoryNameById', 'getSubCategoryNameById', 'activeBillCount']),
+        ...mapState(mainStore, ['activeBills', 'activeMonth', 'getCategoryNameById', 'getSubCategoryNameById', 'activeBillCount', 'isStoreInitialized', 'user']),
         paidBills() {
             const paidBills = this.activeBills.filter(b => b.paid === true);
             return this.sortBills(paidBills, this.sortMethod);
@@ -104,7 +110,7 @@ export default defineComponent({
         }
     },
     methods: {
-        ...mapActions(mainStore, ['deleteBill', 'updateBill']),
+        ...mapActions(mainStore, ['deleteBill', 'updateBill', 'initStore', 'getUserBills']),
         sortBills(bills, sortMethod) {
             if(!bills || bills === null) { return []; }
             switch (sortMethod) {

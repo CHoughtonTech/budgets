@@ -1,7 +1,7 @@
 <script>
     import { defineComponent } from 'vue';
     import { Cropper, Preview } from 'vue-advanced-cropper';
-    import { getStorage, ref, uploadBytes } from 'firebase/storage';
+    import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
     import ox from '@/assets/small-ox.jpg';
     import 'vue-advanced-cropper/dist/style.css';
 
@@ -51,10 +51,10 @@
             if (!result || result === null) return;
             result.canvas.toBlob((blob) => {
                 uploadBytes(this.storage, blob)
-                    .then((result) => {
-                        const urlPath = result.metadata.fullPath.replace('/', '%2F');
-                        const userPhoto = `https://firebasestorage.googleapis.com/v0/b/${result.metadata.bucket}/o/${urlPath}?alt=media`;
-                        this.$emit('upload-image-success', userPhoto);
+                    .then(() => {
+                        getDownloadURL(this.storage).then((url) => {
+                            this.$emit('upload-image-success', url);
+                        });
                     })
                     .catch((error) => {
                         console.error(error);
@@ -97,7 +97,7 @@
 <template>
     <div id="profilePhoto">
         <h4 class="is-flex is-justify-content-center">Update Profile Photo</h4>
-        <cropper ref="cropper" class="cropper" :src="image.src" :debounce="false" :stencil-props="{ scalable: true, aspectRatio: 1/1 }" :image-restriction="stencil" @change="onChange"/>
+        <cropper ref="cropper" class="cropper" :src="image.src" :debounce="false" :canvas="{maxHeight: 512,maxWidth: 512}" :stencil-props="{ scalable: true, aspectRatio: 1/1 }" :image-restriction="stencil" @change="onChange"/>
         <div class="button-wrapper">
             <button class="button" @click="$refs.file.click()">
                 <input

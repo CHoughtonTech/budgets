@@ -16,8 +16,15 @@ export default defineComponent({
             return this.user.displayName ?? null;
         },
         profilePhoto() {
-            if (!this.user || this.user === null) return ox;
-            return this.user.photoURL;
+            if (this.user) {
+                if (this.user.photoURL && this.user.photoURL !== ox) {
+                    return this.user.photoURL;
+                } else {
+                    return ox;
+                }
+            } else {
+                return ox;
+            }
         },
         isLoggedIn() {
             return this.user !== null;
