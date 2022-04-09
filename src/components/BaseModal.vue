@@ -1,3 +1,7 @@
+<script>
+import { defineComponent } from 'vue';
+export default defineComponent({})
+</script>
 <template>
     <transition name="modal">
         <div class="modal-mask">
@@ -23,9 +27,6 @@
         </div>
     </transition>
 </template>
-<script>
-export default {};
-</script>
 <style>
 .modal-mask {
   position: fixed;

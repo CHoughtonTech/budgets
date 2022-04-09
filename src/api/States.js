@@ -1,4 +1,4 @@
-const _states = [
+const states = [
     { 'id': 1, 'name': 'Alabama', 'abbreviation': 'AL' },
     { 'id': 2, 'name': 'Alaska', 'abbreviation': 'AK' },
     { 'id': 3, 'name': 'Arizona', 'abbreviation': 'AZ' },
@@ -52,8 +52,4 @@ const _states = [
     { 'id': 51, 'name': 'Washington DC', 'abbreviation': 'DC' }
 ];
 
-export default {
-    getAllStates(cb) {
-        setTimeout(() => cb(_states), 100);
-    },
-}
+export default states;
