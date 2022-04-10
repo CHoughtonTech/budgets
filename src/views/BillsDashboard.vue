@@ -254,7 +254,7 @@ export default defineComponent({
             </div>
             <div v-if="unpaidBills.length > 0 && totalPastDue > 0" class="overdue-bill">
                 <div class='overdue-bill-count'>Past Due Bills: {{totalPastDue}}</div>
-                <div class="overdue-bill-total">Total Past Due: {{totalPastDueTotal}}</div>
+                <div class="overdue-bill-total">Total Past Due: {{ toCurrency(totalPastDueTotal) }}</div>
             </div>
             <br/>
             <router-link class="add-bill" :to="{ name: 'create-bill' , params: { billId: -1 } }">
