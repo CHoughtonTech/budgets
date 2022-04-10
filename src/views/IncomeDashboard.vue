@@ -1,3 +1,68 @@
+<script>
+import BaseIcon from '../components/BaseIcon';
+import IncomeCard from '../components/IncomeCard';
+import { mobileCheckMixin } from '../mixins/GlobalMixin.js';
+import { mapActions, mapState } from 'pinia';
+import mainStore from '@/store';
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+    components: {
+        BaseIcon: BaseIcon,
+        IncomeCard: IncomeCard
+    },
+    mixins: [mobileCheckMixin],
+    mounted() {
+        if (!this.isStoreInitialized)
+            this.initStore();
+        if (this.user && this.user !== null)
+            this.getUserIncomes();
+    },
+    computed: {
+        ...mapState(mainStore, ['income', 'isStoreInitialized', 'user']),
+        activeIncomesCount() {
+            let activeIncomesCount = 0;
+            if (this.income && this.income.length > 0) {
+                activeIncomesCount = this.income.filter(i => i.isActive === true).length;
+            }
+            return activeIncomesCount;
+        },
+        inactiveIncomesCount() {
+            let inactiveIncomesCount = 0;
+            if (this.income && this.income.length > 0) {
+                inactiveIncomesCount = this.income.filter(i => i.isActive === false).length;
+            }
+            return inactiveIncomesCount;
+        },
+        activeIncomes() {
+            return this.income.filter(i => i.isActive === true);
+        },
+        inactiveIncomes() {
+            return this.income.filter(i => i.isActive === false);
+        },
+        incomeCount() {
+            let incomesCount = 0;
+            if (this.income && this.income.length > 0) {
+                incomesCount = this.income.length;
+            }
+            return incomesCount;
+        }
+    },
+    data() {
+        return {
+            showSelectedIncomeDetails: false
+        }
+    },
+    methods: {
+        ...mapActions(mainStore, ['deleteIncome', 'initStore', 'getUserIncomes']),
+        deleteIncome(income) {
+            this.deleteIncome(income.id).then(() => {
+                this.$router.push('/');
+            });
+        }
+    }
+})
+</script>
 <template>
     <div>
         <h1>Income Sources</h1>
@@ -40,83 +105,10 @@
         <div class="no-incomes" v-if="incomeCount < 1">
             <p>Oh snap! You have no income sources! Click below to create your first income source!</p>
             <br/>
-            <router-link class="add-income subtitle is-5" :to="{ name: 'create-income' }"><button><BaseIcon name="plus-circle">Add an Income</BaseIcon></button></router-link>
+            <router-link class="add-income subtitle is-5" :to="{ name: 'create-income', params: { incomeId: -1} }"><button><BaseIcon name="plus-circle">Add an Income</BaseIcon></button></router-link>
         </div>
     </div>
 </template>
-<script>
-import BaseIcon from '../components/BaseIcon';
-import IncomeCard from '../components/IncomeCard';
-import { mobileCheckMixin } from '../mixins/GlobalMixin.js';
-
-export default {
-    components: {
-        BaseIcon: BaseIcon,
-        IncomeCard: IncomeCard
-    },
-    mixins: [mobileCheckMixin],
-    created() {
-        this.incomes = this.$store.getters.getIncomes;
-    },
-    computed: {
-        activeIncomesCount() {
-            let activeIncomesCount = 0;
-            if (this.incomes && this.incomes.length > 0) {
-                activeIncomesCount = this.incomes.filter(i => i.isActive === true).length;
-            }
-            return activeIncomesCount;
-        },
-        inactiveIncomesCount() {
-            let inactiveIncomesCount = 0;
-            if (this.incomes && this.incomes.length > 0) {
-                inactiveIncomesCount = this.incomes.filter(i => i.isActive === false).length;
-            }
-            return inactiveIncomesCount;
-        },
-        activeIncomes() {
-            return this.incomes.filter(i => i.isActive === true);
-        },
-        inactiveIncomes() {
-            return this.incomes.filter(i => i.isActive === false);
-        },
-        incomeCount() {
-            let incomesCount = 0;
-            if (this.incomes && this.incomes.length > 0) {
-                incomesCount = this.incomes.length;
-            }
-            return incomesCount;
-        }
-    },
-    data() {
-        return {
-            incomes: [],
-            income: {
-                id: null,
-                name: null,
-                type: null,
-                salary: 0,
-                hourlyRate: 0,
-                hoursPerWeek: 0,
-                employmentType: null,
-                filingStatus: null,
-                payPeriod: null,
-                state: null,
-                isActive: true,
-                isTaxExempt: false,
-                deductions: []
-            },
-            showSelectedIncomeDetails: false
-        }
-    },
-    methods: {
-        deleteIncome(income) {
-            this.$store.dispatch('deleteIncome', income.id).then(() => {
-                this.$router.push('/');
-            });
-        }
-    }
-}
-</script>
 <style scoped>
 span {
     color:whitesmoke;

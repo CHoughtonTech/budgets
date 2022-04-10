@@ -1,40 +1,24 @@
-<template>
-  <div id="app">
-    <NavBar/>
-    <router-view id="main-view"/>
-    <hr/>
-    <div class="copyright">&copy; {{currentYear}} OxSoft Solutions</div>
-    <div class="is-flex is-justify-content-center term-of-use">
-      <a :href="privacyPolicyLink">Privacy Policy</a> &nbsp;|&nbsp; 
-      <a :href="termsOfUseLink">Term of Use</a> &nbsp;|&nbsp; 
-      <a :href="contactUsLink">Contact Us</a>
-    </div>
-    <div class="is-flex is-justify-content-center attribution-credit">
-      <a href="https://www.vecteezy.com/free-vector/ox">Ox Vectors by Vecteezy</a> &nbsp;|&nbsp;
-      <a target="_blank" href="https://icons8.com/icon/112554/bull">Bull</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
-    </div>
-  </div>
-</template>
-
 <script>
 import NavBar from './components/NavBar';
+import { defineComponent } from 'vue';
+import { mapActions, mapState } from 'pinia';
+import mainStore from '@/store';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-export default {
+
+export default defineComponent({
   components: {
-    NavBar
+    NavBar,
   },
-  created() {
-    let self = this;
-    self.$store.dispatch('getCategories');
-    self.$store.dispatch('getSubcategories');
-    self.$store.dispatch('getStateData');
-    self.$store.dispatch('getFederalTaxes');
-    self.$store.dispatch('getStateTaxes');
-    self.$store.dispatch('getFICARate');
-    if (self.$store.state.activeMonth?.name !== self.currentMonth.name || self.$store.state.activeMonth?.id !== self.currentMonth.id) {
+  mounted() {
+    const vuexStorage = localStorage.getItem('vuex');
+    if (vuexStorage && vuexStorage !== null)
+      localStorage.removeItem('vuex');
+    if (!this.isStoreInitialized)
+      this.initStore();
+    if (this.activeMonth?.name !== this.currentMonth.name || this.activeMonth?.id !== this.currentMonth.id) {
         let promiseArr = [];
-        if (self.$store.getters.hasBills) {
-          self.$store.getters.getBills.forEach(b => {
+        if (this.hasBills) {
+          this.bills.forEach(b => {
             if (b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === '')) {
               if (b.dueDate && b.dueDate !== null) {
                 let currentDueDate = new Date(b.dueDate);
@@ -50,29 +34,29 @@ export default {
               b.paid = false;
               b.datePaid = null;
             }
-            promiseArr.push(this.$store.dispatch('updateBill', b));
+            promiseArr.push(this.updateBill(b));
           });
           Promise.all(promiseArr).then(() => {
-            self.$store.dispatch('updateActiveMonth', this.currentMonth);
+            this.updateActiveMonth(this.currentMonth);
           });
         } else {
-          self.$store.dispatch('updateActiveMonth', this.currentMonth);
+          this.updateActiveMonth(this.currentMonth);
         }
       }
       onAuthStateChanged(getAuth(), (user) => {
         if (user) {
-          const storeUser = this.$store.state.user;
-          if (!storeUser || storeUser === null) {
-            this.$store.dispatch('setUser', user);
-            this.$store.dispatch('getUserIncomes');
-            this.$store.dispatch('getUserBills');
+          if (!this.user || this.user === null) {
+            this.setUser(user);
+            this.getUserIncomes();
+            this.getUserBills();
           }
         } else {
-          this.$store.dispatch('clearUser');
+          this.clearUser();
         }
       });
   },
   computed: {
+    ...mapState(mainStore, ['activeMonth', 'user', 'bills', 'hasBills', 'isStoreInitialized']),
     currentYear() {
       return  new Date().getFullYear();
     },
@@ -89,6 +73,9 @@ export default {
       return routeData.href;
     }
   },
+  methods: {
+    ...mapActions(mainStore, ['updateActiveMonth', 'updateBill', 'setUser', 'clearUser', 'getUserIncomes', 'getUserBills', 'initStore']),
+  },
   data() {
     return {
       currentMonth: {
@@ -97,9 +84,25 @@ export default {
       }
     }
   }
-}
+});
 </script>
-
+<template>
+  <div id="app">
+    <NavBar/>
+    <router-view id="main-view"/>
+    <hr/>
+    <div class="copyright">&copy; {{currentYear}} OxSoft Budgets</div>
+    <div class="is-flex is-justify-content-center term-of-use">
+      <a :href="privacyPolicyLink">Privacy Policy</a> &nbsp;|&nbsp; 
+      <a :href="termsOfUseLink">Term of Use</a> &nbsp;|&nbsp; 
+      <a :href="contactUsLink">Contact Us</a>
+    </div>
+    <div class="is-flex is-justify-content-center attribution-credit">
+      <a href="https://www.vecteezy.com/free-vector/ox">Ox Vectors by Vecteezy</a> &nbsp;|&nbsp;
+      <a target="_blank" href="https://icons8.com/icon/112554/bull">Bull</a> &nbsp;icon by&nbsp; <a target="_blank" href="https://icons8.com">Icons8</a>
+    </div>
+  </div>
+</template>
 <style>
 html {
   -webkit-text-size-adjust: 100%;
@@ -133,6 +136,9 @@ a {
   color: #A755C2;
   font-weight: 600;
   background-color: transparent;
+}
+a:hover {
+  color: whitesmoke;
 }
 img {
   border-style: none;

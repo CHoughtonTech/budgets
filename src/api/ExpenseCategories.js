@@ -1,7 +1,4 @@
-/**
- * Mocking client-server processing (until Microsoft integration)
- */
-const _categories = [
+const categories = [
     { 'id': 1, 'Name': 'Automobile' },
     { 'id': 2, 'Name': 'Bank Charges' },
     { 'id': 4, 'Name': 'Childcare' },
@@ -24,7 +21,7 @@ const _categories = [
     { 'id': 22, 'Name': 'Vacation'}
 ]
 
-const _subCategories = [
+const subCategories = [
     //Automobile
     { 'id': 1, 'Name': 'Gasoline', 'CategoryId': 1 },
     { 'id': 2, 'Name': 'Maintenance', 'CategoryId': 1 },
@@ -149,12 +146,9 @@ const _subCategories = [
     { 'id': 101, 'Name': 'Subscriptions (e.g. Disney+, Hulu, etc.)', 'CategoryId': 16 }
 ]
 
-export default {
-    getCategories(cb) {
-        setTimeout(() => cb(_categories), 100);
-    },
-
-    getSubCategories(cb) {
-        setTimeout(() => cb(_subCategories), 100);
-    }
+const expenseCategories = {
+    categories,
+    subCategories
 }
+
+export default expenseCategories;

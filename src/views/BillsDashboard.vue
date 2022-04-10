@@ -1,8 +1,251 @@
+<script>
+import BillCard from '../components/BillCard';
+import BaseModal from '../components/BaseModal';
+import BaseIcon from '../components/BaseIcon';
+import { toCurrencyMixin } from '../mixins/GlobalMixin';
+import { defineComponent } from 'vue';
+import { mapActions, mapState } from 'pinia';
+import mainStore from '@/store';
+
+export default defineComponent({
+    components: {
+        BillCard,
+        BaseModal,
+        BaseIcon
+    },
+    mixins: [toCurrencyMixin],
+    data() {
+        return {
+            selectedBill: Object,
+            showBillDeleteModal: false,
+            showBillDetailModal: false,
+            showBillAmountModal: false,
+            showBillPayOffModal: false,
+            ascending: true,
+            sortMethod: 'dueDate',
+            sortType: {
+                NAME: 'name',
+                DUEDATE: 'dueDate',
+                AMOUNT: 'amount'
+            },
+            errors: []
+        }
+    },
+    mounted() {
+        if (!this.isStoreInitialized)
+            this.initStore();
+        if (this.user && this.user !== null)
+            this.getUserBills();
+    },
+    computed: {
+        ...mapState(mainStore, ['activeBills', 'activeMonth', 'getCategoryNameById', 'getSubCategoryNameById', 'activeBillCount', 'isStoreInitialized', 'user']),
+        paidBills() {
+            const paidBills = this.activeBills.filter(b => b.paid === true);
+            return this.sortBills(paidBills, this.sortMethod);
+        },
+        unpaidBills() {
+            const unpaidBills = this.activeBills.filter(b => b.paid === false);
+            return this.sortBills(unpaidBills, this.sortMethod);
+        },
+        totalDue() {
+            let total = 0;
+            this.unpaidBills.forEach(bill => {
+                total += parseFloat(bill.amount);
+            });
+            return total;
+        },
+        totalPaid() {
+            let total = 0;
+            this.paidBills.forEach(bill => {
+                total += parseFloat(bill.amount);
+            });
+            return total;
+        },
+        totalPastDueTotal() {
+            let total = 0;
+            this.unpaidBills.forEach(bill => {
+                if (bill.dueDate !== null & bill.dueDate !== '' && new Date(bill.dueDate).getDate() < new Date().getDate()) {
+                    total += parseFloat(bill.amount);
+                }
+            });
+            return total;
+        },
+        totalPastDue() {
+            let billsPastDue = 0;
+            this.unpaidBills.forEach(bill => {
+                if (bill.dueDate !== null & bill.dueDate !== '' && new Date(bill.dueDate).getDate() < new Date().getDate()) {
+                    billsPastDue += 1;
+                }
+            });
+            return billsPastDue;
+        },
+        activeBillsTotal() {
+            let total = 0;
+            this.activeBills.forEach(bill => {
+                if (bill.datePaidOff === null || bill.datePaidOff === '') {
+                    total += parseFloat(bill.amount);
+                }
+            });
+            return total;
+        },
+        recurringBillsTotal() {
+            const recurringBills = this.activeBills.filter(b => b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === ''));
+            let total = 0;
+            recurringBills.forEach(bill => {
+                total += parseFloat(bill.amount);
+            });
+            return total;
+        },
+        activeMonth() {
+            if (this.activeMonth && this.activeMonth !== null) {
+                return this.activeMonth.name;
+            }
+            return new Date().toLocaleString('default', { month: 'long' });
+        },
+        selectedCategory() {
+            return this.getCategoryNameById(this.selectedBill?.subCategoryId);
+        },
+        selectedSubCategory() {
+            return this.getSubCategoryNameById(this.selectedBill?.subCategoryId);
+        }
+    },
+    methods: {
+        ...mapActions(mainStore, ['deleteBill', 'updateBill', 'initStore', 'getUserBills']),
+        sortBills(bills, sortMethod) {
+            if(!bills || bills === null) { return []; }
+            switch (sortMethod) {
+                case 'amount': 
+                    return bills.sort((a,b) => {
+                        let x = typeof a.amount === 'number' ? a.amount : parseFloat(a.amount);
+                        let y = typeof b.amount === 'number' ? b.amount : parseFloat(b.amount);
+                        if (x < y) { return this.ascending ? -1 : 1 }
+                        if (x > y) { return this.ascending ? 1 : -1 }
+                        return 0;
+                    });
+                case 'name': 
+                    return bills.sort((a,b) => {
+                        let x = a.name.toLowerCase();
+                        let y = b.name.toLowerCase();
+                        if (x < y) { return this.ascending ? -1 : 1 }
+                        if (x > y) { return this.ascending ? 1 : -1 }
+                        return 0;
+                    });
+                default:
+                    return bills.sort((a,b) => {
+                        let x = a.dueDate ? new Date(a.dueDate).getDate() : null;
+                        let y = b.dueDate ? new Date(b.dueDate).getDate() : null;
+                        if (x < y) {return this.ascending ? -1 : 1}
+                        if (y < x) {return this.ascending ? 1 : -1}
+                        return 0;
+                    });
+            }
+        },
+        setSort(sortType) {
+            if (this.sortMethod === sortType) {
+                this.ascending = !this.ascending;   
+            } else if (this.sortMethod !== sortType) {
+                this.ascending = true;
+            }
+            this.sortMethod = sortType;
+        },
+        deleteUserBill(bill) {
+            this.selectedBill = bill;
+            this.showBillDeleteModal = true;
+        },
+        updateBillPaid(bill) {
+            this.selectedBill = bill;
+            if (this.selectedBill.isFixedAmount === false && this.selectedBill.isRecurring === true) {
+                this.showBillAmountModal = true;
+            } else {
+                bill.paid = true;
+                bill.datePaid = new Date().toLocaleDateString();
+                bill.paidCount++;
+                this.updateBill(bill);
+            }
+        },
+        toggleBillPayOffModal(bill) {
+            this.selectedBill = bill;
+            this.showBillPayOffModal = !this.showBillPayOffModal;
+        },
+        updateBillPayOffConfirm(choice) {
+            if (choice === 'cancel') {
+                this.showBillPayOffModal = !this.showBillPayOffModal;
+            } else {
+                this.selectedBill.paid = true;
+                this.selectedBill.datePaid = new Date().toLocaleDateString();
+                this.selectedBill.datePaidOff = this.selectedBill.datePaid;
+                this.selectedBill.paidCount++;
+                this.updateBill(this.selectedBill).then(() => {
+                    this.showBillPayOffModal = !this.showBillPayOffModal;
+                });
+            }
+        },
+        updateBillPaidConfirm(choice) {
+            let validationPassed = this.validateAmount();
+            if (choice === 'cancel') {
+                this.showBillAmountModal = !this.showBillAmountModal;
+            } else {
+                if (validationPassed === true) {
+                    this.selectedBill.amount = parseFloat(this.selectedBill.amount).toFixed(2);
+                    this.selectedBill.paid = true;
+                    this.selectedBill.datePaid = new Date().toLocaleDateString();
+                    this.selectedBill.paidCount++;
+                    this.updateBill(this.selectedBill).then(() => {
+                        this.showBillAmountModal = !this.showBillAmountModal;
+                    });
+                }
+            }
+        },
+        updateBillUndoPaid(bill) {
+            bill.paid = false;
+            bill.datePaid = null;
+            bill.paidCount--;
+            this.updateBill(bill);
+        },
+        deleteBillConfirm(choice) {
+            if (choice === 'confirm') {
+                this.deleteBill(this.selectedBill.id);
+            }
+            this.showBillDeleteModal = !this.showBillDeleteModal;
+        },
+        validateAmount() {
+            this.errors = [];
+            //Bill Amount Validation
+            if (!this.selectedBill.amount || this.selectedBill.amount === null) {
+                this.errors.push({ message: 'Amount is required', field: 'billInputAmount' });
+            } else if (isNaN(this.selectedBill.amount)) {
+                this.errors.push({ message: 'Amount must be a number', field: 'billInputAmount' });
+            }
+            return this.errors.length === 0;
+        },
+        validationFailed(field) {
+            let found = this.errors.find(e => e.field === field) !== undefined;
+            return found
+        },
+        getErrorMessage(field) {
+            if (this.errors.length <= 0) {
+                return null;
+            } else {
+                let found = this.errors.find(err => err.field === field);
+                if (found && found !== null) {
+                    return `*${found.message}`;
+                } else {
+                    return `No errors for '${field}'`
+                }
+            }
+        },
+        showBillDetails(bill) {
+            this.selectedBill = bill;
+            this.showBillDetailModal = true;
+        }
+    }
+})
+</script>
 <template>
     <div class="bills-view">
         <h3 style="color:lightgrey;">{{activeMonth + ' ' + new Date().getFullYear() }} Bills</h3>
         <div>
-            <div v-if="this.$store.getters.activeBillCount > 0" class="bill-summary -shadow">
+            <div v-if="activeBillCount > 0" class="bill-summary -shadow">
                 <div class="bill-summary-header">Summary</div>
                 <div class="bill-summary-item">Recurring Bills Total: {{ toCurrency(recurringBillsTotal) }}</div>
                 <div class="bill-summary-item">Bills Total: {{ toCurrency(activeBillsTotal) }}</div>
@@ -20,22 +263,22 @@
             <hr/>
             <div v-if="unpaidBills.length > 0 || paidBills.length > 0">
                 <div class="buttons has-addons is-centered">
-                    <button class="button is-rounded" :class="{'is-selected is-sorted' : this.sortMethod === 'dueDate', 'is-dark': this.sortMethod !== 'dueDate'}" @click="setSort('dueDate')">
-                        <BaseIcon :name="(this.ascending && this.sortMethod === 'dueDate' ? 'chevron-up' : 'chevron-down')">
+                    <button class="button is-rounded" :class="{'is-selected is-sorted' : sortMethod === 'dueDate', 'is-dark': sortMethod !== 'dueDate'}" @click="setSort('dueDate')">
+                        <BaseIcon :name="(ascending && sortMethod === 'dueDate' ? 'chevron-up' : 'chevron-down')">
                             <template #pre>
                                 <span>Date Due</span>
                             </template>
                         </BaseIcon>
                     </button>
-                    <button class="button" :class="{'is-selected is-sorted' : this.sortMethod === 'name', 'is-dark': this.sortMethod !== 'name'}" @click="setSort('name')">
-                        <BaseIcon :name="(this.ascending && this.sortMethod === 'name' ? 'chevron-up' : 'chevron-down')">
+                    <button class="button" :class="{'is-selected is-sorted' : sortMethod === 'name', 'is-dark': sortMethod !== 'name'}" @click="setSort('name')">
+                        <BaseIcon :name="(ascending && sortMethod === 'name' ? 'chevron-up' : 'chevron-down')">
                             <template #pre>
                                 <span>Name</span>
                             </template>
                         </BaseIcon>
                     </button>
-                    <button class="button is-rounded" :class="{'is-selected is-sorted' : this.sortMethod === 'amount', 'is-dark': this.sortMethod !== 'amount'}" @click="setSort('amount')">
-                        <BaseIcon :name="(this.ascending && this.sortMethod === 'amount' ? 'chevron-up' : 'chevron-down')">
+                    <button class="button is-rounded" :class="{'is-selected is-sorted' : sortMethod === 'amount', 'is-dark': sortMethod !== 'amount'}" @click="setSort('amount')">
+                        <BaseIcon :name="(ascending && sortMethod === 'amount' ? 'chevron-up' : 'chevron-down')">
                             <template #pre>
                                 <span>Amount</span>
                             </template>
@@ -45,22 +288,22 @@
             </div>
             <br/>
             <BaseIcon v-if="unpaidBills.length > 0" name="arrow-right-circle">
-                <span>Unpaid Bills<span class="badge -fill-gradient">{{unpaidBills.length}} / {{this.$store.getters.activeBillCount}}</span></span>
+                <span>Unpaid Bills<span class="badge -fill-gradient">{{unpaidBills.length}} / {{activeBillCount}}</span></span>
             </BaseIcon>
             <br v-if="unpaidBills.length > 0" /><br v-if="unpaidBills.length > 0" />
-            <BillCard v-for="bill in unpaidBills" :key="bill.id" :bill="bill" @delete-bill="deleteBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
+            <BillCard v-for="bill in unpaidBills" :key="bill.id" :bill="bill" @delete-bill="deleteUserBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
             <BaseIcon v-if="paidBills.length > 0" name="arrow-right-circle">
                 <span>Paid Bills</span>
             </BaseIcon>
             <br/><br/>
-            <BillCard v-for="bill in paidBills" :key="bill.id" :bill="bill" @delete-bill="deleteBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
+            <BillCard v-for="bill in paidBills" :key="bill.id" :bill="bill" @delete-bill="deleteUserBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
             <BaseModal v-if="showBillDeleteModal">
                 <template #header>
                     <h3 style="color:#C15EF2">Delete Bill</h3>
                 </template>
                 <template #body>
                     <div style="color:whitesmoke;">
-                        Delete bill: <b style="color:#C15EF2;">{{this.selectedBill.name}}</b>?
+                        Delete bill: <b style="color:#C15EF2;">{{selectedBill.name}}</b>?
                     </div>
                 </template>
                 <template #footer>
@@ -133,239 +376,6 @@
         </div>
     </div>
 </template>
-
-<script>
-import BillCard from '../components/BillCard';
-import BaseModal from '../components/BaseModal';
-import BaseIcon from '../components/BaseIcon';
-import { toCurrencyMixin } from '../mixins/GlobalMixin';
-export default {
-    components: {
-        BillCard: BillCard,
-        BaseModal: BaseModal,
-        BaseIcon: BaseIcon
-    },
-    mixins: [toCurrencyMixin],
-    data() {
-        return {
-            selectedBill: Object,
-            showBillDeleteModal: false,
-            showBillDetailModal: false,
-            showBillAmountModal: false,
-            showBillPayOffModal: false,
-            ascending: true,
-            sortMethod: 'dueDate',
-            sortType: {
-                NAME: 'name',
-                DUEDATE: 'dueDate',
-                AMOUNT: 'amount'
-            },
-            errors: []
-        }
-    },
-    computed: {
-        paidBills() {
-            const paidBills = this.$store.getters.activeBills.filter(b => b.paid === true);
-            return this.sortBills(paidBills, this.sortMethod);
-        },
-        unpaidBills() {
-            const unpaidBills = this.$store.getters.activeBills.filter(b => b.paid === false);
-            return this.sortBills(unpaidBills, this.sortMethod);
-        },
-        totalDue() {
-            let total = 0;
-            this.unpaidBills.forEach(bill => {
-                total += parseFloat(bill.amount);
-            });
-            return total;
-        },
-        totalPaid() {
-            let total = 0;
-            this.paidBills.forEach(bill => {
-                total += parseFloat(bill.amount);
-            });
-            return total;
-        },
-        totalPastDueTotal() {
-            let total = 0;
-            this.unpaidBills.forEach(bill => {
-                if (bill.dueDate !== null & bill.dueDate !== '' && new Date(bill.dueDate).getDate() < new Date().getDate()) {
-                    total += parseFloat(bill.amount);
-                }
-            });
-            return total;
-        },
-        totalPastDue() {
-            let billsPastDue = 0;
-            this.unpaidBills.forEach(bill => {
-                if (bill.dueDate !== null & bill.dueDate !== '' && new Date(bill.dueDate).getDate() < new Date().getDate()) {
-                    billsPastDue += 1;
-                }
-            });
-            return billsPastDue;
-        },
-        activeBillsTotal() {
-            let total = 0;
-            this.$store.getters.activeBills.forEach(bill => {
-                if (bill.datePaidOff === null || bill.datePaidOff === '') {
-                    total += parseFloat(bill.amount);
-                }
-            });
-            return total;
-        },
-        recurringBillsTotal() {
-            const recurringBills = this.$store.getters.activeBills.filter(b => b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === ''));
-            let total = 0;
-            recurringBills.forEach(bill => {
-                total += parseFloat(bill.amount);
-            });
-            return total;
-        },
-        activeMonth() {
-            if (this.$store.state.activeMonth && this.$store.state.activeMonth !== null) {
-                return this.$store.state.activeMonth.name;
-            }
-            return new Date().toLocaleString('default', { month: 'long' });
-        },
-        selectedCategory() {
-            return this.$store.getters.getCategoryNameById(this.selectedBill?.subCategoryId);
-        },
-        selectedSubCategory() {
-            return this.$store.getters.getSubCategoryNameById(this.selectedBill?.subCategoryId);
-        }
-    },
-    methods: {
-        sortBills(bills, sortMethod) {
-            if(!bills || bills === null) { return []; }
-            switch (sortMethod) {
-                case 'amount': 
-                    return bills.sort((a,b) => {
-                        let x = typeof a.amount === 'number' ? a.amount : parseFloat(a.amount);
-                        let y = typeof b.amount === 'number' ? b.amount : parseFloat(b.amount);
-                        if (x < y) { return this.ascending ? -1 : 1 }
-                        if (x > y) { return this.ascending ? 1 : -1 }
-                        return 0;
-                    });
-                case 'name': 
-                    return bills.sort((a,b) => {
-                        let x = a.name.toLowerCase();
-                        let y = b.name.toLowerCase();
-                        if (x < y) { return this.ascending ? -1 : 1 }
-                        if (x > y) { return this.ascending ? 1 : -1 }
-                        return 0;
-                    });
-                default:
-                    return bills.sort((a,b) => {
-                        let x = a.dueDate ? new Date(a.dueDate).getDate() : null;
-                        let y = b.dueDate ? new Date(b.dueDate).getDate() : null;
-                        if (x < y) {return this.ascending ? -1 : 1}
-                        if (y < x) {return this.ascending ? 1 : -1}
-                        return 0;
-                    });
-            }
-        },
-        setSort(sortType) {
-            if (this.sortMethod === sortType) {
-                this.ascending = !this.ascending;   
-            } else if (this.sortMethod !== sortType) {
-                this.ascending = true;
-            }
-            this.sortMethod = sortType;
-        },
-        deleteBill(bill) {
-            this.selectedBill = bill;
-            this.showBillDeleteModal = true;
-        },
-        updateBillPaid(bill) {
-            this.selectedBill = bill;
-            if (this.selectedBill.isFixedAmount === false && this.selectedBill.isRecurring === true) {
-                this.showBillAmountModal = true;
-            } else {
-                bill.paid = true;
-                bill.datePaid = new Date().toLocaleDateString();
-                bill.paidCount++;
-                this.$store.dispatch('updateBill', bill);
-            }
-        },
-        toggleBillPayOffModal(bill) {
-            this.selectedBill = bill;
-            this.showBillPayOffModal = !this.showBillPayOffModal;
-        },
-        updateBillPayOffConfirm(choice) {
-            if (choice === 'cancel') {
-                this.showBillPayOffModal = !this.showBillPayOffModal;
-            } else {
-                this.selectedBill.paid = true;
-                this.selectedBill.datePaid = new Date().toLocaleDateString();
-                this.selectedBill.datePaidOff = this.selectedBill.datePaid;
-                this.selectedBill.paidCount++;
-                this.$store.dispatch('updateBill', this.selectedBill).then(() => {
-                    this.showBillPayOffModal = !this.showBillPayOffModal;
-                });
-            }
-        },
-        updateBillPaidConfirm(choice) {
-            let validationPassed = this.validateAmount();
-            if (choice === 'cancel') {
-                this.showBillAmountModal = !this.showBillAmountModal;
-            } else {
-                if (validationPassed === true) {
-                    this.selectedBill.amount = parseFloat(this.selectedBill.amount).toFixed(2);
-                    this.selectedBill.paid = true;
-                    this.selectedBill.datePaid = new Date().toLocaleDateString();
-                    this.selectedBill.paidCount++;
-                    this.$store.dispatch('updateBill', this.selectedBill).then(() => {
-                        this.showBillAmountModal = !this.showBillAmountModal;
-                    });
-                }
-            }
-        },
-        updateBillUndoPaid(bill) {
-            bill.paid = false;
-            bill.datePaid = null;
-            bill.paidCount--;
-            this.$store.dispatch('updateBill', bill);
-        },
-        deleteBillConfirm(choice) {
-            if (choice === 'confirm') {
-                this.$store.dispatch('deleteBill', this.selectedBill.id);
-            }
-            this.showBillDeleteModal = !this.showBillDeleteModal;
-        },
-        validateAmount() {
-            this.errors = [];
-            //Bill Amount Validation
-            if (!this.selectedBill.amount || this.selectedBill.amount === null) {
-                this.errors.push({ message: 'Amount is required', field: 'billInputAmount' });
-            } else if (isNaN(this.selectedBill.amount)) {
-                this.errors.push({ message: 'Amount must be a number', field: 'billInputAmount' });
-            }
-            return this.errors.length === 0;
-        },
-        validationFailed(field) {
-            let found = this.errors.find(e => e.field === field) !== undefined;
-            return found
-        },
-        getErrorMessage(field) {
-            if (this.errors.length <= 0) {
-                return null;
-            } else {
-                let found = this.errors.find(err => err.field === field);
-                if (found && found !== null) {
-                    return `*${found.message}`;
-                } else {
-                    return `No errors for '${field}'`
-                }
-            }
-        },
-        showBillDetails(bill) {
-            this.selectedBill = bill;
-            this.showBillDetailModal = true;
-        }
-    }
-}
-</script>
-
 <style scoped>
 .bills-view {
     min-width: 500px;

@@ -1,3 +1,7 @@
+<script>
+import { defineComponent } from 'vue';
+export default defineComponent({})
+</script>
 <template>
     <div class="privacy-policy-view">
         <h1>Privacy Policy</h1>
@@ -168,9 +172,6 @@
         </ul>
     </div>
 </template>
-<script>
-export default {}
-</script>
 <style scoped>
 .privacy-policy-view {
     min-width: 500px;

@@ -1,8 +1,8 @@
-const _ficaTaxRate = [
+const ficaTaxRate = [
     { 'id': 1, 'name': 'Social Security', 'rate': 6.2 },
     { 'id': 2, 'name': 'Medicare', 'rate': 1.45 }
 ];
-const _federalTaxBracket = [
+const federalTaxBracket = [
     //single 2022
     { 'id': 22, 'year': 2022, 'rate': 10, 'incomeMin': 1, 'incomeMax': 10275, 'filing_status': 's' },
     { 'id': 23, 'year': 2022, 'rate': 12, 'incomeMin': 10276, 'incomeMax': 41775, 'filing_status': 's' },
@@ -28,7 +28,7 @@ const _federalTaxBracket = [
     { 'id': 41, 'year': 2022, 'rate': 35, 'incomeMin': 215951, 'incomeMax': 539900, 'filing_status': 'h' },
     { 'id': 42, 'year': 2022, 'rate': 37, 'incomeMin': 539901, 'incomeMax': 9007199254740991, 'filing_status': 'h' }
 ];
-const _stateTaxBracket = [
+const stateTaxBracket = [
     // 2022 State Taxes
     {'id': 8, 'year': 2022, 'rate': 0.0, 'state': 'AK', 'incomeMin': 0, 'filing_status': 'm'},
 	{'id': 7, 'year': 2022, 'rate': 0.0, 'state': 'AK', 'incomeMin': 0, 'filing_status': 's'},
@@ -430,14 +430,10 @@ const _stateTaxBracket = [
 	{'id': 383, 'year': 2022, 'rate': 0.0, 'state': 'WY', 'incomeMin': 0, 'filing_status': 's'}
 ];
 
-export default {
-    getFederalTaxBracket(cb) {
-        setTimeout(() => cb(_federalTaxBracket.filter(f => f.year === new Date().getFullYear())), 100);
-    },
-    getStateTaxBracket(cb) {
-        setTimeout(() => cb(_stateTaxBracket.filter(s => s.year === new Date().getFullYear())), 100);
-    },
-    getFICATaxRate(cb) {
-        setTimeout(() => cb(_ficaTaxRate), 100);
-    }
+const taxData = {
+	federalTaxBracket,
+	stateTaxBracket,
+	ficaTaxRate
 }
+
+export default taxData;
