@@ -25,10 +25,9 @@ const mainStore = defineStore('main', {
   getters: {
     hasBills: (state) => state.bills && state.bills.length > 0,
     activeBills: (state) => {
-      if (!state.activeMonth || state.activeMonth === null) return [];
       return state.bills.filter((bill) => {
-        const isCreatedThisMonth = new Date(bill.dateCreated).getMonth() === state.activeMonth.id && new Date(bill.dateCreated).getFullYear() === new Date().getFullYear();
-        const isPaidOffThisMonth = new Date(bill.datePaidOff).getMonth() === state.activeMonth.id && new Date(bill.datePaidOff).getFullYear() === new Date().getFullYear();
+        const isCreatedThisMonth = new Date(bill.dateCreated).getMonth() === state.activeMonth?.id && new Date(bill.dateCreated).getFullYear() === new Date().getFullYear();
+        const isPaidOffThisMonth = new Date(bill.datePaidOff).getMonth() === state.activeMonth?.id && new Date(bill.datePaidOff).getFullYear() === new Date().getFullYear();
         return (bill.isRecurring || isCreatedThisMonth) && (bill.datePaidOff === null || bill.datePaidOff === '' || isPaidOffThisMonth);
       });
     },
