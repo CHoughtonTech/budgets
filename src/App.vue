@@ -23,8 +23,8 @@ export default defineComponent({
               if (b.dueDate && b.dueDate !== null) {
                 let currentDueDate = new Date(b.dueDate);
                 let newDueDate = new Date(b.dueDate);
-                if (currentDueDate.getMonth() !== self.currentMonth.id) {
-                  newDueDate.setMonth(self.currentMonth.id);
+                if (currentDueDate.getMonth() !== this.currentMonth.id) {
+                  newDueDate.setMonth(this.currentMonth.id);
                 }
                 if (currentDueDate.getFullYear() !== this.currentYear) {
                   newDueDate.setFullYear(this.currentYear);
