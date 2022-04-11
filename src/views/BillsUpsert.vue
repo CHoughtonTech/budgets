@@ -113,6 +113,8 @@ export default defineComponent({
             if (this.validateFields()) {
                 if (!this.bill.userId)
                     this.bill.userId = this.getUserId;
+                this.bill.amount = this.toFixedNumber(parseFloat(this.bill.amount), 2);
+                this.bill.dueDate = this.selectedDueDate.toLocaleDateString();
                 this.toggleShowConfirmModal();
             }
         },
@@ -194,6 +196,7 @@ export default defineComponent({
         resetBill() {
             this.selectedCategoryId =  null;
             this.selectedSubCategoryId = null;
+            this.selectedDueDate = null;
             return {
                 id: null,
                 name: null,
@@ -205,7 +208,8 @@ export default defineComponent({
                 paidCount: 0,
                 isFixedAmount: false,
                 datePaidOff: '',
-                subCategoryId : null
+                subCategoryId : null,
+                dueDate: null
             };
         },
         createAnotherConfirm(value) {
