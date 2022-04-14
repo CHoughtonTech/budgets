@@ -7,6 +7,11 @@ import { defineComponent } from 'vue';
 import { mapActions, mapState } from 'pinia';
 import mainStore from '@/store';
 
+const ACTIVE_MONTH = {
+  name: new Date().toLocaleString('default', { month: 'long' }),
+  id: new Date().getMonth()
+};
+
 export default defineComponent({
     components: {
         BillCard,
@@ -28,6 +33,7 @@ export default defineComponent({
                 DUEDATE: 'dueDate',
                 AMOUNT: 'amount'
             },
+            currentMonth: new Date().toLocaleString('default', { month: 'long' }),
             errors: []
         }
     },
@@ -36,9 +42,33 @@ export default defineComponent({
             this.initStore();
         if (this.user && this.user !== null)
             this.getUserBills();
+        if (this.hasBills) {
+            const activeRecurringBills = this.bills.filter((b) => b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === ''));
+            activeRecurringBills.forEach(b => {
+                if (b.dueDate && b.dueDate !== null) {
+                    let currentDueDate = new Date(b.dueDate);
+                    let newDueDate = new Date(b.dueDate);
+                    let isNewBillCycle = false;
+                    if (currentDueDate.getMonth() !== ACTIVE_MONTH.id) {
+                        isNewBillCycle = true;
+                        newDueDate.setMonth(ACTIVE_MONTH.id);
+                    }
+                    if (currentDueDate.getFullYear() !== new Date().getFullYear()) {
+                        isNewBillCycle = true;
+                        newDueDate.setFullYear(new Date().getFullYear());
+                    }
+                    if (isNewBillCycle) {
+                        b.dueDate = newDueDate.toLocaleDateString();
+                        b.paid = false;
+                        b.datePaid = null;
+                        this.updateBill(b);
+                    }
+                }
+            });
+        }
     },
     computed: {
-        ...mapState(mainStore, ['activeBills', 'activeMonth', 'getCategoryNameById', 'getSubCategoryNameById', 'activeBillCount', 'isStoreInitialized', 'user']),
+        ...mapState(mainStore, ['activeBills', 'getCategoryNameById', 'getSubCategoryNameById', 'activeBillCount', 'isStoreInitialized', 'user', 'hasBills', 'bills']),
         paidBills() {
             const paidBills = this.activeBills.filter(b => b.paid === true);
             return this.sortBills(paidBills, this.sortMethod);
@@ -95,12 +125,6 @@ export default defineComponent({
                 total += parseFloat(bill.amount);
             });
             return total;
-        },
-        activeMonth() {
-            if (this.activeMonth && this.activeMonth !== null) {
-                return this.activeMonth.name;
-            }
-            return new Date().toLocaleString('default', { month: 'long' });
         },
         selectedCategory() {
             return this.getCategoryNameById(this.selectedBill?.subCategoryId);
@@ -243,7 +267,7 @@ export default defineComponent({
 </script>
 <template>
     <div class="bills-view">
-        <h3 style="color:lightgrey;">{{activeMonth + ' ' + new Date().getFullYear() }} Bills</h3>
+        <h3 style="color:lightgrey;">{{currentMonth + ' ' + new Date().getFullYear() }} Bills</h3>
         <div>
             <div v-if="activeBillCount > 0" class="bill-summary -shadow">
                 <div class="bill-summary-header">Summary</div>
