@@ -7,10 +7,14 @@ import states from '@/api/States';
 
 const DEFAULT_USER_ID = 'oxsoftsolutions-budgets-notLoggedIn';
 
+const ACTIVE_MONTH = {
+  name: new Date().toLocaleString('default', { month: 'long' }),
+  id: new Date().getMonth()
+};
+
 const rootState = {
   bills: [],
   income: [],
-  activeMonth: null,
   categories: [],
   subCategories: [],
   states: [],
@@ -26,8 +30,8 @@ const mainStore = defineStore('main', {
     hasBills: (state) => state.bills && state.bills.length > 0,
     activeBills: (state) => {
       return state.bills.filter((bill) => {
-        const isCreatedThisMonth = new Date(bill.dateCreated).getMonth() === state.activeMonth?.id && new Date(bill.dateCreated).getFullYear() === new Date().getFullYear();
-        const isPaidOffThisMonth = new Date(bill.datePaidOff).getMonth() === state.activeMonth?.id && new Date(bill.datePaidOff).getFullYear() === new Date().getFullYear();
+        const isCreatedThisMonth = new Date(bill.dateCreated).getMonth() === ACTIVE_MONTH.id && new Date(bill.dateCreated).getFullYear() === new Date().getFullYear();
+        const isPaidOffThisMonth = new Date(bill.datePaidOff).getMonth() === ACTIVE_MONTH.id && new Date(bill.datePaidOff).getFullYear() === new Date().getFullYear();
         return (bill.isRecurring || isCreatedThisMonth) && (bill.datePaidOff === null || bill.datePaidOff === '' || isPaidOffThisMonth);
       });
     },
@@ -80,7 +84,6 @@ const mainStore = defineStore('main', {
     clearStore() {
       this.bills = [];
       this.income = [];
-      this.activeMonth = null;
       this.categories = [];
       this.subCategories = [];
       this.states = [];
@@ -190,9 +193,6 @@ const mainStore = defineStore('main', {
           reject();
         }
       });
-    },
-    updateActiveMonth(activeMonth) {
-      this.activeMonth = activeMonth;
     },
     initStore() {
       this.ficaRate = taxData.ficaTaxRate;

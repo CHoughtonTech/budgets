@@ -15,48 +15,20 @@ export default defineComponent({
       localStorage.removeItem('vuex');
     if (!this.isStoreInitialized)
       this.initStore();
-    if (this.activeMonth?.name !== this.currentMonth.name || this.activeMonth?.id !== this.currentMonth.id) {
-        let promiseArr = [];
-        if (this.hasBills) {
-          this.bills.forEach(b => {
-            if (b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === '')) {
-              if (b.dueDate && b.dueDate !== null) {
-                let currentDueDate = new Date(b.dueDate);
-                let newDueDate = new Date(b.dueDate);
-                if (currentDueDate.getMonth() !== this.currentMonth.id) {
-                  newDueDate.setMonth(this.currentMonth.id);
-                }
-                if (currentDueDate.getFullYear() !== this.currentYear) {
-                  newDueDate.setFullYear(this.currentYear);
-                }
-                b.dueDate = newDueDate.toLocaleDateString();
-              }
-              b.paid = false;
-              b.datePaid = null;
-            }
-            promiseArr.push(this.updateBill(b));
-          });
-          Promise.all(promiseArr).then(() => {
-            this.updateActiveMonth(this.currentMonth);
-          });
-        } else {
-          this.updateActiveMonth(this.currentMonth);
+    onAuthStateChanged(getAuth(), (user) => {
+      if (user) {
+        if (!this.user || this.user === null) {
+          this.setUser(user);
+          this.getUserIncomes();
+          this.getUserBills();
         }
+      } else {
+        this.clearUser();
       }
-      onAuthStateChanged(getAuth(), (user) => {
-        if (user) {
-          if (!this.user || this.user === null) {
-            this.setUser(user);
-            this.getUserIncomes();
-            this.getUserBills();
-          }
-        } else {
-          this.clearUser();
-        }
-      });
+    });
   },
   computed: {
-    ...mapState(mainStore, ['activeMonth', 'user', 'bills', 'hasBills', 'isStoreInitialized']),
+    ...mapState(mainStore, ['user', 'isStoreInitialized']),
     currentYear() {
       return  new Date().getFullYear();
     },
@@ -74,15 +46,7 @@ export default defineComponent({
     }
   },
   methods: {
-    ...mapActions(mainStore, ['updateActiveMonth', 'updateBill', 'setUser', 'clearUser', 'getUserIncomes', 'getUserBills', 'initStore']),
-  },
-  data() {
-    return {
-      currentMonth: {
-          name: new Date().toLocaleString('default', { month: 'long' }),
-          id: new Date().getMonth()
-      }
-    }
+    ...mapActions(mainStore, ['updateBill', 'setUser', 'clearUser', 'getUserIncomes', 'getUserBills', 'initStore']),
   }
 });
 </script>
