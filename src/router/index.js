@@ -12,6 +12,7 @@ import IncomeUpsert from '@/views/IncomeUpsert';
 import TermsAndConditions from '@/views/TermsOfUse';
 import UserRegistration from '@/views/UserRegistration';
 import UserProfile from '@/views/UserProfile';
+import UserPasswordReset from '@/views/UserPasswordReset';
 
 const routes = [
   {
@@ -69,6 +70,12 @@ const routes = [
     name: 'user-profile',
     component: UserProfile,
     props: true
+  },
+  {
+    path: '/resetPassword',
+    name: 'user-reset-password',
+    props: true,
+    component: UserPasswordReset,
   },
   {
     path: '/verifyCallback/:email',
