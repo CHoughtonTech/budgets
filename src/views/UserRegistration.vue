@@ -236,6 +236,7 @@ export default defineComponent({
             {{ getErrorMessage('userEmail') }}
         </div>
         <input id="userEmail" type="text" placeholder="user@example.com" v-model="email" />
+        <router-link v-if="validateEmail()" style="float:right;" :to="{ name: 'user-reset-password', params: { userEmail: email } }">Forgot Password?</router-link>
         <label for="userPassword">Password</label>
         <label class="is-pulled-right" v-if="isRegistering && password !== ''">
             Strength:&nbsp;<span :class="passwordStrengthStyle">{{ passwordStrengthText }}</span>
