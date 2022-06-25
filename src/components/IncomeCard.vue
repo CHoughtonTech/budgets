@@ -355,7 +355,7 @@ export default defineComponent({
                                 </li>
                                 <li v-if="isHourly">
                                     <span>Hours Per Week</span>
-                                    <span class="is-pulled-right">{{ toCurrency(income.hoursPerWeek) }}</span>
+                                    <span class="is-pulled-right">{{ income.hoursPerWeek }}</span>
                                 </li>
                                 <li v-if="!isHourly">
                                     <span>Annual Salary</span>
