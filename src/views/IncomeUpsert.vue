@@ -110,6 +110,9 @@ export default defineComponent({
         overTimePay() {
             return this.overTimeHours * this.overTimeHourlyRate * 52;
         },
+        disabilityPay() {
+            return this.salary * 12;
+        },
         incomeIsTaxExemptIcon() {
             if (this.userIncome && this.userIncome !== null) {
                 return this.userIncome.isTaxExempt ? 'check-circle' : 'x-circle';
@@ -128,6 +131,9 @@ export default defineComponent({
             }
             return 'check-circle';
         },
+        isDisabilityIncome() {
+            return this.userIncome.employmentType === 'd';
+        },
         showIncomeUpdateModal() {
             return this.isLoaded && this.showConfirmModal;
         },
@@ -136,7 +142,7 @@ export default defineComponent({
         },
         upsertButtonLabel() {
             return this.isLoaded ? 'Update' : 'Create';
-        }
+        },
     },
     data() {
         return {
@@ -173,11 +179,13 @@ export default defineComponent({
             incomeType: [
                 { option: 'Hourly', value: 'h' },
                 { option: 'Salary', value: 's' },
+                { option: 'Disability', value: 'd' }
             ],
             employmentType: [
                 { option: 'Part Time', value: 'pt' },
                 { option: 'Full Time', value: 'ft' },
                 { option: 'Contractor', value: 'c' },
+                { option: 'Disability', value: 'd' },
             ],
             payPeriods: [
                 { option: 'Weekly', value: 52 },
@@ -226,7 +234,7 @@ export default defineComponent({
                 if (!this.isLoaded) 
                     this.userIncome.id = this.getIncomeID();
                 this.userIncome.userId = this.getUserId;
-                this.userIncome.salary = this.toFixedNumber(this.userIncome.type === 'h' ? (this.regularPay + this.overTimePay) : parseFloat(this.salary), 2);
+                this.userIncome.salary = this.calculateSalary();
                 const preTaxDeductedIncome = this.userIncome.salary - (this.preTaxDeductionTotal * this.userIncome.payPeriod);
                 this.setFederalTaxRate(preTaxDeductedIncome);
                 this.setStateTaxRate(preTaxDeductedIncome);
@@ -235,6 +243,21 @@ export default defineComponent({
                 if(this.netIncome > 0)
                     this.toggleShowConfirmModal();
             }
+        },
+        calculateSalary() {
+            let pay = 0;
+            switch (this.userIncome.type) {
+                case 'h':
+                    pay = this.regularPay + this.overTimePay;
+                    break;
+                case 'd': 
+                    pay = this.disabilityPay;
+                    break;
+                default:
+                    pay = this.salary;
+                    break;
+            }
+            return this.toFixedNumber(pay, 2);
         },
         saveIncome() {
             this.createIncome(this.userIncome).then(() => this.$router.push('/income'));
@@ -262,7 +285,7 @@ export default defineComponent({
                     isTaxExempt: i.isTaxExempt,
                     deductions: i.deductions.map(d => { return d; })
                 };
-                this.salary = this.userIncome.salary;
+                this.salary = this.userIncome.type === 'd' ? this.toFixedNumber(this.userIncome.salary / 12, 2) : this.userIncome.salary;
                 this.toggleIsLoaded();
             }).catch((err) => {
                 console.log(err.message);
@@ -306,6 +329,36 @@ export default defineComponent({
                 });
                 this.stateTaxRate = state[0].rate;
                 this.stateTaxAmount = this.toFixedNumber(preTaxDeductedIncome * (this.stateTaxRate / 100), 2);
+            }
+        },
+        setUserIncomeType() {
+            if (this.userIncome.employmentType === 'd') {
+                this.userIncome.type = 'd';
+                this.setPayPeriod('Monthly');
+            } else {
+                this.userIncome.type = null;
+            }
+        },
+        setUserEmploymentType() {
+            if (this.userIncome.type === 'd') {
+                this.userIncome.employmentType = 'd';
+                this.setPayPeriod('Monthly');
+            }
+        },
+        setPayPeriod(selection) {
+            switch (selection) {
+                case 'Bi-Weekly':
+                    this.userIncome.payPeriod = 26;
+                    break;
+                case 'Bi-Monthly':
+                    this.userIncome.payPeriod = 24;
+                    break;
+                case 'Monthly':
+                    this.userIncome.payPeriod = 12;
+                    break;            
+                default:
+                    this.userIncome.payPeriod = 52;
+                    break;
             }
         },
         getFICATaxAmount(preTaxDeductedIncome) {
@@ -490,7 +543,7 @@ export default defineComponent({
                     <label>Employment Type</label><br/>
                     <div v-if="validationFailed('employmentType', errors)" class="error-detail">{{getErrorMessage('employmentType', errors)}}</div>
                     <div class="select is-rounded is-medium">
-                        <select v-model="userIncome.employmentType">
+                        <select v-model="userIncome.employmentType" @change="setUserIncomeType">
                             <option :value="null" hidden selected>Employment Type</option>
                             <option v-for="type in employmentType" :key="type.value" :value="type.value">{{type.option}}</option>
                         </select>
@@ -516,7 +569,7 @@ export default defineComponent({
                             <label>Income Type</label><br/>
                             <div v-if="validationFailed('incomeType', errors)" class="error-detail">{{getErrorMessage('incomeType', errors)}}</div>
                             <div class="select is-rounded is-medium">
-                                <select v-model="userIncome.type">
+                                <select v-model="userIncome.type" :disabled="isDisabilityIncome" @change="setUserEmploymentType">
                                     <option :value="null" hidden selected>Income Type</option>
                                     <option v-for="type in incomeType" :key="type.value" :value="type.value">{{type.option}}</option>
                                 </select>
@@ -532,7 +585,7 @@ export default defineComponent({
                             <div v-if="validationFailed('hoursPerWeek', errors)" class="error-detail">{{getErrorMessage('hoursPerWeek', errors)}}</div>
                             <input class="input is-rounded" type="number" v-model.number="userIncome.hoursPerWeek"/>
                         </div>
-                        <div v-if="userIncome.type === 's'" class="tile is-12 is-child">
+                        <div v-if="userIncome.type === 's' || userIncome.type === 'd'" class="tile is-12 is-child">
                             <label>Salary Amount</label>
                             <div v-if="validationFailed('salary', errors)" class="error-detail">{{getErrorMessage('salary', errors)}}</div>
                             <input class="input is-rounded" type="number" v-model.number="salary"/>
