@@ -7,11 +7,6 @@ import { defineComponent } from 'vue';
 import { mapActions, mapState } from 'pinia';
 import mainStore from '@/store';
 
-const ACTIVE_MONTH = {
-  name: new Date().toLocaleString('default', { month: 'long' }),
-  id: new Date().getMonth()
-};
-
 export default defineComponent({
     components: {
         BillCard,
@@ -42,30 +37,6 @@ export default defineComponent({
             this.initStore();
         if (this.user && this.user !== null)
             this.getUserBills();
-        if (this.hasBills) {
-            const activeRecurringBills = this.bills.filter((b) => b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === ''));
-            activeRecurringBills.forEach(b => {
-                if (b.dueDate && b.dueDate !== null && b.isRecurring) {
-                    let currentDueDate = new Date(b.dueDate);
-                    let newDueDate = new Date(b.dueDate);
-                    let isNewBillCycle = false;
-                    if (currentDueDate.getMonth() !== ACTIVE_MONTH.id) {
-                        isNewBillCycle = true;
-                        newDueDate.setMonth(ACTIVE_MONTH.id);
-                    }
-                    if (currentDueDate.getFullYear() !== new Date().getFullYear()) {
-                        isNewBillCycle = true;
-                        newDueDate.setFullYear(new Date().getFullYear());
-                    }
-                    if (isNewBillCycle) {
-                        b.dueDate = newDueDate.toLocaleDateString();
-                        b.paid = false;
-                        b.datePaid = null;
-                        this.updateBill(b);
-                    }
-                }
-            });
-        }
     },
     computed: {
         ...mapState(mainStore, ['activeBills', 'getCategoryNameById', 'getSubCategoryNameById', 'activeBillCount', 'isStoreInitialized', 'user', 'hasBills', 'bills']),
