@@ -20,12 +20,13 @@ export default defineComponent({
             return isCreatedToday;
         },
         isPastDue() {
+            const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
             if (this.bill.paid) {
                 return false;
             }
             if (!this.bill.dueDate || this.bill.dueDate === '') {
                 return false;
-            } else if (new Date(this.bill.dueDate).getDate() < new Date().getDate()) {
+            } else if (new Date(this.bill.dueDate).getDate() < new Date().getDate() || new Date(this.bill.dueDate).getTime() < new Date(startOfMonth.toLocaleDateString()).getTime()) {
                 return true;
             } else {
                 return false;

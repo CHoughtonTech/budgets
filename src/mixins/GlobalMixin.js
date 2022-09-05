@@ -36,3 +36,25 @@ export const toCurrencyMixin = {
         }
     }
 }
+
+export const guid = {
+    methods: {
+        generateGUID() {
+            let timestamp = new Date().getTime();
+            let microseconds = (performance && performance.now && (performance.now() * 1000)) || 0;
+            let base = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
+
+            return base.replace(/[xy]/g, (c) => {
+                let r = Math.random() * 16;
+                if (timestamp > 0) {
+                    r = (timestamp + r)%16 | 0;
+                    timestamp = Math.floor(timestamp/16);
+                } else {
+                    r = (microseconds + r)%16 | 0;
+                    microseconds = Math.floor(microseconds/16);
+                }
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+        }
+    }
+}
