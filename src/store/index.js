@@ -42,6 +42,8 @@ const mainStore = defineStore('main', {
           return monthsSinceDue % bill.recurringCycle.interval === 0; 
         };
 
+        if (isRecurringDueThisMonth()) updateDueDate(bill)
+
         return isRecurringDueThisMonth() && (bill.datePaidOff === null || bill.datePaidOff === '' || isPaidOffThisMonth);
       });
     },
@@ -214,6 +216,26 @@ const mainStore = defineStore('main', {
     }
   }
 });
+
+const updateDueDate = (b) => {
+  const currentDueDate = new Date(b.dueDate);
+  const newDueDate = new Date(b.dueDate);
+  let isNewBillCycle = false;
+  if (currentDueDate.getMonth() !== ACTIVE_MONTH.id) {
+      isNewBillCycle = true;
+      newDueDate.setMonth(ACTIVE_MONTH.id);
+  }
+  if (currentDueDate.getFullYear() !== new Date().getFullYear()) {
+      isNewBillCycle = true;
+      newDueDate.setFullYear(new Date().getFullYear());
+  }
+  if (isNewBillCycle) {
+      b.dueDate = newDueDate.toLocaleDateString();
+      b.paid = false;
+      b.datePaid = null;
+      mainStore().updateBill(b);
+  }
+}
 
 export default mainStore;
 
