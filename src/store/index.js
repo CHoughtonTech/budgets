@@ -30,9 +30,19 @@ const mainStore = defineStore('main', {
     hasBills: (state) => state.bills && state.bills.length > 0,
     activeBills: (state) => {
       return state.bills.filter((bill) => {
-        const isCreatedThisMonth = new Date(bill.dateCreated).getMonth() === ACTIVE_MONTH.id && new Date(bill.dateCreated).getFullYear() === new Date().getFullYear();
         const isPaidOffThisMonth = new Date(bill.datePaidOff).getMonth() === ACTIVE_MONTH.id && new Date(bill.datePaidOff).getFullYear() === new Date().getFullYear();
-        return (bill.isRecurring || isCreatedThisMonth) && (bill.datePaidOff === null || bill.datePaidOff === '' || isPaidOffThisMonth);
+        const isRecurringDueThisMonth = () => {
+          if (!bill.isRecurring) {
+            const createdDate = new Date(bill.dateCreated);
+            const today = new Date();
+            return createdDate.getMonth() === today.getMonth() && createdDate.getFullYear() === today.getFullYear();
+          };
+          const dueDate = new Date(bill.recurringCycle.date ?? new Date().toLocaleDateString());
+          const monthsSinceDue = Math.abs(dueDate.getMonth() - new Date().getMonth());
+          return monthsSinceDue % bill.recurringCycle.interval === 0; 
+        };
+
+        return isRecurringDueThisMonth() && (bill.datePaidOff === null || bill.datePaidOff === '' || isPaidOffThisMonth);
       });
     },
     isStoreInitialized: (state) => {

@@ -119,6 +119,7 @@ h6 {
   font-family: "Montserrat", sans-serif;
 }
 h1 {
+  color: #C15EF2;
   font-size: 50px;
   font-weight: 700;
 }
@@ -283,21 +284,6 @@ textarea {
 }
 [hidden] {
   display: none;
-}
-select {
-  width: 100%;
-  height: 52px;
-  padding: 0 24px 0 10px;
-  vertical-align: middle;
-  background: #fff
-    url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23343a40' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E")
-    no-repeat right 12px center;
-  background-size: 8px 10px;
-  border: solid 1px rgba(0, 0, 0, 0.4);
-  border-radius: 0;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
 }
 select:focus {
   border-color: #A755C2;

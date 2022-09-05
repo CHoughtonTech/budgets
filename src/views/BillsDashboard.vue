@@ -45,7 +45,7 @@ export default defineComponent({
         if (this.hasBills) {
             const activeRecurringBills = this.bills.filter((b) => b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === ''));
             activeRecurringBills.forEach(b => {
-                if (b.dueDate && b.dueDate !== null) {
+                if (b.dueDate && b.dueDate !== null && b.isRecurring) {
                     let currentDueDate = new Date(b.dueDate);
                     let newDueDate = new Date(b.dueDate);
                     let isNewBillCycle = false;
@@ -131,6 +131,19 @@ export default defineComponent({
         },
         selectedSubCategory() {
             return this.getSubCategoryNameById(this.selectedBill?.subCategoryId);
+        },
+        selectedBillRecurrence() {
+            if (this.selectedBill && !this.selectedBill.isRecurring) return '';
+            switch (this.selectedBill.recurringCycle?.interval) {
+                case 3:
+                    return 'Quarterly';
+                case 6:
+                    return 'Semi-Annual';
+                case 12: 
+                    return 'Annual';
+                default:
+                    return 'Monthly';
+            }
         }
     },
     methods: {
@@ -281,7 +294,7 @@ export default defineComponent({
                 <div class="overdue-bill-total">Total Past Due: {{ toCurrency(totalPastDueTotal) }}</div>
             </div>
             <br/>
-            <router-link class="add-bill" :to="{ name: 'create-bill' , params: { billId: -1 } }">
+            <router-link class="add-bill" :to="{ name: 'create-bill' }">
                 <BaseIcon name="plus-circle">Add a Bill</BaseIcon>
             </router-link>
             <hr/>
@@ -364,9 +377,8 @@ export default defineComponent({
                     <div>
                         <br/>
                         <div class="bill-detail"><span class="bill-detail-label">Amount</span>{{toCurrency(selectedBill.amount)}}</div>
-                        <div class="bill-detail"><span class="bill-detail-label">Created</span>{{selectedBill.dateCreated}}</div>
                         <div class="bill-detail"><span class="bill-detail-label">Due</span>{{selectedBill.dueDate ? selectedBill.dueDate : "--"}}</div>
-                        <div class="bill-detail"><span class="bill-detail-label">Recurring</span><BaseIcon :name="selectedBill.isRecurring ? 'check' : 'x'"></BaseIcon></div>
+                        <div class="bill-detail"><span class="bill-detail-label">{{ selectedBill.isRecurring ? 'Recurrence:' : 'Recurring' }}</span><BaseIcon v-if="!selectedBill.isRecurring" :name="'x'"></BaseIcon>{{ selectedBillRecurrence }}</div>
                         <div class="bill-detail"><span class="bill-detail-label">Fixed Amount</span><BaseIcon :name="selectedBill.isFixedAmount ? 'check' : 'x'"></BaseIcon></div>
                         <div class="bill-detail"><span class="bill-detail-label">Category</span>{{selectedCategory}}</div>
                         <div class="bill-detail"><span class="bill-detail-label">SubCategory</span>{{selectedSubCategory}}</div>

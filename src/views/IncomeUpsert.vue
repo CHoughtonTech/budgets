@@ -1,7 +1,7 @@
 <script>
 import BaseModal from '../components/BaseModal';
 import BaseIcon from '../components/BaseIcon';
-import { toCurrencyMixin } from '../mixins/GlobalMixin';
+import { toCurrencyMixin, guid } from '../mixins/GlobalMixin';
 import { defineComponent } from 'vue';
 import { mapActions, mapState } from 'pinia';
 import mainStore from '@/store';
@@ -11,12 +11,12 @@ export default defineComponent({
         BaseModal,
         BaseIcon,
     },
-    mixins: [toCurrencyMixin],
+    mixins: [toCurrencyMixin, guid],
     props: {
         incomeId: null,
     },
     created() {
-        if (this.incomeId !== null && parseInt(this.incomeId) !== -1) {
+        if (this.incomeId) {
             this.loadIncome(this.incomeId);
         }
     },
@@ -232,7 +232,7 @@ export default defineComponent({
         calculateNetIncome() {
             if (this.validateIncomeFields()) {
                 if (!this.isLoaded) 
-                    this.userIncome.id = this.getIncomeID();
+                    this.userIncome.id = this.generateGUID();
                 this.userIncome.userId = this.getUserId;
                 this.userIncome.salary = this.calculateSalary();
                 const preTaxDeductedIncome = this.userIncome.salary - (this.preTaxDeductionTotal * this.userIncome.payPeriod);
@@ -266,25 +266,8 @@ export default defineComponent({
             this.updateIncome(this.userIncome).then(() => this.$router.push('/income'));
         },
         loadIncome(id) {
-            const incomeId = typeof id !== 'number' ? parseInt(id) : id;
-            this.getIncomeById(incomeId).then((i) => {
-                this.userIncome = {
-                    userId: i.userId,
-                    id: i.id,
-                    name: i.name,
-                    type: i.type,
-                    salary: i.salary,
-                    netSalary: i.netSalary,
-                    hourlyRate: i.hourlyRate,
-                    hoursPerWeek: i.hoursPerWeek,
-                    employmentType: i.employmentType,
-                    filingStatus: i.filingStatus,
-                    payPeriod: i.payPeriod,
-                    state: i.state,
-                    isActive: i.isActive,
-                    isTaxExempt: i.isTaxExempt,
-                    deductions: i.deductions.map(d => { return d; })
-                };
+            this.getIncomeById(id).then((i) => {
+                this.userIncome = JSON.parse(JSON.stringify(i));
                 this.salary = this.userIncome.type === 'd' ? this.toFixedNumber(this.userIncome.salary / 12, 2) : this.userIncome.salary;
                 this.toggleIsLoaded();
             }).catch((err) => {
@@ -468,25 +451,6 @@ export default defineComponent({
                 this.userIncome.deductions.splice(index, 1);
             }
         },
-        getIncomeID(existingIds = this.income.map(i => i.id)) {
-            let isUniqueId = false;
-            let max = 9999999;
-            let maxRetries = 1000;
-            let count = 0;
-            let id = Math.floor(Math.random() * Math.floor(max));
-            while (!isUniqueId) {
-                isUniqueId = existingIds.find(bill => bill.id === id) === undefined;
-                if (!isUniqueId) {
-                    id = Math.floor(Math.random() * Math.floor(max));
-                }
-                count++;
-                if(count >= maxRetries) {
-                    isUniqueId = true;
-                    id = -1;
-                }
-            }
-            return id;
-        },
         toFixedNumber(num, digits, base){
             var pow = Math.pow(base||10, digits);
             return Math.round(num*pow) / pow;
@@ -545,7 +509,7 @@ export default defineComponent({
                     <div class="select is-rounded is-medium">
                         <select v-model="userIncome.employmentType" @change="setUserIncomeType">
                             <option :value="null" hidden selected>Employment Type</option>
-                            <option v-for="type in employmentType" :key="type.value" :value="type.value">{{type.option}}</option>
+                            <option v-for="types in employmentType" :key="types.value" :value="types.value">{{ types.option }}</option>
                         </select>
                     </div>
                 </div>
@@ -612,10 +576,12 @@ export default defineComponent({
                         <div v-if="!hideDeductions" class="tile is-12 is-child">
                             <label>Deduction Type</label>
                             <div v-if="validationFailed('deductionType', deductionErrors)" class="error-detail">{{getErrorMessage('deductionType', deductionErrors)}}</div>
-                            <select v-model="deduction.type" >
-                                <option :value="null" hidden selected>Deduction Type</option>
-                                <option v-for="deductionType in deductionTypes" :key="deductionType.value" :value="deductionType.value">{{deductionType.option}}</option>
-                            </select>
+                            <div class='select is-rounded is-medium'>
+                                <select v-model="deduction.type">
+                                    <option :value="null" hidden selected>Deduction Type</option>
+                                    <option v-for="deductionType in deductionTypes" :key="deductionType.value" :value="deductionType.value">{{deductionType.option}}</option>
+                                </select>
+                            </div>
                         </div>
                         <div v-if="!hideDeductions" class="tile is-12 is-child">
                             <button @click="addDeduction">Add Deduction</button>

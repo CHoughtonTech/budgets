@@ -2,15 +2,17 @@
 import BaseModal from '../components/BaseModal';
 import DatePicker from 'vue3-date-time-picker';
 import 'vue3-date-time-picker/dist/main.css';
-import { defineComponent } from 'vue';
+import { defineComponent, watch } from 'vue';
 import { mapActions, mapState } from 'pinia';
 import mainStore from '@/store';
+import { guid } from '@/mixins/GlobalMixin';
 
 export default defineComponent({
     components: {
         BaseModal,
         DatePicker
     },
+    mixins: [guid],
     props: {
         billId: null
     },
@@ -18,9 +20,20 @@ export default defineComponent({
         if (this.categories.length <= 0) {
             this.$router.push('/bills');
         }
-        if (this.billId !== null && parseInt(this.billId) !== -1) {
+        if (this.billId) {
             this.loadBill(this.billId);
         }
+    },
+    mounted() {
+        watch(
+            () => this.bill.isRecurring,
+            (currentValue, oldValue) => {
+                if (currentValue === false && oldValue === true) {
+                    this.bill.recurringCycle = null;
+                    this.selectedRecurringCycle = null;
+                }
+            }
+        )
     },
     computed: {
         ...mapState(mainStore, ['getUserId', 'categories', 'subCategories', 'getSubCategoriesByCategoryId', 'bills']),
@@ -47,7 +60,7 @@ export default defineComponent({
                 id: null,
                 name: null,
                 paid: false,
-                amount:0.0,
+                amount: null,
                 datePaid: null,
                 dateCreated: null,
                 isRecurring: false,
@@ -55,40 +68,41 @@ export default defineComponent({
                 isFixedAmount: false,
                 datePaidOff: null,
                 subCategoryId : null,
-                dueDate: null
+                dueDate: null,
+                recurringCycle: null,
             },
             format: 'M/d/yyyy',
             selectedCategoryId: null,
             selectedSubCategoryId: null,
             selectedDueDate: null,
+            selectedRecurringCycle: null,
             isLoaded: false,
             showConfirmModal: false,
+            recurringCycles: [
+                { label: 'Monthly', value: 1 },
+                { label: 'Quarterly', value: 3 },
+                { label: 'Semi-Annual', value: 6 },
+                { label: 'Annual', value: 12 }
+            ],
             errors: []
         }
     },
     methods: {
         ...mapActions(mainStore, ['getBillById', 'updateBill', 'createBill']),
+        setRecurringCycle() {
+            if (!this.bill.isRecurring || this.bill.isRecurring === false) return;
+            this.bill.recurringCycle = {
+                interval: this.selectedRecurringCycle,
+                date: this.selectedDueDate.toLocaleDateString()
+            }
+        },
         loadBill(id) {
-            const billId = typeof id !== 'number' ? parseInt(id) : id;
-            this.getBillById(billId)
+            this.getBillById(id)
                 .then((b) => {
-                    this.bill = {
-                        userId: b.userId,
-                        id: b.id,
-                        name: b.name,
-                        paid:  b.paid,
-                        amount: b.amount,
-                        datePaid:  b.datePaid,
-                        dateCreated:  b.dateCreated,
-                        isRecurring:  b.isRecurring,
-                        paidCount:  b.paidCount,
-                        isFixedAmount: b.isFixedAmount,
-                        datePaidOff: b.datePaidOff,
-                        subCategoryId: b.subCategoryId,
-                        dueDate: b.dueDate
-                    };
+                    this.bill = JSON.parse(JSON.stringify(b));
                     this.selectedSubCategoryId = this.bill.subCategoryId;
                     this.selectedDueDate = new Date(this.bill.dueDate);
+                    this.selectedRecurringCycle = this.bill.recurringCycle?.interval;
                     this.setCategoryId();
                     this.isLoaded = true;
                 })
@@ -99,11 +113,12 @@ export default defineComponent({
         },
         createUserBill() {
             if (this.validateFields()) {
-                this.bill.id = this.getBillID();
+                this.bill.id = this.generateGUID();
                 this.bill.userId = this.getUserId;
                 this.bill.amount = this.toFixedNumber(parseFloat(this.bill.amount), 2);
                 this.bill.dateCreated = new Date().toLocaleDateString();
                 this.bill.dueDate = this.selectedDueDate.toLocaleDateString();
+                this.setRecurringCycle();
                 this.createBill(this.bill).then(() => {
                     this.toggleShowConfirmModal();
                 });
@@ -115,6 +130,7 @@ export default defineComponent({
                     this.bill.userId = this.getUserId;
                 this.bill.amount = this.toFixedNumber(parseFloat(this.bill.amount), 2);
                 this.bill.dueDate = this.selectedDueDate.toLocaleDateString();
+                this.setRecurringCycle();
                 this.toggleShowConfirmModal();
             }
         },
@@ -125,25 +141,6 @@ export default defineComponent({
         cancelBill() {
             this.resetBill();
             this.$router.push('/bills');
-        },
-        getBillID() {
-            let isUniqueId = false;
-            let max = 9999999;
-            let maxRetries = 1000;
-            let count = 0;
-            let id = Math.floor(Math.random() * Math.floor(max));
-            while (!isUniqueId) {
-                isUniqueId = this.bills.find(bill => bill.id === id) === undefined;
-                if (!isUniqueId) {
-                    id = Math.floor(Math.random() * Math.floor(max));
-                }
-                count++;
-                if(count >= maxRetries) {
-                    isUniqueId = true;
-                    id = -1;
-                }
-            }
-            return id;
         },
         toggleShowConfirmModal() {
             this.showConfirmModal = !this.showConfirmModal;
@@ -159,9 +156,17 @@ export default defineComponent({
             if (!b.amount || b.amount === null) {
                 this.errors.push({ message: 'Amount is required', field: 'billAmount' });
             }
+            //Bill Due Date
+            if (!this.selectedDueDate || this.selectedDueDate === null) {
+                this.errors.push({ message: 'Due Date is required', field: 'billDueDate' })
+            }
             //Bill Subcategory
             if (!b.subCategoryId || b.subCategoryId === null) {
                 this.errors.push({ message: 'Subcategory is required', field: 'billSubcategories' });
+            }
+            //Bill Recurring Cycle
+            if (b.isRecurring && b.recurringCycle === null) {
+                this.errors.push({ message: 'Recurring Cycle is required if bill is set to reoccur.', field: 'billRecurringCycle' })
             }
             return this.errors.length <= 0;
         },
@@ -197,6 +202,7 @@ export default defineComponent({
             this.selectedCategoryId =  null;
             this.selectedSubCategoryId = null;
             this.selectedDueDate = null;
+            this.selectedRecurringCycle = null;
             return {
                 id: null,
                 name: null,
@@ -209,7 +215,8 @@ export default defineComponent({
                 isFixedAmount: false,
                 datePaidOff: '',
                 subCategoryId : null,
-                dueDate: null
+                dueDate: null,
+                recurringCycle: null,
             };
         },
         createAnotherConfirm(value) {
@@ -242,30 +249,54 @@ export default defineComponent({
         <h1>{{ billActionLabel }}</h1>
         <label for="billName">Name</label>
         <div v-if="validationFailed('billName')" class="error-detail">{{getErrorMessage('billName')}}</div>
-        <input id="billName" type="text" ref="billName" v-model="bill.name" placeholder="Bill Name" :class="{'error-detail-input': validationFailed('billName')}" />
+        <input id="billName" type="text" ref="billName" v-model="bill.name" placeholder="Bill Name" :class="{'error-detail-input': validationFailed('billName')}" class='input is-rounded is-medium' />
         <label for="billAmount">Amount</label>
         <div v-if="validationFailed('billAmount')" class="error-detail">{{getErrorMessage('billAmount')}}</div>
-        <input id="billAmount" type="number" v-model="bill.amount" placeholder="0.00" :class="{'error-detail-input': validationFailed('billAmount')}" />
+        <input id="billAmount" type="number" v-model="bill.amount" placeholder="0.00" :class="{'error-detail-input': validationFailed('billAmount')}" class='input is-rounded is-medium' />
         <label for="billDueDate">Due Date</label>
-        <DatePicker v-model="selectedDueDate" :format="format" :enableTimePicker="false" autoApply></DatePicker>
+        <br/>
+        <div v-if="validationFailed('billDueDate')" class="error-detail">{{getErrorMessage('billDueDate')}}</div>
+        <DatePicker v-model="selectedDueDate" :format="format" :enableTimePicker="false" :autoApply="true" class='is-medium'></DatePicker>
+        <br/>
         <label for="billFixedAmount" style="margin-right: 25px">Is fixed amount?</label>
         <input id="billFixedAmount" type="checkbox" v-model="bill.isFixedAmount" /><br/>
         <label for="billRecurring" style="margin-right: 25px">Is recurring?</label>
-        <input id="billRecurring" type="checkbox" v-model="bill.isRecurring" /><br/>
+        <input id="billRecurring" type="checkbox" v-model="bill.isRecurring" />
+        <br v-if="bill.isRecurring"/>
+        <label for="billRecurringCycle" v-if="bill.isRecurring">Recurring Cycle</label>
+        <div v-if="validationFailed('billRecurringCycle')" class="error-detail">{{getErrorMessage('billRecurringCycle')}}</div>
+        <br v-if="bill.isRecurring"/>
+        <div class='select is-rounded is-medium' v-if="bill.isRecurring">
+            <select id="billRecurringCycle" v-if="bill.isRecurring" v-model="selectedRecurringCycle" @change="setRecurringCycle" :disabled="!selectedDueDate">
+                <option :value="null" hidden selected>Recurring Cycle</option>
+                <option v-for="option in recurringCycles" :key="option.value" :value="option.value">{{ option.label }}</option>
+            </select>
+        </div>
+        <br />
         <label for="billCategories">Categories</label>
         <div v-if="validationFailed('billSubcategories') && selectedCategoryId === null" class="error-detail">{{getErrorMessage('billSubcategories')}}</div>
-        <select id="billCategories" v-model="selectedCategoryId" @change="resetSubcategoryId" :class="{'error-detail-input': validationFailed('billSubcategories') && selectedCategoryId === null}">
-            <option v-for="category in categories" :key="category.id" :value="category.id">
-                {{category.Name}}
-            </option>
-        </select>
+        <br/>
+        <div class='select is-rounded is-medium'>
+            <select id="billCategories" v-model="selectedCategoryId" @change="resetSubcategoryId" :class="{'error-detail-input': validationFailed('billSubcategories') && selectedCategoryId === null}">
+                <option :value="null" hidden selected>Category</option>
+                <option v-for="category in categories" :key="category.id" :value="category.id">
+                    {{category.Name}}
+                </option>
+            </select>
+        </div>
+        <br v-if="selectedCategoryId !== null"/>
         <label v-if="activeSubCategories.length > 0" for="billSubcategories">SubCategories</label>
         <div v-if="validationFailed('billSubcategories') && selectedCategoryId !== null" class="error-detail">{{getErrorMessage('billSubcategories')}}</div>
-        <select id="billSubcategories" v-if="activeSubCategories.length > 0" v-model="selectedSubCategoryId" @blur="setSubcategoryId" :class="{'error-detail-input': validationFailed('billSubcategories')}">
-            <option v-for="subcategory in activeSubCategories" :key="subcategory.id" :value="subcategory.id">
-                {{subcategory.Name}}
-            </option>
-        </select>
+        <br v-if="selectedCategoryId !== null"/>
+        <div class='select is-rounded is-medium'>
+            <select id="billSubcategories" v-if="activeSubCategories.length > 0" v-model="selectedSubCategoryId" @blur="setSubcategoryId" :class="{'error-detail-input': validationFailed('billSubcategories')}" class='select is-rounded is-medium'>
+                <option :value="null" hidden selected>Subcategory</option>
+                <option v-for="subcategory in activeSubCategories" :key="subcategory.id" :value="subcategory.id">
+                    {{subcategory.Name}}
+                </option>
+            </select>
+        </div>
+        <br/>
         <button type="button" @click="isLoaded ? updateUserBill() : createUserBill()">{{ buttonLabel }}</button>
         <button type="button" @click="cancelBill()">Cancel</button>
         <BaseModal v-if="showCreateAnotherModal">
@@ -304,6 +335,9 @@ h1 {
 }
 h3 {
     color: lightgrey;
+}
+p {
+    color: #C15EF2;
 }
 label {
     color: lightgrey;
