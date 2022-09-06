@@ -31,28 +31,28 @@
             },
             showBillDetails(bill) {
                 this.showMenu = false;
-                const nextRecurrenceDate = (billDueDate) => {
-                    const dueDate = new Date(billDueDate);
-                    let nextDueDate = new Date(billDueDate);
-                    let nextDueYear = dueDate.getFullYear();
-                    let count = 0;
-                    const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-                    while (nextDueDate.getTime() < firstDayOfMonth.getTime()) {
-                        const nextDueMonth = (d) => {
-                            const newMonth = d.getMonth() + bill.recurringCycle.interval;
-                            if (newMonth > 11) {
-                                nextDueYear += 1;
-                                return Math.abs(newMonth - 12);
-                            } else {
-                                return newMonth;
-                            }
-                        };
-                        const nextDueMonth2 = nextDueMonth(nextDueDate);
-                        nextDueDate = new Date(nextDueYear, nextDueMonth2, dueDate.getDate());
-                        count++;
-                        // Maximum iteration attempts at 13 for monthly bills. 
-                        if (count >= 12) break;
+                const monthsRecurringIsDue = () => {
+                    const dueDate = new Date(bill.recurringCycle.date);
+                    const result = [];
+                    for(let i = 0; i < 12; i++) {
+                        const monthsSinceDue = Math.abs(dueDate.getMonth() - i);    
+                        const isDueThisMonth = monthsSinceDue % bill.recurringCycle.interval === 0;
+                        if (isDueThisMonth) result.push(i);
                     }
+                    return result;
+                };
+                const nextRecurrenceDate = (billDueDate) => {
+                    let nextDueDate = new Date(billDueDate);
+                    const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+                    [0, 1].every((y) => {
+                        nextDueDate.setFullYear(new Date().getFullYear() + y);
+                        monthsRecurringIsDue().every((x) => {
+                            nextDueDate.setMonth(x);
+                            if (nextDueDate.getTime() > firstDayOfMonth.getTime()) return false;
+                            return true;
+                        })
+                        return nextDueDate.getTime() < firstDayOfMonth.getTime();
+                    });
                     
                     return nextDueDate.toLocaleDateString();
                 }
