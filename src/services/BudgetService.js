@@ -8,7 +8,7 @@ const mapBillsFromRealTimeDatabase = (billToConvert) => {
     };
     const billToMap = { 
         userId: billToConvert.userId ?? null,
-        id: billToConvert.id ?? null,
+        id: billToConvert.id.toString() ?? null,
         name: billToConvert.name ?? null,
         paid: billToConvert.paid ?? false,
         amount: billToConvert.amount ?? 0.0,
@@ -28,7 +28,7 @@ const mapBillsFromRealTimeDatabase = (billToConvert) => {
 const mapIncomeFromRealTimeDatabase = (incomeToConvert) => {
     const incomeToMap = {
         userId: incomeToConvert.userId ?? null,
-        id: incomeToConvert.id ?? null,
+        id: incomeToConvert.id.toString() ?? null,
         name: incomeToConvert.name ?? null,
         type: incomeToConvert.type ?? null,
         salary: incomeToConvert.salary ?? 0,

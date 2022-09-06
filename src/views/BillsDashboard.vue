@@ -1,5 +1,6 @@
 <script>
 import BillCard from '../components/BillCard';
+import BillRecurringCard from '@/components/BillRecurringCard';
 import BaseModal from '../components/BaseModal';
 import BaseIcon from '../components/BaseIcon';
 import { toCurrencyMixin } from '../mixins/GlobalMixin';
@@ -9,10 +10,11 @@ import mainStore from '@/store';
 
 export default defineComponent({
     components: {
-        BillCard,
-        BaseModal,
-        BaseIcon
-    },
+    BillCard,
+    BillRecurringCard,
+    BaseModal,
+    BaseIcon,
+},
     mixins: [toCurrencyMixin],
     data() {
         return {
@@ -21,6 +23,7 @@ export default defineComponent({
             showBillDetailModal: false,
             showBillAmountModal: false,
             showBillPayOffModal: false,
+            showAllRecurringBills: false,
             ascending: true,
             sortMethod: 'dueDate',
             sortType: {
@@ -115,7 +118,13 @@ export default defineComponent({
                 default:
                     return 'Monthly';
             }
-        }
+        },
+        allRecurringBills() {
+            return this.sortBills(this.bills.filter((x) => x.isRecurring), 'name');
+        },
+        recurringBillsIcon() {
+            return this.showAllRecurringBills ? 'minus-circle' : 'plus-circle';
+        },
     },
     methods: {
         ...mapActions(mainStore, ['deleteBill', 'updateBill', 'initStore', 'getUserBills']),
@@ -174,6 +183,9 @@ export default defineComponent({
         toggleBillPayOffModal(bill) {
             this.selectedBill = bill;
             this.showBillPayOffModal = !this.showBillPayOffModal;
+        },
+        toggleShowAllRecurringBills() {
+            this.showAllRecurringBills = !this.showAllRecurringBills;
         },
         updateBillPayOffConfirm(choice) {
             if (choice === 'cancel') {
@@ -305,6 +317,13 @@ export default defineComponent({
             </BaseIcon>
             <br/><br/>
             <BillCard v-for="bill in paidBills" :key="bill.id" :bill="bill" @delete-bill="deleteUserBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
+            <BaseIcon class="toggle-recurring-bills" :style="'stroke: #411159;'" v-if="allRecurringBills.length > 0" :name="recurringBillsIcon" @click="toggleShowAllRecurringBills">
+                <span>All Recurring Bills</span>
+            </BaseIcon>
+            <div v-if="showAllRecurringBills">
+                <br/>
+                <BillRecurringCard v-for="bill in allRecurringBills" :key="bill.id + bill.recurringCycle.interval" :bill="bill" @delete-bill="deleteUserBill" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal" />
+            </div>
             <BaseModal v-if="showBillDeleteModal">
                 <template #header>
                     <h3 style="color:#C15EF2">Delete Bill</h3>
@@ -450,5 +469,13 @@ export default defineComponent({
     padding-right: 10px;
     font-style:italic;
     font-weight:bolder;
+}
+.toggle-recurring-bills {
+    background: whitesmoke;
+    color: #411159;
+    padding: 5px;
+    border: 2px solid whitesmoke;
+    border-radius: 25px;
+    cursor: pointer;
 }
 </style>
