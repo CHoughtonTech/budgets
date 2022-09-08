@@ -23,7 +23,9 @@ export default defineComponent({
             showBillDetailModal: false,
             showBillAmountModal: false,
             showBillPayOffModal: false,
-            showAllRecurringBills: false,
+            showAllRecurringBills: true,
+            showAllUnpaidBills: true,
+            showAllPaidBills: true,
             ascending: true,
             sortMethod: 'dueDate',
             sortType: {
@@ -122,9 +124,6 @@ export default defineComponent({
         allRecurringBills() {
             return this.sortBills(this.bills.filter((x) => x.isRecurring), 'name');
         },
-        recurringBillsIcon() {
-            return this.showAllRecurringBills ? 'minus-circle' : 'plus-circle';
-        },
     },
     methods: {
         ...mapActions(mainStore, ['deleteBill', 'updateBill', 'initStore', 'getUserBills']),
@@ -186,6 +185,12 @@ export default defineComponent({
         },
         toggleShowAllRecurringBills() {
             this.showAllRecurringBills = !this.showAllRecurringBills;
+        },
+        toggleShowAllUnpaidBills() {
+            this.showAllUnpaidBills = !this.showAllUnpaidBills;
+        },
+        toggleShowAllPaidBills() {
+            this.showAllPaidBills = !this.showAllPaidBills;
         },
         updateBillPayOffConfirm(choice) {
             if (choice === 'cancel') {
@@ -257,6 +262,12 @@ export default defineComponent({
         showBillDetails(bill) {
             this.selectedBill = bill;
             this.showBillDetailModal = true;
+        },
+        accordionIcon(isActive) {
+            return isActive ? 'minus-circle' : 'plus-circle';
+        },
+        activeAccordionStyle(isActive) {
+            return isActive ? 'stroke:#411159;color:#411159' : '';
         }
     }
 })
@@ -307,19 +318,32 @@ export default defineComponent({
                 </div>
             </div>
             <br/>
-            <BaseIcon v-if="unpaidBills.length > 0" name="arrow-right-circle">
-                <span>Unpaid Bills<span class="badge -fill-gradient">{{unpaidBills.length}} / {{activeBillCount}}</span></span>
-            </BaseIcon>
-            <br v-if="unpaidBills.length > 0" /><br v-if="unpaidBills.length > 0" />
-            <BillCard v-for="bill in unpaidBills" :key="bill.id" :bill="bill" @delete-bill="deleteUserBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
-            <BaseIcon v-if="paidBills.length > 0" name="arrow-right-circle">
-                <span>Paid Bills</span>
-            </BaseIcon>
-            <br/><br/>
-            <BillCard v-for="bill in paidBills" :key="bill.id" :bill="bill" @delete-bill="deleteUserBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
-            <BaseIcon class="toggle-recurring-bills" :style="'stroke: #411159;'" v-if="allRecurringBills.length > 0" :name="recurringBillsIcon" @click="toggleShowAllRecurringBills">
-                <span>All Recurring Bills</span>
-            </BaseIcon>
+            <div :class="showAllUnpaidBills ? 'accordion-active': 'accordion'" @click="toggleShowAllUnpaidBills">
+                <BaseIcon v-if="unpaidBills.length > 0" :name="accordionIcon(showAllUnpaidBills)" :style="activeAccordionStyle(showAllUnpaidBills)">
+                    <span>Unpaid Bills</span>
+                </BaseIcon>
+                <span class="badge -fill-gradient" style="float:right;">{{unpaidBills.length}} / {{activeBillCount}}</span>
+            </div>
+            <br />
+            <div v-if="showAllUnpaidBills">
+                <BillCard v-for="bill in unpaidBills" :key="bill.id" :bill="bill" @delete-bill="deleteUserBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
+            </div>
+            <div :class="showAllPaidBills ? 'accordion-active': 'accordion'" @click="toggleShowAllPaidBills">
+                <BaseIcon v-if="paidBills.length > 0" :name="accordionIcon(showAllPaidBills)" :style="activeAccordionStyle(showAllPaidBills)">
+                    <span>Paid Bills</span>
+                </BaseIcon>
+                <span class="badge -fill-gradient" style="float:right;">{{paidBills.length}} / {{activeBillCount}}</span>
+            </div>
+            <br/>
+            <div v-if="showAllPaidBills">
+                <BillCard v-for="bill in paidBills" :key="bill.id" :bill="bill" @delete-bill="deleteUserBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
+            </div>
+            <div :class="showAllRecurringBills ? 'accordion-active': 'accordion'" @click="toggleShowAllRecurringBills">
+                <BaseIcon v-if="allRecurringBills.length > 0" :name="accordionIcon(showAllRecurringBills)" :style="activeAccordionStyle(showAllRecurringBills)">
+                    <span>All Recurring Bills</span>
+                </BaseIcon>
+                <span class="badge -fill-gradient" style="float:right;">{{allRecurringBills.length}}</span>
+            </div>
             <div v-if="showAllRecurringBills">
                 <br/>
                 <BillRecurringCard v-for="bill in allRecurringBills" :key="bill.id + bill.recurringCycle.interval" :bill="bill" @delete-bill="deleteUserBill" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal" />
@@ -403,6 +427,9 @@ export default defineComponent({
     </div>
 </template>
 <style scoped>
+h4 {
+    color: whitesmoke;
+}
 .bills-view {
     min-width: 500px;
     width: 25%;
@@ -410,6 +437,22 @@ export default defineComponent({
 .add-bill {
     cursor: pointer;
     text-decoration: none;
+}
+.accordion {
+    width: 100%;
+    background: #411159;
+    padding: 20px;
+    border-radius:10px;
+    cursor: pointer;
+}
+.accordion-active {
+    width: 100%;
+    background: whitesmoke;
+    color: #411159;
+    border: 1px solid #411159;
+    padding: 20px;
+    border-radius:10px;
+    cursor: pointer;
 }
 .bill-detail {
     background: #2D3033;
