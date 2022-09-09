@@ -74,7 +74,7 @@ export default defineComponent({
 </template>
 <style scoped>
 .reset-view {
-    min-width: 500px;
+    min-width: 400px;
     width: 25%;
     display: flex;
     flex-direction: column;

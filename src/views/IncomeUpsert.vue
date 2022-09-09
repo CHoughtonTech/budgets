@@ -535,7 +535,7 @@ export default defineComponent({
                             <div class="select is-rounded is-medium">
                                 <select v-model="userIncome.type" :disabled="isDisabilityIncome" @change="setUserEmploymentType">
                                     <option :value="null" hidden selected>Income Type</option>
-                                    <option v-for="type in incomeType" :key="type.value" :value="type.value">{{type.option}}</option>
+                                    <option v-for="types in incomeTypes" :key="types.value" :value="types.value">{{types.option}}</option>
                                 </select>
                             </div>
                         </div>

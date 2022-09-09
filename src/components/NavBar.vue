@@ -61,7 +61,7 @@ export default defineComponent({
     position:fixed;
     top:0;
     width: 100%;
-    min-width: 500px;
+    min-width: 400px;
     background-color:#411159;
     color: white;
     margin: 0;

@@ -174,7 +174,7 @@ export default defineComponent({})
 </template>
 <style scoped>
 .privacy-policy-view {
-    min-width: 500px;
+    min-width: 400px;
     width: 25%;
 }
 p,li,h2 {

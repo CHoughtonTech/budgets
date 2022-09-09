@@ -23,9 +23,9 @@ export default defineComponent({
             showBillDetailModal: false,
             showBillAmountModal: false,
             showBillPayOffModal: false,
-            showAllRecurringBills: true,
+            showAllRecurringBills: false,
             showAllUnpaidBills: true,
-            showAllPaidBills: true,
+            showAllPaidBills: false,
             ascending: true,
             sortMethod: 'dueDate',
             sortType: {
@@ -318,31 +318,31 @@ export default defineComponent({
                 </div>
             </div>
             <br/>
-            <div :class="showAllUnpaidBills ? 'accordion-active': 'accordion'" @click="toggleShowAllUnpaidBills">
+            <div v-if="unpaidBills.length > 0" :class="showAllUnpaidBills ? 'accordion-active': 'accordion'" @click="toggleShowAllUnpaidBills">
                 <BaseIcon v-if="unpaidBills.length > 0" :name="accordionIcon(showAllUnpaidBills)" :style="activeAccordionStyle(showAllUnpaidBills)">
                     <span>Unpaid Bills</span>
                 </BaseIcon>
-                <span class="badge -fill-gradient" style="float:right;">{{unpaidBills.length}} / {{activeBillCount}}</span>
+                <span class="badge -fill-gradient" :class="showAllUnpaidBills ? '' : ' -light'" style="float:right;">{{unpaidBills.length}} / {{activeBillCount}}</span>
             </div>
             <br />
             <div v-if="showAllUnpaidBills">
                 <BillCard v-for="bill in unpaidBills" :key="bill.id" :bill="bill" @delete-bill="deleteUserBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
             </div>
-            <div :class="showAllPaidBills ? 'accordion-active': 'accordion'" @click="toggleShowAllPaidBills">
+            <div v-if="paidBills.length > 0" :class="showAllPaidBills ? 'accordion-active': 'accordion'" @click="toggleShowAllPaidBills">
                 <BaseIcon v-if="paidBills.length > 0" :name="accordionIcon(showAllPaidBills)" :style="activeAccordionStyle(showAllPaidBills)">
                     <span>Paid Bills</span>
                 </BaseIcon>
-                <span class="badge -fill-gradient" style="float:right;">{{paidBills.length}} / {{activeBillCount}}</span>
+                <span class="badge -fill-gradient" :class="showAllPaidBills ? '' : ' -light'" style="float:right;">{{paidBills.length}} / {{activeBillCount}}</span>
             </div>
             <br/>
             <div v-if="showAllPaidBills">
                 <BillCard v-for="bill in paidBills" :key="bill.id" :bill="bill" @delete-bill="deleteUserBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
             </div>
-            <div :class="showAllRecurringBills ? 'accordion-active': 'accordion'" @click="toggleShowAllRecurringBills">
+            <div v-if="allRecurringBills.length > 0" :class="showAllRecurringBills ? 'accordion-active': 'accordion'" @click="toggleShowAllRecurringBills">
                 <BaseIcon v-if="allRecurringBills.length > 0" :name="accordionIcon(showAllRecurringBills)" :style="activeAccordionStyle(showAllRecurringBills)">
                     <span>All Recurring Bills</span>
                 </BaseIcon>
-                <span class="badge -fill-gradient" style="float:right;">{{allRecurringBills.length}}</span>
+                <span class="badge -fill-gradient" :class="showAllRecurringBills ? '' : ' -light'" style="float:right;">{{allRecurringBills.length}}</span>
             </div>
             <div v-if="showAllRecurringBills">
                 <br/>
@@ -431,7 +431,7 @@ h4 {
     color: whitesmoke;
 }
 .bills-view {
-    min-width: 500px;
+    min-width: 400px;
     width: 25%;
 }
 .add-bill {
@@ -449,7 +449,7 @@ h4 {
     width: 100%;
     background: whitesmoke;
     color: #411159;
-    border: 1px solid #411159;
+    border: 3px solid #411159;
     padding: 20px;
     border-radius:10px;
     cursor: pointer;
