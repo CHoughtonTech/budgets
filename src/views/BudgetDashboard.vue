@@ -108,7 +108,7 @@ export default defineComponent({
 <style scoped>
 .dashboard-view {
     width: 50%;
-    min-width: 500px;
+    min-width: 400px;
 }
 .base-summaries {
     display: inline-flex;

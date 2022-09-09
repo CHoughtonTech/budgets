@@ -30,9 +30,21 @@ const mainStore = defineStore('main', {
     hasBills: (state) => state.bills && state.bills.length > 0,
     activeBills: (state) => {
       return state.bills.filter((bill) => {
-        const isCreatedThisMonth = new Date(bill.dateCreated).getMonth() === ACTIVE_MONTH.id && new Date(bill.dateCreated).getFullYear() === new Date().getFullYear();
         const isPaidOffThisMonth = new Date(bill.datePaidOff).getMonth() === ACTIVE_MONTH.id && new Date(bill.datePaidOff).getFullYear() === new Date().getFullYear();
-        return (bill.isRecurring || isCreatedThisMonth) && (bill.datePaidOff === null || bill.datePaidOff === '' || isPaidOffThisMonth);
+        const isRecurringDueThisMonth = () => {
+          if (!bill.isRecurring) {
+            const createdDate = new Date(bill.dateCreated);
+            const today = new Date();
+            return createdDate.getMonth() === today.getMonth() && createdDate.getFullYear() === today.getFullYear();
+          };
+          const dueDate = new Date(bill.recurringCycle.date ?? new Date().toLocaleDateString());
+          const monthsSinceDue = Math.abs(dueDate.getMonth() - new Date().getMonth());
+          return monthsSinceDue % bill.recurringCycle.interval === 0; 
+        };
+
+        if (isRecurringDueThisMonth()) updateDueDate(bill)
+
+        return isRecurringDueThisMonth() && (bill.datePaidOff === null || bill.datePaidOff === '' || isPaidOffThisMonth);
       });
     },
     isStoreInitialized: (state) => {
@@ -204,6 +216,26 @@ const mainStore = defineStore('main', {
     }
   }
 });
+
+const updateDueDate = (b) => {
+  const currentDueDate = new Date(b.dueDate);
+  const newDueDate = new Date(b.dueDate);
+  let isNewBillCycle = false;
+  if (currentDueDate.getMonth() !== ACTIVE_MONTH.id) {
+      isNewBillCycle = true;
+      newDueDate.setMonth(ACTIVE_MONTH.id);
+  }
+  if (currentDueDate.getFullYear() !== new Date().getFullYear()) {
+      isNewBillCycle = true;
+      newDueDate.setFullYear(new Date().getFullYear());
+  }
+  if (isNewBillCycle) {
+      b.dueDate = newDueDate.toLocaleDateString();
+      b.paid = false;
+      b.datePaid = null;
+      mainStore().updateBill(b);
+  }
+}
 
 export default mainStore;
 

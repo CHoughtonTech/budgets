@@ -1,5 +1,6 @@
 <script>
 import BillCard from '../components/BillCard';
+import BillRecurringCard from '@/components/BillRecurringCard';
 import BaseModal from '../components/BaseModal';
 import BaseIcon from '../components/BaseIcon';
 import { toCurrencyMixin } from '../mixins/GlobalMixin';
@@ -7,17 +8,13 @@ import { defineComponent } from 'vue';
 import { mapActions, mapState } from 'pinia';
 import mainStore from '@/store';
 
-const ACTIVE_MONTH = {
-  name: new Date().toLocaleString('default', { month: 'long' }),
-  id: new Date().getMonth()
-};
-
 export default defineComponent({
     components: {
-        BillCard,
-        BaseModal,
-        BaseIcon
-    },
+    BillCard,
+    BillRecurringCard,
+    BaseModal,
+    BaseIcon,
+},
     mixins: [toCurrencyMixin],
     data() {
         return {
@@ -26,6 +23,9 @@ export default defineComponent({
             showBillDetailModal: false,
             showBillAmountModal: false,
             showBillPayOffModal: false,
+            showAllRecurringBills: false,
+            showAllUnpaidBills: true,
+            showAllPaidBills: false,
             ascending: true,
             sortMethod: 'dueDate',
             sortType: {
@@ -42,30 +42,6 @@ export default defineComponent({
             this.initStore();
         if (this.user && this.user !== null)
             this.getUserBills();
-        if (this.hasBills) {
-            const activeRecurringBills = this.bills.filter((b) => b.isRecurring === true && (b.datePaidOff === null || b.datePaidOff === ''));
-            activeRecurringBills.forEach(b => {
-                if (b.dueDate && b.dueDate !== null) {
-                    let currentDueDate = new Date(b.dueDate);
-                    let newDueDate = new Date(b.dueDate);
-                    let isNewBillCycle = false;
-                    if (currentDueDate.getMonth() !== ACTIVE_MONTH.id) {
-                        isNewBillCycle = true;
-                        newDueDate.setMonth(ACTIVE_MONTH.id);
-                    }
-                    if (currentDueDate.getFullYear() !== new Date().getFullYear()) {
-                        isNewBillCycle = true;
-                        newDueDate.setFullYear(new Date().getFullYear());
-                    }
-                    if (isNewBillCycle) {
-                        b.dueDate = newDueDate.toLocaleDateString();
-                        b.paid = false;
-                        b.datePaid = null;
-                        this.updateBill(b);
-                    }
-                }
-            });
-        }
     },
     computed: {
         ...mapState(mainStore, ['activeBills', 'getCategoryNameById', 'getSubCategoryNameById', 'activeBillCount', 'isStoreInitialized', 'user', 'hasBills', 'bills']),
@@ -131,7 +107,23 @@ export default defineComponent({
         },
         selectedSubCategory() {
             return this.getSubCategoryNameById(this.selectedBill?.subCategoryId);
-        }
+        },
+        selectedBillRecurrence() {
+            if (this.selectedBill && !this.selectedBill.isRecurring) return '';
+            switch (this.selectedBill.recurringCycle?.interval) {
+                case 3:
+                    return 'Quarterly';
+                case 6:
+                    return 'Semi-Annual';
+                case 12: 
+                    return 'Annual';
+                default:
+                    return 'Monthly';
+            }
+        },
+        allRecurringBills() {
+            return this.sortBills(this.bills.filter((x) => x.isRecurring), 'name');
+        },
     },
     methods: {
         ...mapActions(mainStore, ['deleteBill', 'updateBill', 'initStore', 'getUserBills']),
@@ -190,6 +182,15 @@ export default defineComponent({
         toggleBillPayOffModal(bill) {
             this.selectedBill = bill;
             this.showBillPayOffModal = !this.showBillPayOffModal;
+        },
+        toggleShowAllRecurringBills() {
+            this.showAllRecurringBills = !this.showAllRecurringBills;
+        },
+        toggleShowAllUnpaidBills() {
+            this.showAllUnpaidBills = !this.showAllUnpaidBills;
+        },
+        toggleShowAllPaidBills() {
+            this.showAllPaidBills = !this.showAllPaidBills;
         },
         updateBillPayOffConfirm(choice) {
             if (choice === 'cancel') {
@@ -261,6 +262,12 @@ export default defineComponent({
         showBillDetails(bill) {
             this.selectedBill = bill;
             this.showBillDetailModal = true;
+        },
+        accordionIcon(isActive) {
+            return isActive ? 'minus-circle' : 'plus-circle';
+        },
+        activeAccordionStyle(isActive) {
+            return isActive ? 'stroke:#411159;color:#411159' : '';
         }
     }
 })
@@ -281,7 +288,7 @@ export default defineComponent({
                 <div class="overdue-bill-total">Total Past Due: {{ toCurrency(totalPastDueTotal) }}</div>
             </div>
             <br/>
-            <router-link class="add-bill" :to="{ name: 'create-bill' , params: { billId: -1 } }">
+            <router-link class="add-bill" :to="{ name: 'create-bill' }">
                 <BaseIcon name="plus-circle">Add a Bill</BaseIcon>
             </router-link>
             <hr/>
@@ -311,16 +318,36 @@ export default defineComponent({
                 </div>
             </div>
             <br/>
-            <BaseIcon v-if="unpaidBills.length > 0" name="arrow-right-circle">
-                <span>Unpaid Bills<span class="badge -fill-gradient">{{unpaidBills.length}} / {{activeBillCount}}</span></span>
-            </BaseIcon>
-            <br v-if="unpaidBills.length > 0" /><br v-if="unpaidBills.length > 0" />
-            <BillCard v-for="bill in unpaidBills" :key="bill.id" :bill="bill" @delete-bill="deleteUserBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
-            <BaseIcon v-if="paidBills.length > 0" name="arrow-right-circle">
-                <span>Paid Bills</span>
-            </BaseIcon>
-            <br/><br/>
-            <BillCard v-for="bill in paidBills" :key="bill.id" :bill="bill" @delete-bill="deleteUserBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
+            <div v-if="unpaidBills.length > 0" :class="showAllUnpaidBills ? 'accordion-active': 'accordion'" @click="toggleShowAllUnpaidBills">
+                <BaseIcon v-if="unpaidBills.length > 0" :name="accordionIcon(showAllUnpaidBills)" :style="activeAccordionStyle(showAllUnpaidBills)">
+                    <span>Unpaid Bills</span>
+                </BaseIcon>
+                <span class="badge -fill-gradient" :class="showAllUnpaidBills ? '' : ' -light'" style="float:right;">{{unpaidBills.length}} / {{activeBillCount}}</span>
+            </div>
+            <br />
+            <div v-if="showAllUnpaidBills">
+                <BillCard v-for="bill in unpaidBills" :key="bill.id" :bill="bill" @delete-bill="deleteUserBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
+            </div>
+            <div v-if="paidBills.length > 0" :class="showAllPaidBills ? 'accordion-active': 'accordion'" @click="toggleShowAllPaidBills">
+                <BaseIcon v-if="paidBills.length > 0" :name="accordionIcon(showAllPaidBills)" :style="activeAccordionStyle(showAllPaidBills)">
+                    <span>Paid Bills</span>
+                </BaseIcon>
+                <span class="badge -fill-gradient" :class="showAllPaidBills ? '' : ' -light'" style="float:right;">{{paidBills.length}} / {{activeBillCount}}</span>
+            </div>
+            <br/>
+            <div v-if="showAllPaidBills">
+                <BillCard v-for="bill in paidBills" :key="bill.id" :bill="bill" @delete-bill="deleteUserBill" @update-paid="updateBillPaid" @update-undo-paid="updateBillUndoPaid" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal"/>
+            </div>
+            <div v-if="allRecurringBills.length > 0" :class="showAllRecurringBills ? 'accordion-active': 'accordion'" @click="toggleShowAllRecurringBills">
+                <BaseIcon v-if="allRecurringBills.length > 0" :name="accordionIcon(showAllRecurringBills)" :style="activeAccordionStyle(showAllRecurringBills)">
+                    <span>All Recurring Bills</span>
+                </BaseIcon>
+                <span class="badge -fill-gradient" :class="showAllRecurringBills ? '' : ' -light'" style="float:right;">{{allRecurringBills.length}}</span>
+            </div>
+            <div v-if="showAllRecurringBills">
+                <br/>
+                <BillRecurringCard v-for="bill in allRecurringBills" :key="bill.id + bill.recurringCycle.interval" :bill="bill" @delete-bill="deleteUserBill" @bill-details="showBillDetails" @payoff-bill="toggleBillPayOffModal" />
+            </div>
             <BaseModal v-if="showBillDeleteModal">
                 <template #header>
                     <h3 style="color:#C15EF2">Delete Bill</h3>
@@ -364,9 +391,8 @@ export default defineComponent({
                     <div>
                         <br/>
                         <div class="bill-detail"><span class="bill-detail-label">Amount</span>{{toCurrency(selectedBill.amount)}}</div>
-                        <div class="bill-detail"><span class="bill-detail-label">Created</span>{{selectedBill.dateCreated}}</div>
                         <div class="bill-detail"><span class="bill-detail-label">Due</span>{{selectedBill.dueDate ? selectedBill.dueDate : "--"}}</div>
-                        <div class="bill-detail"><span class="bill-detail-label">Recurring</span><BaseIcon :name="selectedBill.isRecurring ? 'check' : 'x'"></BaseIcon></div>
+                        <div class="bill-detail"><span class="bill-detail-label">{{ selectedBill.isRecurring ? 'Recurrence:' : 'Recurring' }}</span><BaseIcon v-if="!selectedBill.isRecurring" :name="'x'"></BaseIcon>{{ selectedBillRecurrence }}</div>
                         <div class="bill-detail"><span class="bill-detail-label">Fixed Amount</span><BaseIcon :name="selectedBill.isFixedAmount ? 'check' : 'x'"></BaseIcon></div>
                         <div class="bill-detail"><span class="bill-detail-label">Category</span>{{selectedCategory}}</div>
                         <div class="bill-detail"><span class="bill-detail-label">SubCategory</span>{{selectedSubCategory}}</div>
@@ -401,13 +427,32 @@ export default defineComponent({
     </div>
 </template>
 <style scoped>
+h4 {
+    color: whitesmoke;
+}
 .bills-view {
-    min-width: 500px;
+    min-width: 400px;
     width: 25%;
 }
 .add-bill {
     cursor: pointer;
     text-decoration: none;
+}
+.accordion {
+    width: 100%;
+    background: #411159;
+    padding: 20px;
+    border-radius:10px;
+    cursor: pointer;
+}
+.accordion-active {
+    width: 100%;
+    background: whitesmoke;
+    color: #411159;
+    border: 3px solid #411159;
+    padding: 20px;
+    border-radius:10px;
+    cursor: pointer;
 }
 .bill-detail {
     background: #2D3033;
@@ -467,5 +512,13 @@ export default defineComponent({
     padding-right: 10px;
     font-style:italic;
     font-weight:bolder;
+}
+.toggle-recurring-bills {
+    background: whitesmoke;
+    color: #411159;
+    padding: 5px;
+    border: 2px solid whitesmoke;
+    border-radius: 25px;
+    cursor: pointer;
 }
 </style>

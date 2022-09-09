@@ -1,9 +1,14 @@
 import { ref, get, set, child, remove } from 'firebase/database';
 
 const mapBillsFromRealTimeDatabase = (billToConvert) => {
+    const dateCreated = new Date(billToConvert.dateCreated);
+    const defaultRecurringCycle = {
+        date: new Date(dateCreated.getFullYear(), dateCreated.getMonth(), new Date(billToConvert.dueDate).getDate()).toLocaleDateString(),
+        interval: 1
+    };
     const billToMap = { 
         userId: billToConvert.userId ?? null,
-        id: billToConvert.id ?? null,
+        id: billToConvert.id.toString() ?? null,
         name: billToConvert.name ?? null,
         paid: billToConvert.paid ?? false,
         amount: billToConvert.amount ?? 0.0,
@@ -15,6 +20,7 @@ const mapBillsFromRealTimeDatabase = (billToConvert) => {
         datePaidOff: billToConvert.datePaidOff ?? null,
         subCategoryId: billToConvert.subCategoryId ?? null,
         dueDate: billToConvert.dueDate ?? null,
+        recurringCycle: billToConvert.isRecurring ? billToConvert.recurringCycle ?? defaultRecurringCycle : null,
     };
     return billToMap;
 };
@@ -22,7 +28,7 @@ const mapBillsFromRealTimeDatabase = (billToConvert) => {
 const mapIncomeFromRealTimeDatabase = (incomeToConvert) => {
     const incomeToMap = {
         userId: incomeToConvert.userId ?? null,
-        id: incomeToConvert.id ?? null,
+        id: incomeToConvert.id.toString() ?? null,
         name: incomeToConvert.name ?? null,
         type: incomeToConvert.type ?? null,
         salary: incomeToConvert.salary ?? 0,
