@@ -343,7 +343,7 @@ label {
     color: lightgrey;
 }
 .bills-create-view {
-    min-width: 500px;
+    min-width: 400px;
     width: 25%;
 }
 </style>

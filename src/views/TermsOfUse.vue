@@ -81,7 +81,7 @@ export default defineComponent({})
 </template>
 <style scoped>
 .terms-of-use-view {
-    min-width: 500px;
+    min-width: 400px;
     width: 25%;
 }
 p,li,h2 {

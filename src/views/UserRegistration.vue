@@ -280,7 +280,7 @@ export default defineComponent({
 </template>
 <style scoped>
 .user-view {
-    min-width: 500px;
+    min-width: 400px;
     width: 25%;
 }
 input {
@@ -293,7 +293,7 @@ button {
     border-radius: 20px 0px 0px 20px;
 }
 .passwordPolicy {
-    min-width: 250px;
+    min-width: 200px;
     width: 25%;
     background-color: lightgrey;
     color: #411159;

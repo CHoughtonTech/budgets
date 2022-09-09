@@ -41,7 +41,7 @@ export default defineComponent({
 </template>
 <style scoped>
 .not-found-view {
-    min-width: 500px;
+    min-width: 400px;
     width: 25%;
 }
 .progressBar {

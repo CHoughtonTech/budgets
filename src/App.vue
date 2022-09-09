@@ -82,12 +82,12 @@ body {
 }
 #app {
   box-sizing: border-box;
-  min-width: 500px;
+  min-width: 400px;
   margin: 0 auto;
 }
 #main-view {
   margin-top: 60px;
-  min-width: 500px;
+  min-width: 400px;
   padding: 0 20px 20px;
   box-sizing: border-box;
 }
@@ -183,6 +183,13 @@ small {
 .badge.-fill-gradient {
   background: linear-gradient(to right, #5f1192, #a26acf);
   color: #fff;
+  font-size: 16px;
+}
+.badge.-fill-gradient.-light {
+  background: linear-gradient(to right, #2D3033, #ffffff);
+  color: #411159;
+  font-weight: bolder;
+  font-size: 16px;
 }
 button,
 label,

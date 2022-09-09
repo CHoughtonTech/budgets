@@ -106,24 +106,16 @@
     transition: all 0.2s linear;
     cursor: pointer;
     border-radius:15px;
-    background-color: #411159;
+    border: 3px solid #9C50B6;
     color: whitesmoke;
+}
+.bill-card:hover {
+    background-color: #9C50B6;
+    box-shadow: 0 3px 12px 0 rgba(0, 0, 0, 0.2), 0 1px 15px 0 rgba(0, 0, 0, 0.2);
 }
 .bill-recurrence {
     float: right;
     padding: 0px;
-}
-.bill-menu {
-    position: relative;
-    padding: 0px;
-    display: inline-block;
-    transition: all 0.2s linear;
-}
-.bill-menu-item {
-    margin:0px;
-    background-color:#411159;
-    min-width: 100px;
-    z-index: 1;
 }
 .dropdown-menu, .dropdown-content {
     background-color: #2D3033;
