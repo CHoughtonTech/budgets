@@ -85,7 +85,7 @@ export default defineComponent({
             </div>
             <div class="level-right">
                 <div class="level-item">
-                    <router-link class="add-income subtitle is-5" :to="{ name: 'create-income', params: { incomeId: -1 }}"><BaseIcon name="plus-circle">Add an Income</BaseIcon></router-link>
+                    <router-link class="add-income subtitle is-5" :to="{ name: 'create-income' }"><BaseIcon name="plus-circle">Add an Income</BaseIcon></router-link>
                 </div>
             </div>
         </div>
@@ -105,7 +105,7 @@ export default defineComponent({
         <div class="no-incomes" v-if="incomeCount < 1">
             <p>Oh snap! You have no income sources! Click below to create your first income source!</p>
             <br/>
-            <router-link class="add-income subtitle is-5" :to="{ name: 'create-income', params: { incomeId: -1} }"><button><BaseIcon name="plus-circle">Add an Income</BaseIcon></button></router-link>
+            <router-link class="add-income subtitle is-5" :to="{ name: 'create-income' }"><button><BaseIcon name="plus-circle">Add an Income</BaseIcon></button></router-link>
         </div>
     </div>
 </template>

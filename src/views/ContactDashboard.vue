@@ -131,7 +131,7 @@ export default defineComponent({
 </template>
 <style scoped>
 .contact-view {
-    min-width: 500px;
+    min-width: 400px;
     width: 25%;
 }
 .max-characters {

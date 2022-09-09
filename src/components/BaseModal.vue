@@ -46,17 +46,20 @@ export default defineComponent({})
 }
 
 .modal-container {
-  width: 35%;
-  height: 95%;
+  width: 25%;
   min-width: 400px;
   margin: 0px auto;
   padding: 20px 30px;
   background-color: #2D3033;
   border-radius: 2px;
   box-shadow: 0 2px 8px lightgrey;
-  transition: all 0.3s ease;
+  transition: all 0.5s ease;
   font-family: Helvetica, Arial, sans-serif;
   overflow-y: auto;
+}
+
+.modal-container::-webkit-scrollbar {
+  display: none;
 }
 
 .modal-header h3 {
