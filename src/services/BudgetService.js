@@ -42,6 +42,7 @@ const mapIncomeFromRealTimeDatabase = (incomeToConvert) => {
         isActive: incomeToConvert.isActive ?? true,
         isTaxExempt: incomeToConvert.isTaxExempt ?? false,
         deductions: incomeToConvert.deductions ?? [],
+        payDate: incomeToConvert.payDate ?? null,
     };
     return incomeToMap;
 };

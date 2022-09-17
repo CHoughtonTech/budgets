@@ -1,6 +1,7 @@
 <script>
 import BaseModal from '../components/BaseModal';
 import BaseIcon from '../components/BaseIcon';
+import DatePicker from 'vue3-date-time-picker';
 import { toCurrencyMixin, guid } from '../mixins/GlobalMixin';
 import { defineComponent } from 'vue';
 import { mapActions, mapState } from 'pinia';
@@ -10,6 +11,7 @@ export default defineComponent({
     components: {
         BaseModal,
         BaseIcon,
+        DatePicker,
     },
     mixins: [toCurrencyMixin, guid],
     props: {
@@ -174,7 +176,8 @@ export default defineComponent({
                 state: null,
                 isActive: true,
                 isTaxExempt: false,
-                deductions: []
+                deductions: [],
+                payDate: null,
             },
             incomeType: [
                 { option: 'Hourly', value: 'h' },
@@ -204,6 +207,8 @@ export default defineComponent({
                 { option: 'Pre-Tax', value: 'pretax'},
                 { option: 'Post-Tax', value: 'posttax'}
             ],
+            selectedPayDate: null,
+            format: 'M/d/yyyy',
             errors: [],
             deductionErrors: []
         }
@@ -229,10 +234,19 @@ export default defineComponent({
                 type: null
             };
         },
+        setIncomePayDate() {
+            const baseDate = new Date(null);
+            let incomeDate = new Date();
+            if (this.selectedPayDate) {
+                incomeDate = new Date(this.selectedPayDate);
+                if (incomeDate !== baseDate) this.userIncome.payDate = incomeDate.toLocaleDateString();
+            }
+        },
         calculateNetIncome() {
             if (this.validateIncomeFields()) {
                 if (!this.isLoaded) 
                     this.userIncome.id = this.generateGUID();
+                this.setIncomePayDate();
                 this.userIncome.userId = this.getUserId;
                 this.userIncome.salary = this.calculateSalary();
                 const preTaxDeductedIncome = this.userIncome.salary - (this.preTaxDeductionTotal * this.userIncome.payPeriod);
@@ -554,6 +568,8 @@ export default defineComponent({
                             <div v-if="validationFailed('salary', errors)" class="error-detail">{{getErrorMessage('salary', errors)}}</div>
                             <input class="input is-rounded" type="number" v-model.number="salary"/>
                         </div>
+                        <label>Next Pay Date</label>
+                        <DatePicker v-model="selectedPayDate" :format="format" :enableTimePicker="false" :autoApply="true" class='is-medium'></DatePicker>
                     </div>
                     <div class="tile is-parent is-4 is-vertical">
                         <div class="tile is-12 is-child notification is-deduction-panel toggle-deductions" @click="toggleHideDeductions">
@@ -661,7 +677,9 @@ export default defineComponent({
                     <label>Post-Tax Deductions</label><br/>
                     <span>{{ toCurrency(postTaxDeductionTotal) }}</span><br/>
                     <label>Paydays Per Year</label><br/>
-                    <span>{{userIncome.payPeriod}}</span>
+                    <span>{{userIncome.payPeriod}}</span><br/>
+                    <label v-if="userIncome.payDate">Next Payday</label><br/>
+                    <span v-if="userIncome.payDate">{{userIncome.payDate}}</span>
                 </div>
             </template>
             <template #footer>
