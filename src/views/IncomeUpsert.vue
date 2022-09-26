@@ -158,7 +158,7 @@ export default defineComponent({
                 { option: 'Married', value: 'm' },
                 { option: 'Head of Household', value: 'h' },
             ],
-            salary: 0,
+            salary: null,
             netIncome: 0,
             isLoaded: false,
             userIncome: {
@@ -177,7 +177,7 @@ export default defineComponent({
                 isActive: true,
                 isTaxExempt: false,
                 deductions: [],
-                payDate: null,
+                payDate: [],
             },
             incomeType: [
                 { option: 'Hourly', value: 'h' },
@@ -208,6 +208,7 @@ export default defineComponent({
                 { option: 'Post-Tax', value: 'posttax'}
             ],
             selectedPayDate: null,
+            selectedBiMonthlyDate: null,
             format: 'M/d/yyyy',
             errors: [],
             deductionErrors: []
@@ -237,9 +238,14 @@ export default defineComponent({
         setIncomePayDate() {
             const baseDate = new Date(null);
             let incomeDate = new Date();
+            this.userIncome.payDate = [];
             if (this.selectedPayDate) {
                 incomeDate = new Date(this.selectedPayDate);
-                if (incomeDate !== baseDate) this.userIncome.payDate = incomeDate.toLocaleDateString();
+                if (incomeDate !== baseDate) this.userIncome.payDate.push(incomeDate.toLocaleDateString());
+            }
+            if (this.selectedBiMonthlyDate) {
+                incomeDate = new Date(this.selectedBiMonthlyDate);
+                if (incomeDate !== baseDate) this.userIncome.payDate.push(incomeDate.toLocaleDateString());
             }
         },
         calculateNetIncome() {
@@ -282,6 +288,8 @@ export default defineComponent({
         loadIncome(id) {
             this.getIncomeById(id).then((i) => {
                 this.userIncome = JSON.parse(JSON.stringify(i));
+                this.selectedPayDate = i.payDate[0];
+                if (i.payDate.length > 1) this.selectedBiMonthlyDate = i.payDate[1];
                 this.salary = this.userIncome.type === 'd' ? this.toFixedNumber(this.userIncome.salary / 12, 2) : this.userIncome.salary;
                 this.toggleIsLoaded();
             }).catch((err) => {
@@ -341,6 +349,10 @@ export default defineComponent({
                 this.userIncome.employmentType = 'd';
                 this.setPayPeriod('Monthly');
             }
+        },
+        resetPayDays() {
+            this.selectedPayDate = null;
+            this.selectedBiMonthlyDate = null;
         },
         setPayPeriod(selection) {
             switch (selection) {
@@ -531,7 +543,7 @@ export default defineComponent({
                     <label>Pay Period</label><br/>
                     <div v-if="validationFailed('payPeriod', errors)" class="error-detail">{{getErrorMessage('payPeriod', errors)}}</div>
                     <div class="select is-rounded is-medium">
-                        <select v-model="userIncome.payPeriod">
+                        <select v-model="userIncome.payPeriod" @change="resetPayDays">
                             <option :value="null" hidden selected>Pay Period</option>
                             <option v-for="period in payPeriods" :key="period.value" :value="period.value">{{period.option}}</option>
                         </select>
@@ -568,8 +580,15 @@ export default defineComponent({
                             <div v-if="validationFailed('salary', errors)" class="error-detail">{{getErrorMessage('salary', errors)}}</div>
                             <input class="input is-rounded" type="number" v-model.number="salary"/>
                         </div>
-                        <label>Next Pay Date</label>
-                        <DatePicker v-model="selectedPayDate" :format="format" :enableTimePicker="false" :autoApply="true" class='is-medium'></DatePicker>
+                        <div class="tile is-12 is-child">
+                            <label v-if="userIncome.payPeriod !== 24">Next Pay Date</label>
+                            <label v-else>First Pay Date</label>
+                            <DatePicker v-model="selectedPayDate" :format="format" :enableTimePicker="false" :autoApply="true" class='is-medium'></DatePicker>
+                        </div>
+                        <div class="tile is-12 is-child" v-if="userIncome.payPeriod === 24">
+                            <label>Second Pay Date</label>
+                            <DatePicker v-model="selectedBiMonthlyDate" :format="format" :enableTimePicker="false" :autoApply="true" class='is-medium'></DatePicker>
+                        </div>
                     </div>
                     <div class="tile is-parent is-4 is-vertical">
                         <div class="tile is-12 is-child notification is-deduction-panel toggle-deductions" @click="toggleHideDeductions">
@@ -679,7 +698,7 @@ export default defineComponent({
                     <label>Paydays Per Year</label><br/>
                     <span>{{userIncome.payPeriod}}</span><br/>
                     <label v-if="userIncome.payDate">Next Payday</label><br/>
-                    <span v-if="userIncome.payDate">{{userIncome.payDate}}</span>
+                    <span v-if="userIncome.payDate">{{userIncome.payDate[0]}}</span>
                 </div>
             </template>
             <template #footer>
