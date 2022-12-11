@@ -172,19 +172,11 @@ export default defineComponent({})
         </ul>
     </div>
 </template>
-<style scoped>
-.privacy-policy-view {
-    min-width: 400px;
-    width: 25%;
-}
-p,li,h2 {
-    color: whitesmoke;
-}
+<style lang="scss" module>
 strong {
-    color: #C15EF2;
+    color: $light-purple;
 }
-a:hover {
-    text-decoration: none;
-    color: #C15EF2;
+ul {
+    list-style: none;
 }
 </style>

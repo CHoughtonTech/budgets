@@ -94,7 +94,7 @@ export default defineComponent({
 })
 </script>
 <template>
-    <div class="contact-view">
+    <div :class="$style['page-layout']">
         <h1>Contact Us</h1>
         <h3>Please let us know what you think of the site!</h3>
         <hr>
@@ -103,7 +103,7 @@ export default defineComponent({
             {{ getErrorMessage('subject') }}
         </div>
         <input type="text" placeholder="Feedback, Issue" v-model="subject" />
-        <div v-if="!isLoggedInUserEmailVerified">
+        <div v-if="!isLoggedInUserEmailVerified" :class="$style['email-section']">
             <label for="email">Email</label>
             <div v-if="validationFailed('email')" class="error-detail">
                 {{ getErrorMessage('email') }}
@@ -114,49 +114,74 @@ export default defineComponent({
         <div v-if="validationFailed('message')" class="error-detail">
             {{ getErrorMessage('message') }}
         </div>
-        <span :class="hasNoRemainingCharacters ? 'max-characters-exceeded' : 'max-characters'" class='is-pulled-right max-characters'>{{ remainingCharacters }} remaining</span>
-        <textarea name="userMessage" id="message" style="max-width:100%;" placeholder="Here's some feedback" rows="10" v-model="message"></textarea>
-        <div style="margin-bottom: 25px;">
-            <button :class="hasNoRemainingCharacters ? 'disabled-button' : ''" class="is-pulled-right" @click="sendMessage()" :disabled="hasNoRemainingCharacters">
-                <BaseIcon name='send'>
-                    <template #pre>
-                        &nbsp;Send&nbsp;
-                    </template>
-                </BaseIcon>
-            </button>
-        </div>
-        <br>
-        <p v-if="isMessageSentSuccessfully" class='is-flex is-justify-content-center success-message'>Message sent successfully!</p>
+        <textarea
+            name="userMessage"
+            id="message"
+            :class="hasNoRemainingCharacters && $style['max-characters-textarea']"
+            placeholder="Here's some feedback"
+            rows="10"
+            v-model="message"></textarea>
+        <span :class="hasNoRemainingCharacters ? $style['max-characters-exceeded'] : $style['max-characters']">{{ remainingCharacters }} remaining</span>
+        <button :class="hasNoRemainingCharacters && $style['button-disabled']" @click="sendMessage()" :disabled="hasNoRemainingCharacters">
+            <BaseIcon name='send'>
+                <template #pre>
+                    &nbsp;Send&nbsp;
+                </template>
+            </BaseIcon>
+        </button>
+        <p v-if="isMessageSentSuccessfully" :class="$style['success-message']">Message sent successfully!</p>
     </div>
 </template>
-<style scoped>
-.contact-view {
-    min-width: 400px;
-    width: 25%;
+<style lang="scss" module>
+.page-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    button {
+        align-self: center;
+    }
+}
+.email-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 .max-characters {
-    color: #C15EF2;
-    font-size: 12px;
+    color: $light-purple;
+    font-size: $font-size-small;
+    align-self: flex-end;
 }
 .max-characters-exceeded {
-    font-size: 12px;
-    color: crimson;
+    color: $error-font-color;
+    font-size: $font-size-small;
+    align-self: flex-end;
 }
-.disabled-button {
-    background-color: grey;
+.max-characters-textarea {
+    color: $error-font-color;
+    background: $error-bg-color-light;
+    border: 2px solid $error-bg-color;
+}
+.button-disabled {
+    background-color: $light-gray;
     cursor: not-allowed;
-    color:crimson;
-    border-color:lightcoral;
+    color: $dark-gray;
+    border-color:$dark-gray;
+    --icon-stroke: #{$dark-gray};
+    &:hover {
+        background-color: $gray;
+        cursor: not-allowed;
+        color: $dark-gray;
+        border-color:$dark-gray;
+    }
 }
 .success-message {
-    color:whitesmoke;
-    background-color: #411159;
-    font-size: 30px;
-    font-weight: bolder;
+    color: $success-font-color;
+    background: $dark-purple;
+    font-size: 1.35rem;
+    font-weight: $font-weight-bolder;
     font-style: italic;
-    border: solid 2px #C15EF2;
-    border-radius: 25px;
-    margin-bottom: 20px;
-    margin-top: 25px;
+    border: solid 2px $light-purple;
+    border-radius: $border-radius-medium;
+    padding: 10px;
 }
 </style>

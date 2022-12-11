@@ -1,0 +1,159 @@
+// ===
+// Colors
+// ===
+
+$black: #000;
+$dark-gray: #2D3033;
+$gray: #808080;
+$light-gray: #b9b9b9;
+$white: #f5f5f5;
+$dark-blue: #2c3e50;
+$deep-blue: #0e3fdf;
+$dark-green: #228b22;
+$dark-purple: #411159;
+$darkest-purple: #291E29;
+$purple: #8834B3;
+$light-purple: #C15EF2;
+$orange: #ffa500;
+$light-red: #f08080;
+
+// Notifications
+$red: #f14668;
+$yellow: #ffe08a;
+$blue: #3e8ed0;
+$green: #48c78e;
+
+// ===
+// Gradients
+// ===
+
+$purple-gradient: linear-gradient(to right, $purple, $light-purple);
+$gray-gradient: linear-gradient(to right, $dark-gray, $white);
+
+// ===
+// Shadows
+// ===
+
+$default-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.13);
+
+// ===
+// Background
+// ===
+
+$primary-bg-color: $dark-gray;
+$secondary-bg-color: $gray;
+$error-bg-color: $red;
+$warning-bg-color: $yellow;
+$info-bg-color: $blue;
+$success-bg-color: $green;
+$error-bg-color-dark: darken($error-bg-color, 25%);
+$warning-bg-color-dark: darken($warning-bg-color, 25%);
+$info-bg-color-dark: darken($info-bg-color, 25%);
+$success-bg-color-dark: darken($success-bg-color, 25%);
+$error-bg-color-light: lighten($error-bg-color, 25%);
+$warning-bg-color-light: lighten($warning-bg-color, 25%);
+$info-bg-color-light: lighten($info-bg-color, 25%);
+$success-bg-color-light: lighten($success-bg-color, 25%);
+// Default
+$default-bg-color: $primary-bg-color;
+
+// ===
+// Font
+// ===
+
+// Colors
+$primary-font-color: $white;
+$secondary-font-color: $light-gray;
+$error-font-color: darken($red, 25%);
+$warning-font-color: darken($yellow, 25%);
+$info-font-color: darken($blue, 25%);
+$success-font-color: darken($green, 25%);
+// Default
+$default-font-color: $white;
+
+// Style
+$primary-font-family: 'Open Sans', sans-serif;
+$secondary-font-family: 'Montserrat', sans-serif;
+// Default
+$default-font-family: $primary-font-family;
+
+// Line Height
+$line-height-xsmall: 1;
+$line-height-small: 1.25;
+$line-height-normal: 1.5;
+$line-height-large: 1.75;
+$line-height-xlarge: 2;
+// Default
+$default-line-height: $line-height-normal;
+
+// Weight
+$font-weight-thin: 100;
+$font-weight-xlight: 200;
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semi-bold: 600;
+$font-weight-bold: 700;
+$font-weight-bolder: 800;
+$font-weight-ultra-bold: 900;
+// Default
+$font-weight-default: $font-weight-normal;
+
+// Size
+$font-size-xsmall: 8px;
+$font-size-small: 12px;
+$font-size-medium: 16px;
+$font-size-large: 20px;
+$font-size-xlarge: 24px;
+$font-size-xxlarge: 28px;
+// Default
+$default-font-size: $font-size-medium;
+
+// ===
+// Heading
+// ===
+
+$heading-font-color: $light-purple;
+$heading-letter-spacing: -2%;
+
+$h1-font-size: 50px;
+$h1-line-height: 73px;
+$h1-font-family: #{$h1-font-size}/#{$h1-line-height} $secondary-font-family, $primary-font-family;
+$h1-font-full: $font-weight-bold $h1-font-family;
+
+$h2-font-size: 38px;
+$h2-line-height: 46px;
+$h2-font-family: #{$h2-font-size}/#{$h2-line-height} $secondary-font-family, $primary-font-family;
+$h2-font-full: $font-weight-bold $h2-font-family;
+
+$h3-font-size: 28px;
+$h3-line-height: 34px;
+$h3-font-family: #{$h3-font-size}/#{$h3-line-height} $secondary-font-family, $primary-font-family;
+$h3-font-full: $font-weight-bold $h3-font-family;
+
+$h4-font-size: 21px;
+$h4-line-height: 26px;
+$h4-font-family: #{$h4-font-size}/#{$h4-line-height} $secondary-font-family, $primary-font-family;
+$h4-font-full: $font-weight-bold $h4-font-family;
+
+$h5-font-size: 16px;
+$h5-line-height: 20px;
+$h5-font-family: #{$h5-font-size}/#{$h5-line-height} $secondary-font-family, $primary-font-family;
+$h5-font-full: $font-weight-bold $h5-font-family;
+
+$h6-font-size: 15px;
+$h6-line-height: 16px;
+$h6-font-family: #{$h6-font-size}/#{$h6-line-height} $secondary-font-family, $primary-font-family;
+$h6-font-full: $font-weight-bold $h6-font-family;
+
+// ===
+// Border
+// ===
+
+// Radius
+$border-radius-light: 10px;
+$border-radius-medium: 25px;
+$border-radius-strong: 50px;
+$border-radius-very-strong: 100px;
+// Default
+$border-radius-default: $border-radius-medium;

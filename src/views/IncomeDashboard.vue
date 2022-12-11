@@ -8,8 +8,8 @@ import { defineComponent } from 'vue';
 
 export default defineComponent({
     components: {
-        BaseIcon: BaseIcon,
-        IncomeCard: IncomeCard
+        BaseIcon,
+        IncomeCard
     },
     mixins: [mobileCheckMixin],
     mounted() {
@@ -46,10 +46,12 @@ export default defineComponent({
                 incomesCount = this.income.length;
             }
             return incomesCount;
-        }
+        },
     },
     data() {
         return {
+            showAllActiveIncomes: true,
+            showAllInactiveIncomes: false,
             showSelectedIncomeDetails: false
         }
     },
@@ -59,103 +61,114 @@ export default defineComponent({
             this.deleteIncome(income.id).then(() => {
                 this.$router.push('/');
             });
+        },
+        accordionIcon(isActive) {
+            return isActive ? 'minus-circle' : 'plus-circle';
+        },
+        toggleShowActiveIncomes() {
+            this.showAllActiveIncomes = !this.showAllActiveIncomes;
+        },
+        toggleShowInactiveIncomes() {
+            this.showAllInactiveIncomes = !this.showAllInactiveIncomes;
         }
     }
 })
 </script>
 <template>
-    <div>
-        <h1>Income Sources</h1>
-        <hr/><br/>
-        <div v-if="incomeCount > 0" class="level is-mobile">
-            <div v-if="isMobileDevice()" class="level-left">
-                <div v-if="activeIncomesCount > 0" class="level-item">
-                    <p class="subtitle is-5">
-                        Active Incomes: <span class="badge -fill-gradient">{{activeIncomesCount}}</span>
-                    </p>
-                </div>
-                <div v-if="inactiveIncomesCount > 0 && activeIncomesCount < 1">
-                    <p class="subtitle is-5">
-                        InActive Incomes: <span class="badge -fill-gradient">{{inactiveIncomesCount}}</span>
-                    </p>
-                </div>
-            </div>
-            <div else class="level-left">
-                &nbsp;
-            </div>
-            <div class="level-right">
-                <div class="level-item">
-                    <router-link class="add-income subtitle is-5" :to="{ name: 'create-income' }"><BaseIcon name="plus-circle">Add an Income</BaseIcon></router-link>
-                </div>
+    <div :class="$style['main-content']">
+        <h1>Income</h1>
+        <router-link
+            :class="$style['add-income']"
+            :to="{
+                name: 'create-income'
+            }"
+        >
+            <BaseIcon name="plus-circle">
+                Add an Income
+            </BaseIcon>
+        </router-link>
+        <div
+            v-if="activeIncomesCount > 0"
+            :class="[
+                $style['accordion'],
+                showAllActiveIncomes && $style['is-active']
+            ]"
+            @click="toggleShowActiveIncomes"
+        >
+            <BaseIcon :name="accordionIcon(showAllActiveIncomes)">
+                <p>Active Incomes</p>
+            </BaseIcon>
+            <div
+                class="badge -fill-gradient"
+                :class="showAllActiveIncomes ? '' : ' -light'"
+            >
+                {{ activeIncomesCount }}
             </div>
         </div>
-        <div v-if="activeIncomesCount > 0">
+        <div
+            v-if="showAllActiveIncomes"
+            :class="$style['cards']"
+        >
             <IncomeCard v-for="income in activeIncomes" :key="income.id" :income="income"></IncomeCard>
         </div>
-        <div v-if="inactiveIncomesCount > 0 && activeIncomesCount > 0" class="level is-mobile">
-            <div v-if="isMobileDevice()" class="level-left">
-                <p class="subtitle is-5">
-                    InActive Incomes: <span class="badge -fill-gradient">{{inactiveIncomesCount}}</span>
-                </p>
+        <div
+            v-if="inactiveIncomesCount > 0"
+            :class="[
+                $style['accordion'],
+                showAllInactiveIncomes && $style['is-active']
+            ]"
+            @click="toggleShowInactiveIncomes"
+        >
+            <BaseIcon :name="accordionIcon(showAllInactiveIncomes)">
+                <p>Inactive Incomes</p>
+            </BaseIcon>
+            <div
+                class="badge -fill-gradient"
+                :class="showAllInactiveIncomes ? '' : ' -light'"
+            >
+                {{ inactiveIncomesCount }}
             </div>
         </div>
-        <div v-if="inactiveIncomesCount > 0">
+        <div
+            v-if="showAllInactiveIncomes"
+            :class="$style['cards']"
+        >
             <IncomeCard v-for="income in inactiveIncomes" :key="income.id" :income="income"></IncomeCard>
-        </div>
-        <div class="no-incomes" v-if="incomeCount < 1">
-            <p>Oh snap! You have no income sources! Click below to create your first income source!</p>
-            <br/>
-            <router-link class="add-income subtitle is-5" :to="{ name: 'create-income' }"><button><BaseIcon name="plus-circle">Add an Income</BaseIcon></button></router-link>
         </div>
     </div>
 </template>
-<style scoped>
-span {
-    color:whitesmoke;
+<style lang="scss" module>
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
-ul {
-    color:whitesmoke;
-    font-size: large;
-}
-.deduction-item {
-    background-color: #8834B3;
-    color: whitesmoke;
-    font-size: large;
-    border: solid 1px whitesmoke;
-}
-.deduction-amount {
-    text-align:center;
-}
-.deduction-header {
-    background-color: #411159;
-    font-size: x-large;
-    text-align: center;
-    border-color: whitesmoke;
-    border: solid 1px;
-}
-.toggle-deductions {
+.accordion {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    border-radius: $border-radius-light;
+    background: $dark-purple;
+    color: $white;
+    --icon-stroke: #{$white};
     cursor: pointer;
+    &.is-active {
+        --icon-stroke: #{$dark-purple};
+        color: $dark-purple;
+        background: $white;
+    }
 }
-.remove-deduction-item {
-    cursor: pointer;
-}
-.is-deduction-panel {
-    background-color: #8834B3;
+.cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 .add-income {
     cursor: pointer;
+    color: $light-gray;
     text-decoration: none;
-}
-.income-is-active {
-    background-color: #411159;
-    color: whitesmoke;
-    border-radius: 25px;
-}
-p {
-    color:whitesmoke;
-}
-.no-incomes {
-    color:whitesmoke;
-    text-align:center;
+    &:hover {
+        color: $light-gray;
+    }
 }
 </style>

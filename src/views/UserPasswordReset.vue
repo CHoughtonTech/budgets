@@ -51,39 +51,33 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class='reset-view'>
-        <h2>Reset Password for:</h2>
+    <div :class="$style['page-layout']">
+        <h3>Reset Password for:</h3>
         <h4>{{ emailDisplay }}</h4>
-        <br/>
         <button @click="resetPassword()">Reset Password</button>
         
         <BaseModal v-if="showEmailResetPassword">
             <template #header>
-                <h3 style="color:lightgrey;">Password Reset</h3>
+                <h3>Password Reset</h3>
             </template>
             <template #body>
-                <p style="color:lightgrey;">If your email is valid, we have sent it an email with your password reset link.</p>
+                <p>If your email is valid, we have sent it an email with your password reset link.</p>
             </template>
             <template #footer>
-                <div>
-                    <button @click="toggleEmailResetPassword()">Ok</button>
-                </div>
+                <button @click="toggleEmailResetPassword()">Ok</button>
             </template>
         </BaseModal>
     </div>
 </template>
-<style scoped>
-.reset-view {
-    min-width: 400px;
-    width: 25%;
+<style lang="scss" module>
+.page-layout {
     display: flex;
     flex-direction: column;
     align-items: center;
-}
-h1,h2 {
-    color: #C15EF2;
-}
-h3,h4,h5 {
-    color: whitesmoke;
+    justify-content: center;
+    gap: 10px;
+    h4 {
+        color: $white;
+    }
 }
 </style>
