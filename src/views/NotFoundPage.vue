@@ -27,46 +27,41 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="not-found-view">
-        <h1 class="is-flex is-justify-content-center">Oops...</h1>
-        <h3 class="is-flex is-justify-content-center">There's nothing here genius!</h3>
+    <div :class="$style['page-layout']">
+        <h1>Oops...</h1>
+        <h3>There's nothing here genius!</h3>
         <hr>
-        <h1 class="is-flex is-justify-content-center">( ● ___ ● )</h1>
-        <br>
-        <h4 class="is-flex is-justify-content-center">Redirecting...</h4>
-        <div class="progressBar">
-            <div :style="`width:${currentWidth}`" class="myProgress"></div>
+        <h1>( ● ___ ● )</h1>
+        <h4>Redirecting...</h4>
+        <div :class="$style['progressBar']">
+            <div :style="`width:${currentWidth}`" :class="$style['myProgress']"></div>
         </div>
     </div>
 </template>
-<style scoped>
-.not-found-view {
-    min-width: 400px;
-    width: 25%;
+<style lang="scss" module>
+.page-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    hr {
+        width: 100%;
+    }
+    h4 {
+        font-style: italic;
+    }
 }
 .progressBar {
     width: 100%;
-    border: solid #C15EF2 2px;
+    border: solid $light-purple 2px;
     border-radius: 25px;
+    background: $dark-purple;
 }
 .myProgress {
-    background-color: #C15EF2;
-    border: solid #C15EF2 2px;
+    background-color: $light-purple;
+    border: solid $light-purple 2px;
     border-radius: 25px;
     transition: 0.2s;
     height: 30px;
-}
-h2 {
-    color: #C15EF2;
-}
-h4 {
-    color: whitesmoke;
-    font-style: italic;
-}
-.or-statement {
-    color: whitesmoke;
-    font-size: 72px;
-    font-style: italic;
-    font-weight: bolder;
 }
 </style>

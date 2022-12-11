@@ -95,11 +95,11 @@
     });
 </script>
 <template>
-    <div id="profilePhoto">
-        <h4 class="is-flex is-justify-content-center">Update Profile Photo</h4>
-        <cropper ref="cropper" class="cropper" :src="image.src" :debounce="false" :canvas="{maxHeight: 512,maxWidth: 512}" :stencil-props="{ scalable: true, aspectRatio: 1/1 }" :image-restriction="stencil" @change="onChange"/>
-        <div class="button-wrapper">
-            <button class="button" @click="$refs.file.click()">
+    <div :class="$style['main-content']">
+        <h4>Update Profile Photo</h4>
+        <cropper ref="cropper" :class="$style['cropper']" :src="image.src" :debounce="false" :canvas="{maxHeight: 512,maxWidth: 512}" :stencil-props="{ scalable: true, aspectRatio: 1/1 }" :image-restriction="stencil" @change="onChange"/>
+        <div :class="$style['button-wrapper']">
+            <button @click="$refs.file.click()">
                 <input
                 style="display:none;"
                 type="file"
@@ -107,69 +107,53 @@
                 @change="uploadImage($event)"
                 accept="image/*"
                 />
-                Upload File
+                Select
             </button>
-            <button :class="hasSelectedImage ? 'button' : 'button-disabled'" @click="cropImage()" :disabled="!hasSelectedImage">Set Photo</button>
-            <button class="button" style="width:25%" @click="cancelImageUpload()">Cancel</button>
+            <button :class="!hasSelectedImage && $style['button-disabled']" @click="cropImage()" :disabled="!hasSelectedImage">Upload</button>
+            <button @click="cancelImageUpload()">Cancel</button>
         </div>
-        <div class="is-flex is-justify-content-center">
-            <h4>Preview</h4>
-        </div>
-        <div class="is-flex is-justify-content-center">
-            <preview 
-                :width="128"
-                :height="128"
-                :image="result.image"
-                :coordinates="result.coordinates"
-                style="border-radius:50%"
-            />
-        </div>
+        <h4>Preview</h4>
+        <preview 
+            :width="128"
+            :height="128"
+            :image="result.image"
+            :coordinates="result.coordinates"
+            :class="$style['preview']"
+        />
   </div>
 </template>
-<style scoped>
-#profilePhoto {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+<style lang="scss" module>
+.main-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    color: #2c3e50;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
-
 .cropper {
-  max-height: 500px;
+    max-height: 500px;
+    max-width: calc(100vw - 60px);
 }
-
 .button-wrapper {
-  display: flex;
-  justify-content: center;
-  margin-top: 17px;
+    display: flex;
+    justify-content: center;
 }
-
-h4 {
-    color: #C15EF2;
-}
-
-.button {
-  color: whitesmoke;
-  font-size: 16px;
-  padding: 10px 20px;
-  width: 100%;
-  background: #411159;
-  cursor: pointer;
-  transition: background 0.5s;
-  border: 1px solid #C15EF2;
-  border-radius: 25px;
+.preview {
+    border-radius: $border-radius-very-strong;
 }
 .button-disabled {
-    font-size: 16px;
-    padding: 10px 20px;
-    width: 100%;
-    transition: background 0.5s;
-    border: 1px solid #C15EF2;
-    border-radius: 25px;
-    background-color: grey;
+    background-color: $light-gray;
     cursor: not-allowed;
-    color:crimson;
-    border-color:lightcoral;
+    color: $dark-gray;
+    border-color:$dark-gray;
+    --icon-stroke: #{$dark-gray};
+    &:hover {
+        background-color: $gray;
+        cursor: not-allowed;
+        color: $dark-gray;
+        border-color:$dark-gray;
+    }
 }
 </style>

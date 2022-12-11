@@ -56,12 +56,11 @@ export default defineComponent({
         preTaxDeductions() {
             return this.userIncome.deductions.filter(d => d.type === 'pretax');
         },
-        hideDeductionList() {
-            if (this.userIncome.deductions.length > 0) {
-                return false;
-            } else {
-                return this.hideDeductions;
-            }
+        hasPostTaxDeductions() {
+            return this.postTaxDeductions.length > 0;
+        },
+        hasPreTaxDeductions() {
+            return this.preTaxDeductions.length > 0;
         },
         preTaxDeductionTotal() {
             let preTaxTotal = 0;
@@ -143,6 +142,12 @@ export default defineComponent({
         upsertButtonLabel() {
             return this.isLoaded ? 'Update' : 'Create';
         },
+        activeLabel() {
+            return this.userIncome.isActive ? 'is-active-label' : 'is-inactive-label';
+        },
+        taxExemptLabel() {
+            return this.userIncome.isTaxExempt ? 'is-active-label' : 'is-inactive-label';
+        }
     },
     data() {
         return {
@@ -193,11 +198,10 @@ export default defineComponent({
                 { option: 'Bi-Monthly', value: 24 },
                 { option: 'Monthly', value: 12 },
             ],
-            hideDeductions: true,
             showConfirmModal: false,
             deduction: {
                 name: null,
-                amount: 0,
+                amount: null,
                 type: null
             },
             deductionTypes: [
@@ -216,7 +220,7 @@ export default defineComponent({
                 this.userIncome.deductions.push(this.deduction);
                 this.deduction = {
                     name: null,
-                    amount: 0,
+                    amount: null,
                     type: null
                 };
             }
@@ -225,7 +229,7 @@ export default defineComponent({
             this.userIncome.deductions = [];
             this.deduction = {
                 name: null,
-                amount: 0,
+                amount: null,
                 type: null
             };
         },
@@ -433,9 +437,6 @@ export default defineComponent({
             this.userIncome.filingStatus = this.userIncome.isTaxExempt ? null : this.userIncome.filingStatus;
             this.userIncome.state = this.userIncome.isTaxExempt ? null : this.userIncome.state;
         },
-        toggleHideDeductions() {
-            this.hideDeductions = !this.hideDeductions;
-        },
         toggleIsLoaded() {
             this.isLoaded = !this.isLoaded;
         },
@@ -459,216 +460,201 @@ export default defineComponent({
 })
 </script>
 <template>
-    <div>
-        <h1>{{isLoaded ? `${userIncome.name} Income` : 'New Income'}}</h1>
-        <div class="tile is-ancestor">
-            <div class="tile is-parent">
-                <div class="tile is-3 is-child">
-                    <label>Name</label><br/>
-                    <div v-if="validationFailed('incomeName', errors)" class="error-detail" >{{getErrorMessage('incomeName', errors)}}</div>
-                    <input class="input is-rounded" type="text" v-model="userIncome.name" />
-                </div>
-                <div class="tile is-3 is-child">&nbsp;</div>
-                <div class="tile is-3 is-child is-padded" @click="toggleTaxExempt()">
-                    <div>
-                        <BaseIcon :name="incomeIsTaxExemptIcon" :class="{ 'is-active-label' : userIncome.isTaxExempt, 'is-inactive-label' : !userIncome.isTaxExempt}">Tax Exempt</BaseIcon>
-                    </div>
-                </div>
-                <div v-if="isLoaded" class="tile is-3 is-child is-padded" @click="toggleIncomeIsActive()">
-                    <div>
-                        <BaseIcon :name="incomeIsActiveIcon" :class="{'is-active-label' : userIncome.isActive, 'is-inactive-label' : !userIncome.isActive}">{{incomeIsActiveLabel}}</BaseIcon>
-                    </div>
-                </div>
+    <div :class="$style['page-layout']">
+        <h2>{{isLoaded ? `Edit Income` : 'New Income'}}</h2>
+        <div
+            :class="$style['field-group']"
+        >
+            <label for="income-name">Name</label>
+            <div v-if="validationFailed('incomeName', errors)" class="error-detail" >{{getErrorMessage('incomeName', errors)}}</div>
+            <input id="income-name" :class="validationFailed('incomeName', errors) && 'error-detail-input'" type="text" v-model="userIncome.name" />
+        </div>
+        <div
+            :class="$style['button-group']"
+        >
+            <button
+                :class="$style[taxExemptLabel]"
+                :width="20"
+                @click="toggleTaxExempt"
+            >
+                <BaseIcon
+                    :name="incomeIsTaxExemptIcon"
+                >
+                    Tax Exempt
+                </BaseIcon>
+            </button>
+            <button
+                v-if="isLoaded"
+                :class="$style[activeLabel]"
+                @click="toggleIncomeIsActive()"
+            >
+                <BaseIcon
+                    :name="incomeIsActiveIcon"
+                >
+                        {{ incomeIsActiveLabel }}
+                </BaseIcon>
+            </button>
+        </div>
+        <div
+            v-if="!userIncome.isTaxExempt"
+            :class="$style['field-group']"
+        >
+            <label>State</label>
+            <div v-if="validationFailed('selectedState', errors)" class="error-detail">{{getErrorMessage('selectedState', errors)}}</div>
+            <select v-model="userIncome.state" :class="validationFailed('selectedState', errors) && 'error-detail-input'">
+                <option :value="null" hidden selected>State</option>
+                <option v-for="state in states" :key="state.id" :value="state.abbreviation">{{state.name}}</option>
+            </select>
+            <label>Filing Status</label>
+            <div v-if="validationFailed('filingStatus', errors)" class="error-detail">{{getErrorMessage('filingStatus', errors)}}</div>
+            <select v-model="userIncome.filingStatus" :class="validationFailed('filingStatus', errors) && 'error-detail-input'">
+                <option :value="null" hidden selected>Filing Status</option>
+                <option v-for="filing in filingStatus" :key="filing.value" :value="filing.value">{{filing.option}}</option>
+            </select>
+        </div>
+        <div
+            :class="$style['field-group']"
+        >
+            <label>Employment Type</label>
+            <div v-if="validationFailed('employmentType', errors)" class="error-detail">{{getErrorMessage('employmentType', errors)}}</div>
+            <select v-model="userIncome.employmentType" @change="setUserIncomeType" :class="validationFailed('employmentType', errors) && 'error-detail-input'">
+                <option :value="null" hidden selected>Employment Type</option>
+                <option v-for="types in employmentType" :key="types.value" :value="types.value">{{ types.option }}</option>
+            </select>
+            <label>Pay Period</label>
+            <div v-if="validationFailed('payPeriod', errors)" class="error-detail">{{getErrorMessage('payPeriod', errors)}}</div>
+            <select v-model="userIncome.payPeriod" :class="validationFailed('payPeriod', errors) && 'error-detail-input'">
+                <option :value="null" hidden selected>Pay Period</option>
+                <option v-for="period in payPeriods" :key="period.value" :value="period.value">{{period.option}}</option>
+            </select>
+            <label>Income Type</label>
+            <div v-if="validationFailed('incomeType', errors)" class="error-detail">{{getErrorMessage('incomeType', errors)}}</div>
+            <select v-model="userIncome.type" :disabled="isDisabilityIncome" @change="setUserEmploymentType" :class="validationFailed('incomeType', errors) && 'error-detail-input'">
+                <option :value="null" hidden selected>Income Type</option>
+                <option v-for="types in incomeType" :key="types.value" :value="types.value">{{types.option}}</option>
+            </select>
+        </div>
+        <div
+            v-if="userIncome.type === 'h'"
+            :class="$style['field-group']"
+        >
+            <label>Hourly Rate</label>
+            <div v-if="validationFailed('hourlyRate', errors)" class="error-detail">{{getErrorMessage('hourlyRate', errors)}}</div>
+            <input type="number" v-model.number="userIncome.hourlyRate" :class="validationFailed('hourlyRate', errors) && 'error-detail-input'"/>
+            <label>Hours per week</label>
+            <div v-if="validationFailed('hoursPerWeek', errors)" class="error-detail">{{getErrorMessage('hoursPerWeek', errors)}}</div>
+            <input type="number" v-model.number="userIncome.hoursPerWeek" :class="validationFailed('hoursPerWeek', errors) && 'error-detail-input'"/>
+        </div>
+        <div
+            v-if="userIncome.type === 's' || userIncome.type === 'd'"
+            :class="$style['field-group']"
+        >
+            <label>Salary Amount</label>
+            <div v-if="validationFailed('salary', errors)" class="error-detail">{{getErrorMessage('salary', errors)}}</div>
+            <input type="number" v-model.number="salary" :class="validationFailed('salary', errors) && 'error-detail-input'"/>
+        </div>
+        <div :class="$style['field-group']">
+            <label>Deduction Name</label>
+            <div v-if="validationFailed('deductionName', deductionErrors)" class="error-detail">{{getErrorMessage('deductionName', deductionErrors)}}</div>
+            <input type="text" v-model="deduction.name" :class="validationFailed('deductionName', deductionErrors) && 'error-detail-input'"/>
+            <label>Deduction Amount</label>
+            <div v-if="validationFailed('deductionAmount', deductionErrors)" class="error-detail">{{getErrorMessage('deductionAmount', deductionErrors)}}</div>
+            <input type="number" v-model="deduction.amount" :class="validationFailed('deductionAmount', deductionErrors) && 'error-detail-input'">
+            <label>Deduction Type</label>
+            <div v-if="validationFailed('deductionType', deductionErrors)" class="error-detail">{{getErrorMessage('deductionType', deductionErrors)}}</div>
+            <select v-model="deduction.type" :class="validationFailed('deductionType', deductionErrors) && 'error-detail-input'">
+                <option :value="null" hidden selected>Deduction Type</option>
+                <option v-for="deductionType in deductionTypes" :key="deductionType.value" :value="deductionType.value">{{deductionType.option}}</option>
+            </select>
+            <div :class="$style['button-group']">
+                <button @click="addDeduction">Add Deduction</button>
+                <button v-if="userIncome.deductions.length > 0" @click="resetDeductions">Reset Deductions</button>
             </div>
         </div>
-        <div class="tile is-ancestor">
-            <div class="tile is-parent">
-                <div v-if="!userIncome.isTaxExempt" class="tile is-3 is-child">
-                    <label>State</label><br/>
-                    <div v-if="validationFailed('selectedState', errors)" class="error-detail">{{getErrorMessage('selectedState', errors)}}</div>
-                    <div class="select is-rounded is-medium">
-                        <select v-model="userIncome.state">
-                            <option :value="null" hidden selected>State</option>
-                            <option v-for="state in states" :key="state.id" :value="state.abbreviation">{{state.name}}</option>
-                        </select>
-                    </div>
+        <ul
+            v-if="hasPreTaxDeductions"
+            :class="$style['deduction-panel']"
+        >
+            <li :class="$style['deduction-header']">Pre-Tax Deductions</li>
+            <li
+                :class="[
+                    $style['deduction-item'],
+                    isOdd(index) && $style['is-odd']
+                ]"
+                v-for="(deduction, index) in preTaxDeductions"
+                :key="`pre-tax-deduction-${index}`"
+            >
+                <div>
+                    <p>{{ deduction.name }}</p>
                 </div>
-                <div v-if="!userIncome.isTaxExempt" class="tile is-3 is-child">
-                    <label>Filing Status</label><br/>
-                    <div v-if="validationFailed('filingStatus', errors)" class="error-detail">{{getErrorMessage('filingStatus', errors)}}</div>
-                    <div class="select is-rounded is-medium">
-                        <select v-model="userIncome.filingStatus">
-                            <option :value="null" hidden selected>Filing Status</option>
-                            <option v-for="filing in filingStatus" :key="filing.value" :value="filing.value">{{filing.option}}</option>
-                        </select>
-                    </div>
+                <div>
+                    <p>{{ toCurrency(deduction.amount) }}</p>
                 </div>
-                <div class="tile is-3 is-child">
-                    <label>Employment Type</label><br/>
-                    <div v-if="validationFailed('employmentType', errors)" class="error-detail">{{getErrorMessage('employmentType', errors)}}</div>
-                    <div class="select is-rounded is-medium">
-                        <select v-model="userIncome.employmentType" @change="setUserIncomeType">
-                            <option :value="null" hidden selected>Employment Type</option>
-                            <option v-for="types in employmentType" :key="types.value" :value="types.value">{{ types.option }}</option>
-                        </select>
-                    </div>
+                <div>
+                    <button
+                        :class="$style['deduction-button']"
+                        @click="removeDeduction(deduction)"
+                    >
+                        <BaseIcon name="delete"/>
+                    </button>
                 </div>
-                <div class="tile is-3 is-child is-vertical">
-                    <label>Pay Period</label><br/>
-                    <div v-if="validationFailed('payPeriod', errors)" class="error-detail">{{getErrorMessage('payPeriod', errors)}}</div>
-                    <div class="select is-rounded is-medium">
-                        <select v-model="userIncome.payPeriod">
-                            <option :value="null" hidden selected>Pay Period</option>
-                            <option v-for="period in payPeriods" :key="period.value" :value="period.value">{{period.option}}</option>
-                        </select>
-                    </div>
+            </li>
+        </ul>
+        <ul
+            v-if="hasPostTaxDeductions"
+            :class="$style['deduction-panel']"
+        >
+            <li :class="$style['deduction-header']">Post-Tax Deductions</li>
+            <li
+                :class="[
+                    $style['deduction-item'],
+                    isOdd(index) && $style['is-odd']
+                ]"
+                v-for="(deduction, index) in postTaxDeductions"
+                :key="`post-tax-deduction-${index}`"
+            >
+                <div>
+                    <p>{{ deduction.name }}</p>
                 </div>
-            </div>
-        </div>
-        <div class="tile is-ancestor">
-            <div class="tile is-vertical is-9">
-                <div class="tile">
-                    <div class="tile is-parent is-4 is-vertical">
-                        <div class="tile is-12 is-child">
-                            <label>Income Type</label><br/>
-                            <div v-if="validationFailed('incomeType', errors)" class="error-detail">{{getErrorMessage('incomeType', errors)}}</div>
-                            <div class="select is-rounded is-medium">
-                                <select v-model="userIncome.type" :disabled="isDisabilityIncome" @change="setUserEmploymentType">
-                                    <option :value="null" hidden selected>Income Type</option>
-                                    <option v-for="types in incomeType" :key="types.value" :value="types.value">{{types.option}}</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div v-if="userIncome.type === 'h'" class="tile is-12 is-child">
-                            <label>Hourly Rate</label>
-                            <div v-if="validationFailed('hourlyRate', errors)" class="error-detail">{{getErrorMessage('hourlyRate', errors)}}</div>
-                            <input class="input is-rounded" type="number" v-model.number="userIncome.hourlyRate"/>
-                        </div>
-                        <div v-if="userIncome.type === 'h'" class="tile is-12 is-child">
-                            <label>Hours per week</label>
-                            <div v-if="validationFailed('hoursPerWeek', errors)" class="error-detail">{{getErrorMessage('hoursPerWeek', errors)}}</div>
-                            <input class="input is-rounded" type="number" v-model.number="userIncome.hoursPerWeek"/>
-                        </div>
-                        <div v-if="userIncome.type === 's' || userIncome.type === 'd'" class="tile is-12 is-child">
-                            <label>Salary Amount</label>
-                            <div v-if="validationFailed('salary', errors)" class="error-detail">{{getErrorMessage('salary', errors)}}</div>
-                            <input class="input is-rounded" type="number" v-model.number="salary"/>
-                        </div>
-                    </div>
-                    <div class="tile is-parent is-4 is-vertical">
-                        <div class="tile is-12 is-child notification is-deduction-panel toggle-deductions" @click="toggleHideDeductions">
-                            <label class="toggle-deductions">Deductions</label>
-                            <label class="is-pulled-right toggle-deductions">
-                                <BaseIcon v-if="hideDeductions" name="chevron-down"></BaseIcon>
-                                <BaseIcon v-if="!hideDeductions" name="chevron-up"></BaseIcon>
-                            </label>
-                        </div>
-                        <div v-if="!hideDeductions" class="tile is-12 is-child">
-                            <label>Deduction Name</label>
-                            <div v-if="validationFailed('deductionName', deductionErrors)" class="error-detail">{{getErrorMessage('deductionName', deductionErrors)}}</div>
-                            <input class="input is-rounded" type="text" v-model="deduction.name"/>
-                        </div>
-                        <div v-if="!hideDeductions" class="tile is-12 is-child">
-                            <label>Deduction Amount</label>
-                            <div v-if="validationFailed('deductionAmount', deductionErrors)" class="error-detail">{{getErrorMessage('deductionAmount', deductionErrors)}}</div>
-                            <input class="input is-rounded" type="number" v-model="deduction.amount">
-                        </div>
-                        <div v-if="!hideDeductions" class="tile is-12 is-child">
-                            <label>Deduction Type</label>
-                            <div v-if="validationFailed('deductionType', deductionErrors)" class="error-detail">{{getErrorMessage('deductionType', deductionErrors)}}</div>
-                            <div class='select is-rounded is-medium'>
-                                <select v-model="deduction.type">
-                                    <option :value="null" hidden selected>Deduction Type</option>
-                                    <option v-for="deductionType in deductionTypes" :key="deductionType.value" :value="deductionType.value">{{deductionType.option}}</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div v-if="!hideDeductions" class="tile is-12 is-child">
-                            <button @click="addDeduction">Add Deduction</button>
-                            <button v-if="userIncome.deductions.length > 0" @click="resetDeductions">Reset Deductions</button>
-                        </div>
-                    </div>
-                    <div v-if="!hideDeductionList" class="tile is-parent is-8 is-vertical">
-                        <div class="tile is-12 is-child">
-                            <ul>
-                                <li class="deduction-header">Pre-Tax Deductions</li>
-                                <li :class="{'deduction-item' : isOdd(index)}" v-for="(deduction, index) in preTaxDeductions" :key="`deduction-${index}`">
-                                    <div class="level is-mobile is-padded">
-                                        <div class="level-item has-text-centered">
-                                            <div>
-                                                <span class="title is-4">{{deduction.name}}</span>
-                                            </div>
-                                        </div>
-                                        <div class="level-item has-text-centered">
-                                            <div>
-                                                <span class="title is-4">{{ toCurrency(deduction.amount) }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="level-item">
-                                            <div @click="removeDeduction(deduction)">
-                                                <span class="title is-4 is-pulled-right button is-danger"><BaseIcon name="delete"></BaseIcon></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="tile is-12 is-child">
-                            <ul>
-                                <li class="deduction-header">Post-Tax Deductions</li>
-                                <li :class="{'deduction-item' : isOdd(index)}" v-for="(deduction, index) in postTaxDeductions" :key="`deduction-${index}`">
-                                    <div class="level is-mobile is-padded">
-                                        <div class="level-item has-text-centered">
-                                            <div>
-                                                <span class="title is-4">{{deduction.name}}</span>
-                                            </div>
-                                        </div>
-                                        <div class="level-item has-text-centered">
-                                            <div>
-                                                <span class="title is-4">{{ toCurrency(deduction.amount) }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="level-item">
-                                            <div @click="removeDeduction(deduction)">
-                                                <span class="title is-4 is-pulled-right button is-danger"><BaseIcon name="delete"></BaseIcon></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
+                <div>
+                    <p>{{ toCurrency(deduction.amount) }}</p>
                 </div>
-            </div>
-        </div>
+                <div>
+                    <button
+                        :class="$style['deduction-button']"
+                        @click="removeDeduction(deduction)"
+                    >
+                        <BaseIcon name="delete"/>
+                    </button>
+                </div>
+            </li>
+        </ul>
         <BaseModal v-if="showIncomePreviewModal">
             <template #header>
-                <h3>{{userIncome.name}}</h3>
-            </template>
-            <template #body>
-                <div>
-                    <br/>
-                    <label>Gross Income</label><br/>
-                    <span>{{ toCurrency(userIncome.salary) }}</span><br/>
-                    <label>Gross Paycheck Amount</label><br/>
-                    <span>{{ toCurrency(amountGrossPerCheck) }}</span><br/>
-                    <label>Net Income</label><br/>
-                    <span>{{ toCurrency(netIncome) }}</span><br/>
-                    <label>Net Paycheck Amount</label><br/>
-                    <span>{{ toCurrency(amountPerPaycheck) }}</span><br/>
-                    <label>Pre-Tax Deductions</label><br/>
-                    <span>{{ toCurrency(preTaxDeductionTotal) }}</span><br/>
-                    <label>Post-Tax Deductions</label><br/>
-                    <span>{{ toCurrency(postTaxDeductionTotal) }}</span><br/>
-                    <label>Paydays Per Year</label><br/>
-                    <span>{{userIncome.payPeriod}}</span>
+                <div :class="$style['input-modal-header']">
+                    <h3>{{ userIncome.name }}</h3>
                 </div>
             </template>
+            <template #body>
+                <h4>Gross Income</h4>
+                <p>{{ toCurrency(userIncome.salary) }}</p>
+                <h4>Gross Paycheck Amount</h4>
+                <p>{{ toCurrency(amountGrossPerCheck) }}</p>
+                <h4>Net Income</h4>
+                <p>{{ toCurrency(netIncome) }}</p>
+                <h4>Net Paycheck Amount</h4>
+                <p>{{ toCurrency(amountPerPaycheck) }}</p>
+                <h4>Pre-Tax Deductions</h4>
+                <p>{{ toCurrency(preTaxDeductionTotal) }}</p>
+                <h4>Post-Tax Deductions</h4>
+                <p>{{ toCurrency(postTaxDeductionTotal) }}</p>
+                <h4>Paydays Per Year</h4>
+                <p>{{ userIncome.payPeriod }}</p>
+            </template>
             <template #footer>
-                <div>
-                    <button class="is-pulled-right" @click="toggleShowConfirmModal">Cancel</button>
-                    <button class="is-pulled-right" @click="saveIncome()">Save</button>
-                    <br/><br/>
+                <div :class="$style['button-group']">
+                    <button @click="saveIncome()">Save</button>
+                    <button @click="toggleShowConfirmModal">Cancel</button>
                 </div>
             </template>
         </BaseModal>
@@ -678,74 +664,126 @@ export default defineComponent({
             </template>
             <template #body>
                 <div>
-                    <span>Update <strong><i>{{userIncome.name}}</i></strong>?</span>
+                    <span>Update <b><i>{{userIncome.name}}</i></b>?</span>
                 </div>
             </template>
             <template #footer>
-                <div>
-                    <button class="is-pulled-right" @click="toggleShowConfirmModal">Cancel</button>
-                    <button class="is-pulled-right" @click="updateUserIncome()">Update</button>
-                    <br/><br/>
+                <div :class="$style['button-group']">
+                    <button @click="updateUserIncome()">Update</button>
+                    <button @click="toggleShowConfirmModal">Cancel</button>
                 </div>
             </template>
         </BaseModal>
-        <button @click="calculateNetIncome()">{{ upsertButtonLabel }}</button>
-        <button @click="cancelIncome">Cancel</button>   
+        <div :class="$style['button-group']">
+            <button @click="calculateNetIncome()">{{ upsertButtonLabel }}</button>
+            <button @click="cancelIncome">Cancel</button>   
+        </div>
     </div>
 </template>
-<style scoped>
-span {
-    color:whitesmoke;
+<style lang="scss" module>
+.page-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
-strong {
-    color:whitesmoke;
-}
-i {
-    color:whitesmoke;
-}
-ul {
-    color:whitesmoke;
-    background-color: #411159;
-    border: solid 1px whitesmoke;
-    font-size: large;
+.deduction-panel {
+    display: flex;
+    flex-direction: column;
 }
 .deduction-item {
-    background-color: #8834B3;
-    color: whitesmoke;
-    font-size: large;
-    border: solid 1px whitesmoke;
+    display: flex;
+    align-items: center;
+    background: $dark-purple;
+    color: $white;
+    font-size: $font-size-large;
+    border: solid 1px $white;
+    padding: 5px 10px;
+    &.is-odd {
+        background: $purple;
+    }
+    @media (min-width: 320px) and (max-width: 768px){
+        font-size: .95rem;
+    }
+    div {
+        display: flex;
+        justify-content: center;
+        flex: 1;
+    }
+    :first-child {
+        justify-content: flex-start;
+    }
+    :last-child {
+        justify-content: flex-end;
+    }
+    &:last-child {
+        border-radius: 0 0 25px 25px;
+    }
 }
 .deduction-header {
-    background-color: #411159;
-    font-size: x-large;
+    background: $dark-purple;
+    font-size: $font-size-xlarge;
     text-align: center;
-    border-color: whitesmoke;
-    border: solid 1px;
+    border: 1px solid $white;
+    border-radius: 25px 25px 0 0;
 }
-.toggle-deductions {
-    cursor: pointer;
+.deduction-button {
+    background: $error-bg-color;
+    --icon-stroke: #{$error-bg-color-dark};
+    border: 2px solid $error-bg-color-dark;
+    &:hover {
+        background: $error-bg-color-light;
+        --icon-stroke: #{$error-bg-color};
+        border: 2px solid $error-bg-color;
+    }
 }
-.remove-deduction-item {
-    cursor: pointer;
-}
-.is-deduction-panel {
-    background-color: #8834B3;
-}
-.is-padded {
-    padding: 10px;
+.input-modal-header {
+    display: flex;
+    justify-content: center;
 }
 .is-active-label {
-    background-color: forestgreen;
-    border: solid 2px whitesmoke;
-    border-radius: 25px;
+    background: $success-bg-color;
+    border: solid 2px $success-bg-color-dark;
+    border-radius: $border-radius-medium;
+    --icon-stroke: #{$success-bg-color-dark};
+    color: $success-bg-color-dark;
     cursor: pointer;
     padding: 10px;
+    &:hover {
+        color: $success-bg-color-dark;
+        background: $success-bg-color-light;
+    }
 }
 .is-inactive-label {
-    background-color: crimson;
-    border: solid 2px whitesmoke;
-    border-radius: 25px;
+    background: $error-bg-color;
+    border: solid 2px $error-bg-color-dark;
+    border-radius: $border-radius-medium;
+    --icon-stroke: #{$error-bg-color-dark};
+    color: $error-bg-color-dark;
     cursor: pointer;
     padding: 10px;
+    &:hover {
+        color: $error-bg-color-dark;
+        background: $error-bg-color-light;
+    }
+}
+.field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-weight: $font-weight-bold;
+}
+.button-group {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    button {
+        flex: 1;
+    }
+    @media (min-width: 320px) and (max-width: 768px){
+        align-items: stretch;
+        button {
+            --icon-font-size: #{$font-size-small};
+        }
+    }
 }
 </style>

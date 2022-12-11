@@ -245,105 +245,115 @@ export default defineComponent({
 })
 </script>
 <template>
-    <div class="bills-create-view">
+    <div
+        :class="$style['page-layout']"
+    >
         <h1>{{ billActionLabel }}</h1>
         <label for="billName">Name</label>
         <div v-if="validationFailed('billName')" class="error-detail">{{getErrorMessage('billName')}}</div>
-        <input id="billName" type="text" ref="billName" v-model="bill.name" placeholder="Bill Name" :class="{'error-detail-input': validationFailed('billName')}" class='input is-rounded is-medium' />
+        <input id="billName" type="text" ref="billName" v-model="bill.name" placeholder="Bill Name" :class="{'error-detail-input': validationFailed('billName')}" />
         <label for="billAmount">Amount</label>
         <div v-if="validationFailed('billAmount')" class="error-detail">{{getErrorMessage('billAmount')}}</div>
-        <input id="billAmount" type="number" v-model="bill.amount" placeholder="0.00" :class="{'error-detail-input': validationFailed('billAmount')}" class='input is-rounded is-medium' />
+        <input id="billAmount" type="number" v-model="bill.amount" placeholder="0.00" :class="{'error-detail-input': validationFailed('billAmount')}" />
         <label for="billDueDate">Due Date</label>
-        <br/>
         <div v-if="validationFailed('billDueDate')" class="error-detail">{{getErrorMessage('billDueDate')}}</div>
-        <DatePicker v-model="selectedDueDate" :format="format" :enableTimePicker="false" :autoApply="true" class='is-medium'></DatePicker>
-        <br/>
-        <label for="billFixedAmount" style="margin-right: 25px">Is fixed amount?</label>
-        <input id="billFixedAmount" type="checkbox" v-model="bill.isFixedAmount" /><br/>
-        <label for="billRecurring" style="margin-right: 25px">Is recurring?</label>
-        <input id="billRecurring" type="checkbox" v-model="bill.isRecurring" />
-        <br v-if="bill.isRecurring"/>
+        <DatePicker
+            :class="[
+                $style['date-picker'],
+                validationFailed('billDueDate') && $style['error-detail-input']
+            ]"
+            v-model="selectedDueDate"
+            :format="format"
+            :enableTimePicker="false"
+            :autoApply="true"
+        />
+        <div>
+            <label for="billFixedAmount" style="margin-right: 25px">Is fixed amount?</label>
+            <input id="billFixedAmount" type="checkbox" v-model="bill.isFixedAmount" />
+        </div>
+        <div>
+            <label for="billRecurring" style="margin-right: 25px">Is recurring?</label>
+            <input id="billRecurring" type="checkbox" v-model="bill.isRecurring" />
+        </div>
         <label for="billRecurringCycle" v-if="bill.isRecurring">Recurring Cycle</label>
         <div v-if="validationFailed('billRecurringCycle')" class="error-detail">{{getErrorMessage('billRecurringCycle')}}</div>
-        <br v-if="bill.isRecurring"/>
-        <div class='select is-rounded is-medium' v-if="bill.isRecurring">
-            <select id="billRecurringCycle" v-if="bill.isRecurring" v-model="selectedRecurringCycle" @change="setRecurringCycle" :disabled="!selectedDueDate">
-                <option :value="null" hidden selected>Recurring Cycle</option>
-                <option v-for="option in recurringCycles" :key="option.value" :value="option.value">{{ option.label }}</option>
-            </select>
-        </div>
-        <br />
+        <select id="billRecurringCycle" v-if="bill.isRecurring" v-model="selectedRecurringCycle" @change="setRecurringCycle" :disabled="!selectedDueDate">
+            <option :value="null" hidden selected>Recurring Cycle</option>
+            <option v-for="option in recurringCycles" :key="option.value" :value="option.value">{{ option.label }}</option>
+        </select>
         <label for="billCategories">Categories</label>
         <div v-if="validationFailed('billSubcategories') && selectedCategoryId === null" class="error-detail">{{getErrorMessage('billSubcategories')}}</div>
-        <br/>
-        <div class='select is-rounded is-medium'>
-            <select id="billCategories" v-model="selectedCategoryId" @change="resetSubcategoryId" :class="{'error-detail-input': validationFailed('billSubcategories') && selectedCategoryId === null}">
-                <option :value="null" hidden selected>Category</option>
-                <option v-for="category in categories" :key="category.id" :value="category.id">
-                    {{category.Name}}
-                </option>
-            </select>
-        </div>
-        <br v-if="selectedCategoryId !== null"/>
+        <select id="billCategories" v-model="selectedCategoryId" @change="resetSubcategoryId" :class="{'error-detail-input': validationFailed('billSubcategories') && selectedCategoryId === null}">
+            <option :value="null" hidden selected>Category</option>
+            <option v-for="category in categories" :key="category.id" :value="category.id">
+                {{category.Name}}
+            </option>
+        </select>
         <label v-if="activeSubCategories.length > 0" for="billSubcategories">SubCategories</label>
         <div v-if="validationFailed('billSubcategories') && selectedCategoryId !== null" class="error-detail">{{getErrorMessage('billSubcategories')}}</div>
-        <br v-if="selectedCategoryId !== null"/>
-        <div class='select is-rounded is-medium'>
-            <select id="billSubcategories" v-if="activeSubCategories.length > 0" v-model="selectedSubCategoryId" @blur="setSubcategoryId" :class="{'error-detail-input': validationFailed('billSubcategories')}" class='select is-rounded is-medium'>
-                <option :value="null" hidden selected>Subcategory</option>
-                <option v-for="subcategory in activeSubCategories" :key="subcategory.id" :value="subcategory.id">
-                    {{subcategory.Name}}
-                </option>
-            </select>
+        <select id="billSubcategories" v-if="activeSubCategories.length > 0" v-model="selectedSubCategoryId" @blur="setSubcategoryId" :class="{'error-detail-input': validationFailed('billSubcategories')}">
+            <option :value="null" hidden selected>Subcategory</option>
+            <option v-for="subcategory in activeSubCategories" :key="subcategory.id" :value="subcategory.id">
+                {{subcategory.Name}}
+            </option>
+        </select>
+        <div :class="$style['button-group']">
+            <button type="button" @click="isLoaded ? updateUserBill() : createUserBill()">{{ buttonLabel }}</button>
+            <button type="button" @click="cancelBill()">Cancel</button>
         </div>
-        <br/>
-        <button type="button" @click="isLoaded ? updateUserBill() : createUserBill()">{{ buttonLabel }}</button>
-        <button type="button" @click="cancelBill()">Cancel</button>
         <BaseModal v-if="showCreateAnotherModal">
             <template #header>
-                <h3 style="color:lightgrey;">Bill Creation</h3>
+                <h3>Bill Creation</h3>
             </template>
             <template #body>
-                <h6 style="color:lightgrey;">Create Another bill?</h6>
+                <h6>Create Another bill?</h6>
             </template>
             <template #footer>
-                <div>
-                    <button @click="createAnotherConfirm('Yes')">Yes</button>
-                    <button @click="createAnotherConfirm('No')">No</button>
-                </div>
+                <button @click="createAnotherConfirm('Yes')">Yes</button>
+                <button @click="createAnotherConfirm('No')">No</button>
             </template>
         </BaseModal>
         <BaseModal v-if="showUpdateModal">
             <template #header>
-                <h3 style="color:lightgrey;">Confirm Update</h3>
+                <h3>Confirm Update</h3>
             </template>
             <template #body>
-                <div style="color:lightgrey;">Update <strong><i style="color:white;">{{ bill.name }}</i></strong>?</div>
+                <div>Update <strong><i>{{ bill.name }}</i></strong>?</div>
             </template>
             <template #footer>
-                <div>
-                    <button type="button" @click="updateBillConfirm()">Confirm</button>
-                    <button type="button" @click="toggleShowConfirmModal()">Cancel</button>
-                </div>
+                <button type="button" @click="updateBillConfirm()">Confirm</button>
+                <button type="button" @click="toggleShowConfirmModal()">Cancel</button>
             </template>
         </BaseModal>
     </div>
 </template>
-<style>
-h1 {
-    color: #C15EF2
+<style lang="scss" module>
+.page-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
-h3 {
-    color: lightgrey;
+.date-picker {
+    --dp-icon-color: #{$purple};
+    &.error-detail-input {
+        --dp-background-color: #{$error-bg-color-light};
+        --dp-border-color: #{$error-bg-color};
+        border: 2px solid $error-bg-color;
+    }
 }
-p {
-    color: #C15EF2;
-}
-label {
-    color: lightgrey;
-}
-.bills-create-view {
-    min-width: 400px;
-    width: 25%;
+
+.button-group {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    button {
+        flex: 1;
+    }
+    @media (min-width: 320px) and (max-width: 768px){
+        align-items: stretch;
+        button {
+            --icon-font-size: #{$font-size-small};
+        }
+    }
 }
 </style>

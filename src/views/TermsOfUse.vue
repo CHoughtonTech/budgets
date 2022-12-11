@@ -3,7 +3,7 @@ import { defineComponent } from 'vue';
 export default defineComponent({})
 </script>
 <template>
-    <div class="terms-of-use-view">
+    <div>
         <h2>Website Terms of Use</h2>
         <p>Version 1.0</p>
         <p>The Oxsoft Budgets website located at https://www.oxsoftbudgets.com/ is a copyrighted work belonging to Oxsoft Budgets. Certain features of the Site may be subject to additional guidelines, terms, or rules, which will be posted on the Site in connection with such features.</p>
@@ -79,19 +79,8 @@ export default defineComponent({})
         <p><a href="https://www.oxsoftbudgets.com/contact">https://www.oxsoftbudgets.com/contact</a></p>
     </div>
 </template>
-<style scoped>
-.terms-of-use-view {
-    min-width: 400px;
-    width: 25%;
-}
-p,li,h2 {
-    color: whitesmoke;
-}
+<style lang="scss" module>
 strong {
-    color: #C15EF2;
-}
-a:hover {
-    text-decoration: none;
-    color: #C15EF2;
+    color: $light-purple;
 }
 </style>

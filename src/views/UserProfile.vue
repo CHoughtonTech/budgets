@@ -8,13 +8,15 @@ import ox from '@/assets/small-ox.jpg';
 import { mapActions, mapState } from 'pinia';
 import mainStore from '@/store';
 import { defineComponent } from 'vue';
+import BaseAvatar from '@/components/BaseAvatar.vue';
 
 export default defineComponent({
     components: {
-        BaseIcon,
-        BaseModal,
-        ProfilePhoto,
-    },
+    BaseIcon,
+    BaseModal,
+    ProfilePhoto,
+    BaseAvatar
+},
     props: {
         isRegisteringNewUser: null,
     },
@@ -76,7 +78,6 @@ export default defineComponent({
             showEmailVerificationSent: false,
             showAccountSettings: false,
             showPreferences: false,
-            verifiedEmailStyle: 'stroke:forestgreen;color:whitesmoke;font-style:italic;fill:forestgreen;',
         }
     },
     mounted() {
@@ -240,71 +241,95 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class='profile-view'>
-        <div class="is-flex is-justify-content-center">
-            <h1 v-if="!isEditing">{{ profileName }}</h1>
-            <input v-else id="userName" type="text" :placeholder="profileName" v-model="userName" class="edit-username"/>
-            <BaseIcon v-if="isUserEmailVerified && !isEditing" @click="toggleIsEditing()" name="edit-2" :style="'stroke:whitesmoke;fill:whitesmoke;cursor:pointer;'"></BaseIcon>
-            <BaseIcon v-if="isUserEmailVerified && userNameChanged && isEditing" @click="setUsername(userName)" name="check-circle" :style="'stroke:forestgreen;cursor:pointer;'"></BaseIcon>
-            <BaseIcon v-if="isUserEmailVerified && isEditing" name="x-circle" @click="toggleIsEditing()" :style="'stroke:crimson;cursor:pointer;'"></BaseIcon>
+    <div :class="$style['page-layout']">
+        <div :class="$style['username']">
+            <h1 v-if="!isEditing">
+                {{ profileName }}
+            </h1>
+            <input
+                v-else
+                id="userName"
+                type="text"
+                :placeholder="profileName"
+                v-model="userName"
+                :class="$style['edit-username']"
+            />
+            <BaseIcon
+                v-if="isUserEmailVerified && !isEditing"
+                @click="toggleIsEditing()"
+                name="edit-2"
+                :class="$style['edit-username-button']"
+            />
+            <BaseIcon
+                v-if="isUserEmailVerified && userNameChanged && isEditing"
+                @click="setUsername(userName)"
+                name="check-circle"
+                :class="$style['edit-username-confirm-button']"
+            />
+            <BaseIcon
+                v-if="isUserEmailVerified && isEditing"
+                name="x-circle"
+                @click="toggleIsEditing()"
+                :class="$style['edit-username-cancel-button']"
+            />
         </div>
-        <article v-if="!isUploadingPhoto" class="media is-flex is-justify-content-center">
-            <figure class="media-center">
-                <p class="image is-128x128">
-                    <img class="is-rounded" :src="profilePhoto" alt="Profile Photo">
-                </p>
-                <div v-if="isUserEmailVerified && hasUserProfilePhoto" style="cursor:pointer;">
-                    <BaseIcon @click="removeUserPhoto()" name="x-circle" :style="'fill:crimson;stroke:whitesmoke;'" class="is-pulled-right"></BaseIcon>
-                </div>
-                <div v-if="isUserEmailVerified" style="cursor:pointer;">
-                    <BaseIcon @click="toggleUploadPhoto()" name="plus-circle" :style="'fill:#411159;stroke:whitesmoke;'" class="is-pulled-left"></BaseIcon>
-                </div>
-            </figure>
-        </article>
-        <ProfilePhoto v-if="isUploadingPhoto" @cancel-image-upload="toggleUploadPhoto()" @upload-image-success="setUserProfilePhoto" :userId="userId" ></ProfilePhoto>
-        <br>
-        <p class="is-flex is-justify-content-center">
-            <span v-if="!isUserEmailVerified" class="user-email email-display">{{ userEmail }}</span>
-            <BaseIcon class="email-display" v-else name="user-check" :style="verifiedEmailStyle"> 
+        <div
+            v-if="!isUploadingPhoto"
+            :class="$style['avatar']"
+        >
+            <BaseAvatar
+                :source="profilePhoto"
+                size="xx-large"
+            />
+            <div
+                v-if="isUserEmailVerified"
+                :class="$style['photo-buttons']"
+            >
+                <BaseIcon
+                    @click="toggleUploadPhoto()"
+                    name="plus-circle"
+                />
+                <BaseIcon
+                    v-if="hasUserProfilePhoto"
+                    @click="removeUserPhoto()"
+                    name="x-circle"
+                />
+            </div>
+        </div>
+        <ProfilePhoto
+            v-else
+            @cancel-image-upload="toggleUploadPhoto()"
+            @upload-image-success="setUserProfilePhoto"
+            :userId="userId"
+        />
+        <div
+            :class="$style['email-display']"
+        >
+            <p v-if="!isUserEmailVerified">
+                {{ userEmail }}
+            </p>
+            <BaseIcon
+                v-else
+                name="user-check"
+            > 
                 <template #pre>
                     {{ userEmail }}
                 </template>
             </BaseIcon>
-        </p>
-        <br>
-        <div class="is-flex is-justify-content-center">
-            <button @click="logout()">Logout</button>
         </div>
-        <div v-if="!isUserEmailVerified" class="is-flex is-justify-content-center">
-            <button @click="verifyEmail()">Verify Email</button>
-        </div>
-        <div v-if="true === false">
-            <hr>
-            <div class="is-flex is-justify-content-center" :class="showAccountSettings ? 'show-settings' : 'hide-settings'" @click="toggleShowAccountSettings()">
-                <h4 style="cursor:pointer;">Account Settings</h4>
-            </div>
-            <div v-if="showAccountSettings">
-                <span style="color:whitesmoke;">Change Email </span>
-                <button>Change email</button><br>
-                <span style="color:whitesmoke;">Reset Password </span>
-                <button>Reset Password</button>                
-            </div>
-            <div class="is-flex is-justify-content-center" :class="showPreferences ? 'show-settings' : 'hide-settings'" @click="toggleShowPreferences()">
-                <h4 style="cursor:pointer;">Preferences</h4>
-            </div>
-            <div v-if="showPreferences">
-                <ul style="color:whitesmoke;">
-                    <li>Sort Bills Default</li>
-                    <li></li>
-                </ul>
-            </div>
-        </div>
+        <button @click="logout()">Logout</button>
+        <button
+            v-if="!isUserEmailVerified"
+            @click="verifyEmail()"
+        >
+            Verify Email
+        </button>
         <BaseModal v-if="showUpdateBillsAndIncomes">
             <template #header>
                 <h3>Update Existing Data</h3>
             </template>
             <template #body>
-                <p class="update-bills-incomes-paragraph">
+                <p :class="$style['update-bills-incomes-paragraph']">
                     It looks like you registered after entering some information in the site! 
                     Would you like to sync that data with your profile so you can access it anywhere?
                 </p>
@@ -319,11 +344,13 @@ export default defineComponent({
                 <h3>Email Verification</h3>
             </template>
             <template #body>
-                <span style="color:whitesmoke;">Verification email sent! Check your email for an email from us; It may be in your spam folder. </span>
+                <p :class="$style['email-verification-paragraph']">
+                    Verification email sent! Check your email for an email from us; It may be in your spam folder.
+                </p>
             </template>
             <template #footer>
                 <button @click="toggleShowEmailVerificationSent()">
-                    <BaseIcon name="check-circle"></BaseIcon>
+                    <BaseIcon name="check-circle" />
                 </button>
             </template>
         </BaseModal>
@@ -332,7 +359,7 @@ export default defineComponent({
                 <h3>Update Existing Data</h3>
             </template>
             <template #body>
-                <p class="update-bills-incomes-paragraph-warning">
+                <p :class="$style['update-bills-incomes-paragraph-warning']">
                     If you decide to not do this, all current data will be wiped clean so you can start from scratch!
                 </p>
             </template>
@@ -347,7 +374,7 @@ export default defineComponent({
             </template>
             <template #body>
                 <h3>Sync Successful!</h3>
-                <ul class="update-bills-incomes-paragraph">
+                <ul :class="$style['update-bills-incomes-paragraph']">
                     <li>Bills updated: {{ billsCount }}</li>
                     <li>Incomes update: {{ incomeCount }}</li>
                 </ul>
@@ -358,55 +385,83 @@ export default defineComponent({
         </BaseModal>
     </div>
 </template>
-<style scoped>
-.profile-view {
-    min-width: 400px;
-    width:25%;
+<style lang="scss" module>
+.page-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
 }
-.user-email {
-    color: whitesmoke;
-    font-style: italic;
+.username {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    h1 {
+        cursor: default;
+    }
 }
-.user-email:hover {
-    cursor: default;
-}
-img {
-    max-height: 150px;
-    max-width: 150px;
-}
-.update-bills-incomes-paragraph {
-    color: whitesmoke;
-}
-.update-bills-incomes-paragraph-warning {
-    color: crimson;
-    font-weight: bolder;
-    font-size: 20px;
+.photo-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 50px;
+    width: 100%;
+    > div {
+        &:first-child {
+            --icon-stroke: #{$white};
+            --icon-fill: #{$purple};
+            cursor: pointer;
+        }
+        &:last-child {
+            --icon-stroke: #{$white};
+            --icon-fill: #{$red};
+            cursor: pointer;
+        }
+    }
 }
 .email-display {
-    background-color:#411159;
-    border: 2px #C15EF2 solid;
-    border-radius: 25px;
+    background-color: $dark-purple;
+    border: 2px solid $light-purple;
+    --icon-stroke: #{darken($green, 10%)};
+    --icon-fill: #{darken($green, 10%)};
+    border-radius: $border-radius-light;
+    font-weight: $font-weight-bold;
     padding: 10px;
+    cursor: default;
+}
+.edit-username-button {
+    --icon-stroke: #{$white};
+    --icon-fill: #{$white};
+    cursor: pointer;
+}
+.edit-username-confirm-button {
+    --icon-stroke: #{$white};
+    --icon-fill: #{$green};
+    cursor: pointer;
+}
+.edit-username-cancel-button {
+    --icon-stroke: #{$white};
+    --icon-fill: #{$red};
+    cursor: pointer;
+}
+.avatar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.update-bills-incomes-paragraph .email-verification-paragraph {
+    color: $white;
+}
+.update-bills-incomes-paragraph-warning {
+    color: $red;
+    font-weight: $font-weight-bolder;
+    font-size: $font-size-large;
 }
 .edit-username {
-    color: #C15EF2;
+    color: $purple;
     width: 50%;
-}
-.button-disabled {
-    background-color: grey;
-    cursor: not-allowed;
-    color:crimson;
-    border-color:lightcoral;
-}
-.show-settings {
-    background-color: #C15EF2;
-    border: 2px solid #411159;
-    color: #411159;
-    border-radius: 25px;
-}
-.hide-settings {
-    background-color: #411159;
-    border: 2px solid #C15EF2;
-    color:whitesmoke;
 }
 </style>

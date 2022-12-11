@@ -1,127 +1,174 @@
 <script>
-    import BaseIcon from './BaseIcon.vue';
-    import { toCurrencyMixin } from '../mixins/GlobalMixin';
-    import { defineComponent } from 'vue';
-    
-    export default defineComponent({    
-        components: {
-            BaseIcon,
+import BaseDropdown from './BaseDropdown.vue';
+import { toCurrencyMixin } from '../mixins/GlobalMixin';
+import { defineComponent } from 'vue';
+
+export default defineComponent({    
+    components: {
+        BaseDropdown,
+    },
+    mixins: [toCurrencyMixin],
+    props: {
+        bill: Object
+    },
+    data() {
+        return {
+            menuItems: [
+                {
+                    name: 'Details',
+                    icon: 'help-circle'
+                },
+            ]
+        }
+    },
+    computed: {
+        billRecurrence() {
+            switch (this.bill.recurringCycle.interval) {
+                case 3:
+                    return 'Quarterly';
+                case 6: 
+                    return 'Semi-Annual';
+                case 12:
+                    return 'Annual';
+                default:
+                    return 'Monthly'
+            }
         },
-        mixins: [toCurrencyMixin],
-        props: {
-            bill: Object
+    },
+    methods: {
+        deleteBill(bill) {
+            this.$emit('delete-bill', bill);
         },
-        computed: {
-           billRecurrence() {
-                switch (this.bill.recurringCycle.interval) {
-                    case 3:
-                        return 'Quarterly';
-                    case 6: 
-                        return 'Semi-Annual';
-                    case 12:
-                        return 'Annual';
-                    default:
-                        return 'Monthly'
+        editBill(bill) {
+            this.$router.push({ name: 'edit-bill', params: { billId: bill.id} });
+        },
+        showBillDetails(bill) {
+            this.showMenu = false;
+            const monthsRecurringIsDue = () => {
+                const dueDate = new Date(bill.recurringCycle.date);
+                const result = [];
+                for(let i = 0; i < 12; i++) {
+                    const monthsSinceDue = Math.abs(dueDate.getMonth() - i);    
+                    const isDueThisMonth = monthsSinceDue % bill.recurringCycle.interval === 0;
+                    if (isDueThisMonth) result.push(i);
                 }
-           },
-        },
-        methods: {
-            deleteBill(bill) {
-                this.$emit('delete-bill', bill);
-            },
-            showBillDetails(bill) {
-                this.showMenu = false;
-                const monthsRecurringIsDue = () => {
-                    const dueDate = new Date(bill.recurringCycle.date);
-                    const result = [];
-                    for(let i = 0; i < 12; i++) {
-                        const monthsSinceDue = Math.abs(dueDate.getMonth() - i);    
-                        const isDueThisMonth = monthsSinceDue % bill.recurringCycle.interval === 0;
-                        if (isDueThisMonth) result.push(i);
-                    }
-                    return result;
-                };
-                const nextRecurrenceDate = (billDueDate) => {
-                    let nextDueDate = new Date(billDueDate);
-                    const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-                    [0, 1].every((y) => {
-                        nextDueDate.setFullYear(new Date().getFullYear() + y);
-                        monthsRecurringIsDue().every((x) => {
-                            nextDueDate.setMonth(x);
-                            if (nextDueDate.getTime() > firstDayOfMonth.getTime()) return false;
-                            return true;
-                        })
-                        return nextDueDate.getTime() < firstDayOfMonth.getTime();
-                    });
-                    
-                    return nextDueDate.toLocaleDateString();
-                }
-                this.$emit('bill-details', {
-                    ...bill,
-                    dueDate: nextRecurrenceDate(bill.recurringCycle.date),
+                return result;
+            };
+            const nextRecurrenceDate = (billDueDate) => {
+                let nextDueDate = new Date(billDueDate);
+                const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+                [0, 1].every((y) => {
+                    nextDueDate.setFullYear(new Date().getFullYear() + y);
+                    monthsRecurringIsDue().every((x) => {
+                        nextDueDate.setMonth(x);
+                        if (nextDueDate.getTime() > firstDayOfMonth.getTime()) return false;
+                        return true;
+                    })
+                    return nextDueDate.getTime() < firstDayOfMonth.getTime();
                 });
-            },
-            payOffBill(bill) {
-                this.showMenu = false;
-                this.$emit('payoff-bill', bill);
+                
+                return nextDueDate.toLocaleDateString();
+            }
+            this.$emit('bill-details', {
+                ...bill,
+                dueDate: nextRecurrenceDate(bill.recurringCycle.date),
+            });
+        },
+        payOffBill(bill) {
+            this.showMenu = false;
+            this.$emit('payoff-bill', bill);
+        },
+        menuItemSelected(item) {
+            switch (item.toLowerCase()) {
+                case 'edit':
+                    this.editBill(this.bill);
+                    break;
+                case 'delete': 
+                    this.deleteBill(this.bill);
+                    break;
+                case 'pay off':
+                    this.payOffBill(this.bill);
+                    break;
+                default:
+                    this.showBillDetails(this.bill);
+                    break;
             }
         }
-    })
+    },
+    mounted() {
+        if (!this.bill.datePaidOff) {
+            this.menuItems.push(
+                {
+                    name: 'Edit',
+                    icon: 'edit'
+                },
+                {
+                    name: 'Delete',
+                    icon: 'x-circle'
+                }
+            )
+            if (this.bill.isRecurring) {
+                this.menuItems.push(
+                    {
+                        name: 'Pay Off',
+                        icon: 'stop-circle'
+                    }
+                )
+            }
+        }
+    }
+})
 </script>
 <template>
     <div>
-        <div class="bill-card -shadow">
-            <div class="dropdown is-hoverable">
-                <div class="dropdown-trigger">
-                    <div>
-                        <BaseIcon aria-haspopup="true" v-bind:aria-controls="'dropdown-menu' + bill.id" name="menu"></BaseIcon>
-                    </div>
-                </div>
-                <div class="dropdown-menu" v-bind:id="'dropdown-menu' + bill.id" role="menu">
-                    <div class="dropdown-content">
-                        <div class="dropdown-item" @click="showBillDetails(bill)">
-                            <BaseIcon name="help-circle">Details</BaseIcon>
-                        </div>
-                        <div v-if="bill.datePaidOff === '' || bill.datePaidOff === null" class="dropdown-item">
-                            <router-link :to="{ name: 'edit-bill', params: { billId: bill.id } }"><BaseIcon name="edit">Edit</BaseIcon></router-link>
-                        </div>
-                        <div v-if="bill.datePaidOff === '' || bill.datePaidOff === null" class="dropdown-item">
-                            <span @click="deleteBill(bill)"><BaseIcon name="x-circle">Delete</BaseIcon></span>
-                        </div>
-                        <div v-if="(bill.datePaidOff === '' || bill.datePaidOff === null) && bill.isRecurring" class="dropdown-item">
-                            <span @click="payOffBill(bill)"><BaseIcon name="stop-circle">Pay Off</BaseIcon></span>
-                        </div>
-                    </div>
-                </div>
+        <div :class="$style['bill-card']">
+            <div :class="$style['bill-header']">
+                <BaseDropdown
+                    :menu-items="menuItems"
+                    @menu-item-selected="menuItemSelected"
+                />
+                <p>{{bill.name}}</p>
             </div>
-            <span style="color:lightgrey;">{{bill.name}}</span>
-            <div class="bill-recurrence" >Recurrence: <b><i>{{ billRecurrence }}</i></b></div>
+            <div :class="$style['bill-content']">
+                <p>
+                    Recurrence:
+                </p>
+                <p>
+                    {{ billRecurrence }}
+                </p>
+            </div>
         </div>
     </div>
 </template>
-<style scoped>
+<style lang="scss" module>
 .bill-card {
-    padding: 20px;
-    margin-bottom: 24px;
-    transition: all 0.2s linear;
-    cursor: pointer;
-    border-radius:15px;
-    border: 3px solid #9C50B6;
-    color: whitesmoke;
+    display: flex;
+    flex-direction: column;
+    border-radius: 10px;
+    background: $light-gray;
+    color: $white;
+    padding: 0;
+    --icon-stroke: #{$white};
 }
-.bill-card:hover {
-    background-color: #9C50B6;
-    box-shadow: 0 3px 12px 0 rgba(0, 0, 0, 0.2), 0 1px 15px 0 rgba(0, 0, 0, 0.2);
+.bill-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: $purple;
+    padding: 5px 15px;
+    border-radius: 7px 7px 0 0;
+    font-weight: $font-weight-bold;
 }
-.bill-recurrence {
-    float: right;
-    padding: 0px;
-}
-.dropdown-menu, .dropdown-content {
-    background-color: #2D3033;
-    color: lightgrey;
-}
-.dropdown-item:hover {
-    background-color: #9C50B6;
+.bill-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    color: $dark-purple;
+    padding: 5px 15px;
+    border-radius: 0 0 7px 7px;
+    font-weight: $font-weight-bolder;
+    font-style: italic;
 }
 </style>

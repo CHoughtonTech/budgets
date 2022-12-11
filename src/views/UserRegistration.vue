@@ -39,7 +39,7 @@ export default defineComponent({
         },
         passwordStrength() {
             let tests = [];
-            tests.push(new RegExp(/.{6,20}/).test(this.password)); // Length Regex
+            tests.push(new RegExp(/.{6,}/).test(this.password)); // Length Regex
             tests.push(new RegExp(/[A-Z]/).test(this.password)); // Uppercase Regex
             tests.push(new RegExp(/[a-z]/).test(this.password)); // Lowercase Regex
             tests.push(new RegExp(/\d/).test(this.password)); // At least 1 digit Regex
@@ -181,7 +181,7 @@ export default defineComponent({
             return this.email.match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
         },
         validatePassword() {
-            return this.password.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=^\S+$).{6,20}$/);
+            return this.password.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=^\S+$).{6,}$/);
         },
         getFirebaseErrorMessage(errorCode) {
             let errorMessage = null;
@@ -210,130 +210,166 @@ export default defineComponent({
 })
 </script>
 <template>
-    <div class="user-view" @keyup.enter="isRegistering ? register() : login()">
+    <div
+        :class="$style['page-layout']"
+        @keyup.enter="isRegistering ? register() : login()"
+    >
         <h1 v-if="isRegistering">Create an Account</h1>
         <h1 v-else>Login</h1>
         <div v-if="isRegistering">
-            <p class="passwordPolicy">
-                <ul>
-                    Password Policy:
-                    <li>* No spaces</li>
-                    <li>* At least 6 characters</li>
-                    <li>* No more than 20 characters</li>
-                    <li>* Must contain one numeric digits</li>
-                    <li>* Must contain one uppercase</li>
-                    <li>* Must contain one lowercase</li>
-                </ul>
-            </p>
-            <label for="userName">Username</label>
-            <div v-if="validationFailed('userName')" class="error-detail">
-                {{ getErrorMessage('userName') }}
+            <ul :class="$style['password-policy']">
+                Password Policy:
+                <li>* No spaces</li>
+                <li>* At least 6 characters</li>
+                <li>* Must contain one numeric digits</li>
+                <li>* Must contain one uppercase</li>
+                <li>* Must contain one lowercase</li>
+            </ul>
+            <div :class="$style['username']">
+                <label for="userName">Username</label>
+                <div v-if="validationFailed('userName')" class="error-detail">
+                    {{ getErrorMessage('userName') }}
+                </div>
+                <input ref="username" id='userName' type="text" placeholder="Bruce Wayne" v-model="userName" :class="validationFailed('userName') && 'error-detail-input'" />
             </div>
-            <input ref="username" id='userName' type="text" placeholder="Bruce Wayne" v-model="userName">
         </div>
         <label for="userEmail">Email</label>
-        <div  ref="email" v-if="validationFailed('userEmail')" class="error-detail">
+        <div ref="email" v-if="validationFailed('userEmail')" class="error-detail">
             {{ getErrorMessage('userEmail') }}
         </div>
-        <input id="userEmail" type="text" placeholder="user@example.com" v-model="email" />
-        <router-link v-if="validateEmail()" style="float:right;" :to="{ name: 'user-reset-password', params: { userEmail: email } }">Forgot Password?</router-link>
+        <input id="userEmail" type="text" placeholder="user@example.com" v-model="email" :class="validationFailed('userEmail') && 'error-detail-input'" />
+        <router-link v-if="validateEmail()" :to="{ name: 'user-reset-password', params: { userEmail: email } }">Forgot Password?</router-link>
         <label for="userPassword">Password</label>
-        <label class="is-pulled-right" v-if="isRegistering && password !== ''">
-            Strength:&nbsp;<span :class="passwordStrengthStyle">{{ passwordStrengthText }}</span>
+        <label v-if="isRegistering && password !== ''">
+            Strength:&nbsp;<span :class="$style[passwordStrengthStyle]">{{ passwordStrengthText }}</span>
         </label>
         <div v-if="validationFailed('userPassword')" class="error-detail">
             {{ getErrorMessage('userPassword') }}
         </div>
-        <div>
-            <input id="userPassword" :type="showPasswords ? 'text' : 'password'" placeholder="Password" v-model="password" style="width:85%"/>
-            <button @click="toggleShowPasswords()" class="is-pulled-right"><BaseIcon :name="showPasswords ? 'eye' : 'eye-off'"></BaseIcon></button>
+        <div :class="$style['button-group']">
+            <input id="userPassword" :type="showPasswords ? 'text' : 'password'" placeholder="Password" v-model="password" :class="validationFailed('userPassword') && 'error-detail-input'" />
+            <button @click="toggleShowPasswords()"><BaseIcon :name="showPasswords ? 'eye' : 'eye-off'"></BaseIcon></button>
         </div>
         <div v-if="isRegistering">
             <label for="confirmPassword">Confirm Password</label>
             <div v-if="validationFailed('confirmPassword')" class="error-detail" >
                 {{ getErrorMessage('confirmPassword') }}
             </div>
-            <div>
-                <input id="confirmPassword" :type="showPasswords ? 'text' : 'password'" placeholder="Confirm Password" v-model="confirmedPassword" style="width:85%"/>
-                <button @click="toggleShowPasswords()" class="is-pulled-right"><BaseIcon :name="showPasswords ? 'eye' : 'eye-off'"></BaseIcon></button>
+            <div :class="$style['button-group']">
+                <input id="confirmPassword" :type="showPasswords ? 'text' : 'password'" placeholder="Confirm Password" v-model="confirmedPassword" :class="validationFailed('confirmPassword') && 'error-detail-input'" />
+                <button @click="toggleShowPasswords()"><BaseIcon :name="showPasswords ? 'eye' : 'eye-off'"></BaseIcon></button>
             </div>
         </div>
-        <label v-if="isRegistering" for="userAcknowledged" class="acknowledgement">
-            <span>
-                By checking this box, you hereby agree to the 
-                <strong class="acknowledgement-link" @click="goToPrivacyPolicy()">Privacy Policy</strong>
-                 and 
-                <strong class="acknowledgement-link" @click="goToTermsAndConditions()">Terms Of Use</strong>
-                 of this site.
-            </span>
-        </label>
-        <input v-if="isRegistering" id="userAcknowledged" type="checkbox" v-model="hasUserAcknowledgedTOS" /><br>
-        <div class="is-flex is-justify-content-center">
-            <label v-if="!isRegistering" for="staySignedIn" style="cursor:pointer;">Remember me</label>&nbsp;&nbsp;
-            <input id="staySignedIn" v-if="!isRegistering" type="checkbox" v-model="isUserStayingSignedIn" style="cursor:pointer;" /> 
+        <div
+            v-if="isRegistering"
+            :class="$style['checkbox-group']"
+        >
+            <input id="userAcknowledged" type="checkbox" v-model="hasUserAcknowledgedTOS" />
+            <label for="userAcknowledged" :class="$style['acknowledgement']">
+                <span>
+                    By checking this box, you hereby agree to the 
+                    <strong :class="$style['acknowledgement-link']" @click="goToPrivacyPolicy()">Privacy Policy</strong>
+                    and 
+                    <strong :class="$style['acknowledgement-link']" @click="goToTermsAndConditions()">Terms Of Use</strong>
+                    of this site.
+                </span>
+            </label>
         </div>
-        <div class="is-flex is-justify-content-center">
-            <button :class="disableRegisterButton ? 'button-disabled' : ''" @click="isRegistering ? register() : login()" :disabled="disableRegisterButton">{{ loginRegisterLabel }}</button> 
+        <div
+            v-if="!isRegistering"
+            :class="$style['checkbox-group']"
+        >
+            <label for="staySignedIn">Remember me</label>
+            <input id="staySignedIn" type="checkbox" v-model="isUserStayingSignedIn" /> 
+        </div>
+        <div :class="$style['button-group']">
+            <button :class="disableRegisterButton ? $style['button-disabled'] : ''" @click="isRegistering ? register() : login()" :disabled="disableRegisterButton">{{ loginRegisterLabel }}</button> 
             <button @click="toggleRegisterUser()">{{ toggleRegisterUserLabel }}</button>
         </div>
     </div>
 </template>
-<style scoped>
-.user-view {
-    min-width: 400px;
-    width: 25%;
+<style lang="scss" module>
+.page-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
-input {
-    border-radius: 25px;
-}
-button {
-    border-radius: 20px;
-}
-.password-field {
-    border-radius: 20px 0px 0px 20px;
-}
-.passwordPolicy {
-    min-width: 200px;
-    width: 25%;
-    background-color: lightgrey;
-    color: #411159;
-    border: 2px solid;
+.password-policy {
+    background-color: $light-gray;
+    color: $dark-purple;
+    border: 2px solid $purple;
     padding: 20px;
-    margin-left: 100px;
-    border-color: #C15EF2;
-    border-radius: 25px;
-    font-size: 12px;
-    font-style:italic;
-    font-weight:500;
+    border-radius: $border-radius-medium;
+    font-size: $font-size-small;
+    font-style: italic;
+    font-weight: $font-weight-medium;
+    list-style: none;
+}
+.username {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
 }
 .weak-style { 
-    color: crimson;
+    color: $red;
+    font-weight: $font-weight-medium;
 }
 .moderate-style {
-    color: orange;
+    color: $orange;
+    font-weight: $font-weight-semi-bold;
 }
 .strong-style {
-    color: forestgreen;
+    color: $green;
+    font-weight: $font-weight-bold;
 }
 .very-strong-style {
-    color: #C15EF2;
+    color: $purple;
+    font-weight: $font-weight-bolder;
+}
+.button-group {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 5px;
+    input {
+        flex: 1;
+    }
+    @media (min-width: 320px) and (max-width: 768px){
+        input {
+        flex: 1 1 75%;
+        }
+        button {
+            flex: 2 2 25%;
+        }
+    }
+}
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    input {
+        cursor: pointer;
+    }
 }
 .acknowledgement {
-    color: #C15EF2;
-    font-size: 12px;
+    color: $purple;
+    font-size: $font-size-small;
 }
 .acknowledgement-link {
-    color: #0e3fdf;
+    color: $blue;
     cursor: pointer;
 }
-.acknowledgement-link:hover {
-    text-decoration: underline;
-    color: whitesmoke;
-}
 .button-disabled {
-    background-color: grey;
+    background-color: $light-gray;
     cursor: not-allowed;
-    color:crimson;
-    border-color:lightcoral;
+    color: $dark-gray;
+    border-color:$dark-gray;
+    &:hover {
+        background-color: $gray;
+        cursor: not-allowed;
+        color: $dark-gray;
+        border-color:$dark-gray;
+    }
 }
 </style>

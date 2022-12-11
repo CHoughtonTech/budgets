@@ -1,100 +1,80 @@
 <script>
 import { defineComponent } from 'vue';
-export default defineComponent({})
+export default defineComponent({
+	props: {
+        showModal: {
+			type: Boolean,
+			default: false,
+		}
+    },
+	data() {
+		return {
+			showModals: false,
+		}
+	}
+})
 </script>
 <template>
     <transition name="modal">
-        <div class="modal-mask">
-            <div class="modal-wrapper">
-                <div class="modal-container">
-                    <div class="modal-header">
-                        <slot name="header">
-                        </slot>
-                    </div>
-                    <hr/>
-                    <div class="modal-body">
-                        <slot name="body">
-                        </slot>
-                    </div>
-                    <div class="modal-footer">
-                        <slot name="footer">
-                            <button class="modal-default-button" @click="$emit('close')">OK</button>
-                            <br/><br/>
-                        </slot>
-                    </div>
-                </div>
+      <div :class="$style['modal-mask']">
+        <div :class="$style['modal-container']">
+            <div :class="$style['modal-header']">
+                <slot name="header">
+                </slot>
+            </div>
+            <div :class="$style['modal-body']">
+                <slot name="body">
+                </slot>
+            </div>
+            <div :class="$style['modal-footer']">
+                <slot name="footer">
+                    <button
+                      @click="$emit('close')"
+                    >
+                      OK
+                    </button>
+                </slot>
             </div>
         </div>
+      </div>
     </transition>
 </template>
-<style>
+<style lang="scss" module>
 .modal-mask {
-  position: fixed;
-  z-index: 9998;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: table;
-  transition: opacity 0.3s ease;
+	position: fixed;
+	z-index: 9998;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: opacity 0.3s ease;
 }
-
-.modal-wrapper {
-  display: table-cell;
-  vertical-align: middle;
-}
-
 .modal-container {
-  width: 25%;
-  min-width: 400px;
-  margin: 0px auto;
-  padding: 20px 30px;
-  background-color: #2D3033;
-  border-radius: 2px;
-  box-shadow: 0 2px 8px lightgrey;
-  transition: all 0.5s ease;
-  font-family: Helvetica, Arial, sans-serif;
-  overflow-y: auto;
+	margin: 25px;
+	background: $primary-bg-color;
+	border-radius: $border-radius-medium;
+	box-shadow: 0 2px 8px $secondary-bg-color;
+	transition: all 0.5s ease;
+	min-width: calc(100vw - 10%);
+	overflow-y: auto;
+	&::-webkit-scrollbar {
+		display: none;
+	}
 }
-
-.modal-container::-webkit-scrollbar {
-  display: none;
+.modal-header {
+	padding: 10px 20px;
+	background: $dark-purple;
 }
-
-.modal-header h3 {
-  margin-top: 0;
-  color: #ab42b9;
-}
-
 .modal-body {
-  margin: 20px 0;
+	padding: 10px 20px;
 }
-
-.modal-default-button {
-  float: right;
-}
-
-/*
- * The following styles are auto-applied to elements with
- * transition="modal" when their visibility is toggled
- * by Vue.js.
- *
- * You can easily play with the modal transition by editing
- * these styles.
- */
-
-.modal-enter {
-  opacity: 0;
-}
-
-.modal-leave-active {
-  opacity: 0;
-}
-
-.modal-enter .modal-container,
-.modal-leave-active .modal-container {
-  -webkit-transform: scale(1.1);
-  transform: scale(1.1);
+.modal-footer {
+	padding: 10px 20px;
+	display: flex;
+	justify-content: center;
 }
 </style>

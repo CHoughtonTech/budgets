@@ -13,6 +13,7 @@ import TermsAndConditions from '@/views/TermsOfUse';
 import UserRegistration from '@/views/UserRegistration';
 import UserProfile from '@/views/UserProfile';
 import UserPasswordReset from '@/views/UserPasswordReset';
+import KitchenSink from '@/views/KitchenSink.vue';
 
 const routes = [
   {
@@ -111,6 +112,11 @@ const routes = [
     path: '/contact',
     name: 'contact-dashboard',
     component: ContactDashboard,
+  },
+  {
+    path: '/kitchensink',
+    name: 'kitchen-sink',
+    component: KitchenSink,
   },
   {
     path: '/404',
