@@ -6,12 +6,7 @@ export default defineComponent({
 			type: Boolean,
 			default: false,
 		}
-    },
-	data() {
-		return {
-			showModals: false,
-		}
-	}
+    }
 })
 </script>
 <template>
@@ -59,7 +54,8 @@ export default defineComponent({
 	border-radius: $border-radius-medium;
 	box-shadow: 0 2px 8px $secondary-bg-color;
 	transition: all 0.5s ease;
-	min-width: calc(100vw - 10%);
+	min-width: calc(100vw - 75%);
+	max-width: calc(100vw - 10%);
 	overflow-y: auto;
 	&::-webkit-scrollbar {
 		display: none;

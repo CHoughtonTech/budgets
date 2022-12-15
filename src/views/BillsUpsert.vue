@@ -306,7 +306,7 @@ export default defineComponent({
                 <h3>Bill Creation</h3>
             </template>
             <template #body>
-                <h6>Create Another bill?</h6>
+                <h4>Create Another bill?</h4>
             </template>
             <template #footer>
                 <button @click="createAnotherConfirm('Yes')">Yes</button>
