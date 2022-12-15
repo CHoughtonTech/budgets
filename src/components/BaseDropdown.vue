@@ -19,15 +19,19 @@ export default defineComponent({
     },
     methods: {
         menuItemSelected(item) {
+            this.toggleShowMenu(false);
             this.$emit('menu-item-selected', item);
         },
+        toggleShowMenu(isVisible) {
+            this.showMenu = isVisible;
+        }
     }
 });
 </script>
 <template>
     <div :class="$style['menu-wrapper']">
-        <BaseIcon :class="$style['menu-button']" name="menu"/>
-        <div :class="$style['menu-content']">
+        <BaseIcon :class="$style['menu-button']" name="menu" @mouseenter="toggleShowMenu(true)"/>
+        <div v-if="showMenu" :class="$style['menu-content']" @mouseleave="toggleShowMenu(false)">
             <ul :class="$style['menu']">
                 <li
                     v-for="item in menuItems"
