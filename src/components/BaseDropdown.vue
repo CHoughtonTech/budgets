@@ -29,9 +29,12 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div :class="$style['menu-wrapper']">
+    <div :class="[
+        $style['menu-wrapper'],
+        showMenu && $style['show-dropdown']
+    ]">
         <BaseIcon :class="$style['menu-button']" name="menu" @mouseenter="toggleShowMenu(true)"/>
-        <div v-if="showMenu" :class="$style['menu-content']" @mouseleave="toggleShowMenu(false)">
+        <div :class="$style['menu-content']" @mouseleave="toggleShowMenu(false)">
             <ul :class="$style['menu']">
                 <li
                     v-for="item in menuItems"
@@ -59,7 +62,7 @@ export default defineComponent({
 .menu-wrapper {
     display: flex;
     position: relative;
-    &:hover {
+    &.show-dropdown {
         .menu-content {
             display: flex !important;
             flex-direction: column;
