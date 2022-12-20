@@ -1,0 +1,150 @@
+@use './variables.scss' as *;
+@use './mixins.scss';
+@use './node_modules/normalize-scss/sass/normalize';
+
+// ===
+// Base Styles
+// ===
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    background: $default-bg-color;
+    color: $default-font-color;
+    font-size: $default-font-size;
+    font-family: $default-font-family;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    box-sizing: border-box;
+    line-height: $default-line-height;
+}
+
+@include mixins.generate-headings();
+
+a {
+    cursor: pointer;
+    background: transparent;
+    font-weight: $font-weight-semi-bold;
+    color: $light-purple;
+    text-decoration: none;
+
+    &:hover {
+        color: $primary-font-color;
+    }
+}
+
+img {
+    border-style: none;
+    width: 100%;
+}
+
+button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $dark-purple;
+    color: $white;
+    border: 1px solid $light-purple;
+    border-radius: $border-radius-light;
+    text-decoration: none;
+    text-transform: none;
+    font-size: $font-size-large;
+    letter-spacing: .05rem;
+    &:hover {
+        background: $light-purple;
+        color: $darkest-purple;
+        font-weight: $font-weight-semi-bold;
+    }
+    cursor: pointer;
+    margin: 4px 2px;
+    padding: 10px;
+    &::-moz-focus-inner {
+        border-style: none;
+        padding: 0;
+    }
+    &:-moz-focusring {
+        outline: 2px solid $light-purple;
+    }
+}
+
+input {
+    border-radius: $border-radius-medium;
+    padding: 10px;
+    font-size: $font-size-large;
+    border: 0;
+    &:focus-visible {
+        outline: 0;
+    }
+}
+
+textarea {
+    border-radius: $border-radius-light;
+    padding: 5px;
+    &:focus-visible {
+        outline: 0;
+    }
+}
+
+select {
+    border-radius: 25px;
+    padding: 10px;
+    font-size: $font-size-large;
+    cursor: pointer;
+    &:focus-visible {
+        outline: 0;
+    }
+}
+
+// ===
+// Global Styles
+// ===
+
+:global {
+    @include mixins.context-text();
+    .router-link-exact-active {
+        --rl-active-background-color: #{$purple}; 
+        --rl-active-font-color: #{$secondary-font-color};
+        --rl-active-font-style: italic;
+        background: var(--rl-active-background-color);
+        color: var(--rl-active-font-color);
+        font-style: var(--rl-active-font-style);
+    }
+    
+    .badge {
+        height: 26px;
+        width: auto;
+        padding: 0 7px;
+        margin: 0 5px;
+        background: transparent;
+        border-radius: 13px;
+        font-size: 1rem;
+        font-weight: $font-weight-bolder;
+        line-height: 1.625rem;
+        &.-fill-gradient {
+            background: $purple-gradient;
+            color: $white;
+            &.-light {
+                background: $gray-gradient;
+                color: $dark-purple;
+                font-weight: $font-weight-bolder;
+            }
+        }
+    }
+    .error-detail {
+        font-size: $font-size-small;
+        color: lighten($error-font-color, 25%);
+        font-style: italic;
+        font-weight: $font-weight-medium;
+    }
+    .error-detail-input {
+        border: 2px solid $error-bg-color;
+        background: $error-bg-color-light;
+        color: $error-font-color;
+    }
+}

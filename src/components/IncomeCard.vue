@@ -1,6 +1,7 @@
 <script>
-import BaseIcon from './BaseIcon';
 import BaseModal from './BaseModal';
+import BaseIcon from './BaseIcon.vue';
+import BaseDropdown from './BaseDropdown.vue';
 import { mapActions, mapState } from 'pinia';
 import mainStore from '@/store';
 import { defineComponent } from 'vue';
@@ -10,6 +11,7 @@ export default defineComponent({
     components: {
         BaseIcon,
         BaseModal,
+        BaseDropdown,
     },
     mixins: [
         mobileCheckMixin,
@@ -135,7 +137,21 @@ export default defineComponent({
             ficaTaxRate: 0,
             federalTaxAmount: 0,
             stateTaxAmount: 0,
-            ficaTaxAmount: 0
+            ficaTaxAmount: 0,
+            menuItems: [
+                {
+                    icon: 'info',
+                    name: 'Details'
+                },
+                {
+                    icon: 'edit',
+                    name: 'Edit'
+                },
+                {
+                    icon: 'delete',
+                    name: 'Delete'
+                }
+            ]
         };
     },
     methods: {
@@ -153,6 +169,9 @@ export default defineComponent({
         },
         toggleShowIncomeDetails() {
             this.showSelectedIncomeDetails = !this.showSelectedIncomeDetails;
+        },
+        editIncome(income) {
+            this.$router.push({ name: 'edit-income', params: { incomeId: income.id } });
         },
         deleteSelectedIncome() {
             if (this.selectedIncome && this.selectedIncome !== null) {
@@ -243,214 +262,230 @@ export default defineComponent({
             this.stateTaxAmount = this.toFixedNumber(this.preTaxDeductedIncome * stateTaxRatePct, 2);
             this.federalTaxAmount = this.toFixedNumber(this.preTaxDeductedIncome * fedTaxRatePct, 2);
             this.ficaTaxAmount = this.toFixedNumber(this.preTaxDeductedIncome * ficaTaxRatePct, 2);
+        },
+        menuItemSelected(item) {
+            switch (item.toLowerCase()) {
+                case 'edit':
+                    this.editIncome(this.income);
+                    break;
+                case 'delete': 
+                    this.confirmDelete(this.income);
+                    break;
+                default:
+                    this.showIncomeDetails(this.income);
+                    break;
+            }
         }
     }
 })
 </script>
 <template>
-    <div style="margin: 0px 0px 40px 0px">
-        <div class="level is-mobile" :class="{'income-is-active' : income.isActive, 'income-is-inactive' : !income.isActive}">
-            <div class="level-item has-text-centered">
-                <div>
-                    <br/>
-                    <p class="heading">Name</p>
-                    <p class="title is-4">{{income.name}}</p>
-                    <br/>
-                </div>
-            </div>
-            <div class="level-item has-text-centered">
-                <div>
-                    <p class="heading">Annual Gross Salary</p>
-                    <p class="title is-4">{{ toCurrency(income.salary) }}</p>
-                </div>
-            </div>
-            <div v-if="!isMobileDevice()" class="level-item has-text-centered">
-                <div>
-                    <p class="heading">Annual Net Salary</p>
-                    <p class="title is-4">{{ toCurrency(income.netSalary) }}</p>
-                </div>
-            </div>
-            <div v-if="!isMobileDevice()" class="level-item has-text-centered">
-                <div>
-                    <p class="heading">IsActive</p>
-                    <p v-if="income.isActive">
-                        <BaseIcon name="check-circle"></BaseIcon>
-                    </p>
-                    <p v-else>
-                        <BaseIcon name="x-circle"></BaseIcon>
-                    </p>
-                </div>
-            </div>
-            <div class="level-item">
-                <p class="is-pulled-left button is-info" @click="showIncomeDetails(income)">
-                    <BaseIcon name="info"></BaseIcon>
-                </p>
-                <div>&nbsp;</div>
-                <router-link class="is-pulled-left button is-success" :to="{ name: 'edit-income', params: { incomeId: income.id }}">
-                    <p>
-                        <BaseIcon name="edit" width="12" height="12"></BaseIcon>
-                    </p>
-                </router-link>
-                <div>&nbsp;</div>
-                <p class="is-pulled-right button is-danger" @click="confirmDelete(income)">
-                    <BaseIcon name="delete"></BaseIcon>
-                </p>
-            </div>
+    <div
+        :class="$style['main-content']"
+    >
+        <div
+            :class="[
+                $style['income-header'],
+                !income.isActive && $style['inactive']
+            ]"
+        >
+            <BaseDropdown
+                :menu-items="menuItems"
+                @menu-item-selected="menuItemSelected"
+            />
+            <h3>{{ income.name }}</h3>
         </div>
-        <div v-if="showSelectedIncomeDetails" class="tile is-ancestor income-detail">
-            <div class="tile is-vertical">
-                <div class="tile">
-                    <div class="tile is-parent is-vertical">
-                        <article class="tile is-child income-detail-box">
-                            <div class="is-flex is-justify-content-center">
-                                <h4 class="income-detail-box-header">Net Salary</h4>
-                            </div>
-                            <hr/>
-                            <ul>
-                                <li>
-                                    <span>Annual</span>
-                                    <span class="is-pulled-right">{{ toCurrency(income.netSalary) }}</span>
-                                </li>
-                                <li>
-                                    <span>YTD Earned</span>
-                                    <span class="is-pulled-right">{{ toCurrency(netAmountYTD) }}</span>
-                                </li>
-                                <li>
-                                    <span>Remaining</span>
-                                    <span class="is-pulled-right">{{ toCurrency(netAmountLeft) }}</span>
-                                </li>
-                                <li>
-                                    <span>Paycheck</span>
-                                    <span class="is-pulled-right">{{ toCurrency(netAmountPerCheck) }}</span>
-                                </li>
-                            </ul>
-                        </article>
-                    </div>
-                    <div class="tile is-parent">
-                        <article class="tile is-child income-detail-box">
-                            <div class="is-flex is-justify-content-center">
-                                <h4 class="income-detail-box-header">Pay Info</h4>
-                            </div>
-                            <hr/>
-                            <ul>
-                                <li>
-                                    <span>Employment Type</span>
-                                    <span class="is-pulled-right">{{employmentType}}</span>
-                                </li>
-                                <li>
-                                    <span>Pay Period Frequency</span>
-                                    <span class="is-pulled-right">{{payPeriodFrequency}}</span>
-                                </li>
-                                <li v-if="hasFilingStatus">
-                                    <span>Filing Status</span>
-                                    <span class="is-pulled-right">{{filingStatus}}</span>
-                                </li>
-                                <li v-if="hasFilingState">
-                                    <span>Filing State</span>
-                                    <span class="is-pulled-right">{{filingStateName}}</span>
-                                </li>
-                                <li v-if="isHourly">
-                                    <span>Hourly Rate</span>
-                                    <span class="is-pulled-right">{{ toCurrency(income.hourlyRate) }}</span>
-                                </li>
-                                <li v-if="isHourly">
-                                    <span>Hours Per Week</span>
-                                    <span class="is-pulled-right">{{ income.hoursPerWeek }}</span>
-                                </li>
-                                <li v-if="!isHourly">
-                                    <span>Annual Salary</span>
-                                    <span class="is-pulled-right">{{ toCurrency(income.salary) }}</span>
-                                </li>
-                            </ul>
-                        </article>
-                    </div>
+        <div
+            :class="[
+                $style['income-body'],
+                !income.isActive && $style['inactive']
+            ]"
+        >
+            <p>{{ toCurrency(income.salary) }}</p>
+        </div>
+        <div
+            v-if="showSelectedIncomeDetails"
+        >
+            <div :class="$style['close-details-button']">
+                <BaseIcon
+                    name="x"
+                    @click="this.showIncomeDetails(this.income)"
+                />
+            </div>
+            <div :class="[
+                    $style['income-detail'],
+                    !income.isActive && $style['inactive']
+                ]">
+                <div :class="[
+                    $style['income-detail-header'],
+                    !income.isActive && $style['inactive']
+                ]">
+                    <p>Net Salary</p>
                 </div>
-                <div class="tile">
-                    <div class="tile is-parent">
-                        <article class="tile is-child income-detail-box">
-                            <div class="is-flex is-justify-content-center">
-                                <h4 class="income-detail-box-header">Taxes</h4>
-                            </div>
-                            <hr/>
-                            <ul v-if="!income.isTaxExempt">
-                                <li>
-                                    <span>Annual Federal Taxes</span>
-                                    <span class="is-pulled-right">{{ toCurrency(federalTaxAmount) }}</span>
-                                </li>
-                                <li>
-                                    <span>Federal Taxes per paycheck</span>
-                                    <span class="is-pulled-right">{{ toCurrency(federalTaxAmount / income.payPeriod) }}</span>
-                                </li>
-                                <li>
-                                    <span>Federal Tax Rate</span>
-                                    <span class="is-pulled-right">{{federalTaxRate}}%</span>
-                                </li>
-                                <li>
-                                    <span>Annual State Taxes</span>
-                                    <span class="is-pulled-right">{{ toCurrency(stateTaxAmount) }}</span>
-                                </li>
-                                <li>
-                                    <span>State Taxes per paycheck</span>
-                                    <span class="is-pulled-right">{{ toCurrency(stateTaxAmount / income.payPeriod) }}</span>
-                                </li>
-                                <li>
-                                    <span>State Tax Rate</span>
-                                    <span class="is-pulled-right">{{stateTaxRate}}%</span>
-                                </li>
-                                <li>
-                                    <span>Annual FICA Taxes</span>
-                                    <span class="is-pulled-right">{{ toCurrency(ficaTaxAmount) }}</span>
-                                </li>
-                                <li>
-                                    <span>FICA Taxes per paycheck</span>
-                                    <span class="is-pulled-right">{{ toCurrency(ficaTaxAmount / income.payPeriod) }}</span>
-                                </li>
-                                <li>
-                                    <span>FICA Tax Rate</span>
-                                    <span class="is-pulled-right">{{ficaTaxRate}}%</span>
-                                </li>
-                            </ul>
-                            <div v-else class="is-flex is-justify-content-center notification is-info">
-                                <p>Tax Exempt Income!</p>
-                            </div>
-                        </article>
-                    </div>
-                    <div class="tile is-parent">
-                        <article class="tile is-child income-detail-box">
-                            <div class="is-flex is-justify-content-center">
-                                <h4 class="income-detail-box-header">Deductions</h4>
-                            </div>
-                            <hr/>
-                            <ul v-if="hasDeductions">
-                                <li v-if="preTaxDeductions.length > 0" class="is-flex is-justify-content-center">
-                                    <span>Pre-Tax Deductions</span>
-                                </li>
-                                <li v-for="(preDeduction, index) in preTaxDeductions" :key="`prededuction-${index}`">
-                                    <span>{{preDeduction.name}}</span>
-                                    <span class="is-pulled-right">{{ toCurrency(preDeduction.amount) }}</span>
-                                </li>
-                                <li v-if="postTaxDeductions.length > 0" class="is-flex is-justify-content-center">
-                                    <span>Post-Tax Deductions</span>
-                                </li>
-                                <li v-for="(postDeduction, index) in postTaxDeductions" :key="`postdeduction-${index}`">
-                                    <span>{{postDeduction.name}}</span>
-                                    <span class="is-pulled-right">{{ toCurrency(postDeduction.amount) }}</span>
-                                </li>
-                                <hr>
-                                <li>
-                                    <span>Total per paycheck</span>
-                                    <span class="is-pulled-right">{{ toCurrency(deductionsTotal) }}</span>
-                                </li>
-                                <li>
-                                    <span>Annual Deduction Amount</span>
-                                    <span class="is-pulled-right">{{ toCurrency(deductionsTotal * income.payPeriod) }}</span>
-                                </li>
-                            </ul>
-                            <div v-else class="is-flex is-justify-content-center notification is-info">
-                                <p>No Deductions!</p>
-                            </div>
-                        </article>
-                    </div>
+                <ul :class="$style['income-detail-body']">
+                    <li>
+                        <p>Annual</p>
+                        <p>{{ toCurrency(income.netSalary) }}</p>
+                    </li>
+                    <li>
+                        <p>YTD Earned</p>
+                        <p>{{ toCurrency(netAmountYTD) }}</p>
+                    </li>
+                    <li>
+                        <p>Remaining</p>
+                        <p>{{ toCurrency(netAmountLeft) }}</p>
+                    </li>
+                    <li>
+                        <p>Paycheck</p>
+                        <p>{{ toCurrency(netAmountPerCheck) }}</p>
+                    </li>
+                </ul>
+            </div>
+            <div :class="[
+                    $style['income-detail'],
+                    !income.isActive && $style['inactive']
+                ]">
+                <div :class="[
+                    $style['income-detail-header'],
+                    !income.isActive && $style['inactive']
+                ]">
+                    <p>Pay Info</p>
+                </div>
+                <ul :class="$style['income-detail-body']">
+                    <li>
+                        <p>Type</p>
+                        <p>{{employmentType}}</p>
+                    </li>
+                    <li>
+                        <p>Frequency</p>
+                        <p>{{payPeriodFrequency}}</p>
+                    </li>
+                    <li v-if="hasFilingStatus">
+                        <p>Status</p>
+                        <p>{{filingStatus}}</p>
+                    </li>
+                    <li v-if="hasFilingState">
+                        <p>State</p>
+                        <p>{{filingStateName}}</p>
+                    </li>
+                    <li v-if="isHourly">
+                        <p>Hourly Rate</p>
+                        <p>{{ toCurrency(income.hourlyRate) }}</p>
+                    </li>
+                    <li v-if="isHourly">
+                        <p>Hours Per Week</p>
+                        <p>{{ income.hoursPerWeek }}</p>
+                    </li>
+                    <li v-if="!isHourly">
+                        <p>Annual Salary</p>
+                        <p>{{ toCurrency(income.salary) }}</p>
+                    </li>
+                </ul>
+            </div>
+            <div :class="[
+                    $style['income-detail'],
+                    !income.isActive && $style['inactive']
+                ]">
+                <div :class="[
+                    $style['income-detail-header'],
+                    !income.isActive && $style['inactive']
+                ]">
+                    <p>Taxes</p>
+                </div>
+                <ul
+                    v-if="!income.isTaxExempt"
+                    :class="$style['income-detail-body']"
+                >
+                    <h4>Federal</h4>
+                    <li>
+                        <p>Annual Amt</p>
+                        <p>{{ toCurrency(federalTaxAmount) }}</p>
+                    </li>
+                    <li>
+                        <p>Amt per check</p>
+                        <p>{{ toCurrency(federalTaxAmount / income.payPeriod) }}</p>
+                    </li>
+                    <li>
+                        <p>Rate</p>
+                        <p>{{federalTaxRate}}%</p>
+                    </li>
+                    <h4>State</h4>
+                    <li>
+                        <p>Annual Amt</p>
+                        <p>{{ toCurrency(stateTaxAmount) }}</p>
+                    </li>
+                    <li>
+                        <p>Amt per check</p>
+                        <p>{{ toCurrency(stateTaxAmount / income.payPeriod) }}</p>
+                    </li>
+                    <li>
+                        <p>Rate</p>
+                        <p>{{stateTaxRate}}%</p>
+                    </li>
+                    <h4>FICA</h4>
+                    <li>
+                        <p>Annual Amt</p>
+                        <p>{{ toCurrency(ficaTaxAmount) }}</p>
+                    </li>
+                    <li>
+                        <p>Amt per check</p>
+                        <p>{{ toCurrency(ficaTaxAmount / income.payPeriod) }}</p>
+                    </li>
+                    <li>
+                        <p>Rate</p>
+                        <p>{{ficaTaxRate}}%</p>
+                    </li>
+                </ul>
+                <div
+                    v-else
+                    :class="$style['income-detail-footer']"
+                >
+                    <p>Tax Exempt Income!</p>
+                </div>
+            </div>
+            <div :class="[
+                    $style['income-detail'],
+                    !income.isActive && $style['inactive']
+                ]">
+                <div :class="[
+                    $style['income-detail-header'],
+                    !income.isActive && $style['inactive']
+                ]">
+                    <p>Deductions</p>
+                </div>
+                <ul
+                    v-if="hasDeductions"
+                    :class="$style['income-detail-body']"
+                >
+                    <li v-if="preTaxDeductions.length > 0">
+                        <h4>Pre-Tax</h4>
+                    </li>
+                    <li v-for="(preDeduction, index) in preTaxDeductions" :key="`prededuction-${index}`">
+                        <p>{{preDeduction.name}}</p>
+                        <p>{{ toCurrency(preDeduction.amount) }}</p>
+                    </li>
+                    <li v-if="postTaxDeductions.length > 0">
+                        <h4>Post-Tax</h4>
+                    </li>
+                    <li v-for="(postDeduction, index) in postTaxDeductions" :key="`postdeduction-${index}`">
+                        <p>{{postDeduction.name}}</p>
+                        <p>{{ toCurrency(postDeduction.amount) }}</p>
+                    </li>
+                    <h4>Totals</h4>
+                    <li>
+                        <p>Amt per check</p>
+                        <p>{{ toCurrency(deductionsTotal) }}</p>
+                    </li>
+                    <li>
+                        <p>Annual Amt</p>
+                        <p>{{ toCurrency(deductionsTotal * income.payPeriod) }}</p>
+                    </li>
+                </ul>
+                <div
+                    v-else
+                    :class="$style['income-detail-footer']"
+                >
+                    <p>No Deductions!</p>
                 </div>
             </div>
         </div>
@@ -459,53 +494,134 @@ export default defineComponent({
                 <h3>Confirm Delete</h3>
             </template>
             <template #body>
-                <div>
-                    <h4>Delete Income Source: {{selectedIncome.name}}?</h4>
-                </div>
+                <h4>Delete Income: {{selectedIncome.name}}?</h4>
             </template>
             <template #footer>
-                <div>
-                    <button class="is-pulled-right" @click="cancelDelete">Cancel</button>
-                    <button class="is-pulled-right" @click="deleteSelectedIncome">Delete</button>
-                    <br/><br/>
-                </div>
+                <button @click="deleteSelectedIncome">Delete</button>
+                <button @click="cancelDelete">Cancel</button>
             </template>
         </BaseModal>
     </div>
 </template>
-<style scoped>
-div {
-    color:whitesmoke;
+<style lang="scss" module>
+.main-content {
+    display: flex;
+    flex-direction: column;
+    background: $light-gray;
+    color: $white;
+    border-radius: $border-radius-light;
+    --menu-bg-color: #{$white};
+    --menu-bg-color-highlight: #{$light-purple};
+    --menu-font-highlight-color: #{$dark-purple};
+    --menu-icon-stroke-highlight: #{$dark-purple};
 }
-p {
-    color:whitesmoke;
+.income-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background: $dark-purple;
+    border-radius: 9px 9px 0 0;
+    padding: 10px;
+    &.inactive {
+        background: $gray;
+        color: $dark-gray;
+        --icon-stroke: #{$dark-gray};
+        --menu-icon-stroke: #{$light-gray};
+        --menu-bg-color: #{$dark-gray};
+        --menu-bg-color-highlight: #{$light-gray};
+        --menu-font-color: #{$light-gray};
+        --menu-font-highlight-color: #{$purple};
+        --menu-icon-stroke-highlight: #{$purple};
+        h3 {
+            color: $dark-gray !important;
+            font-style: italic;
+        }
+    }
 }
-.income-is-active {
-    background-color: #411159;
-    color: whitesmoke;
-    border-radius: 25px;
-}
-.income-is-inactive {
-    background-color: #636263;
-    color:slategrey;
-    font-style:italic;
-    border-radius: 25px;
+.income-body {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    background: $light-gray;
+    padding: 10px;
+    font-size: $font-size-xlarge;
+    color: $dark-purple;
+    border-radius: 0 0 $border-radius-light $border-radius-light;
+    font-weight: $font-weight-bold;
+    &.inactive {
+        font-style: italic;
+        color: $dark-gray;
+    }
 }
 .income-detail {
-    background-color: #8834B3;
+    display: flex;
+    flex-direction: column;
+    background: $dark-gray;
     border-radius: 25px;
-    margin-right: 20px;
-    margin-left: 20px;
+    margin: 20px;
+    > ul {
+        list-style: none;
+        > li {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+    }
+    &.inactive {
+        background: $gray;
+        font-weight: $font-weight-bold;
+        ul {
+            h4 {
+                color: $dark-purple;
+            }
+            li {
+                color: $dark-gray;
+            }
+        }
+    }
 }
-.income-detail-box {
-    background-color: #2D3033;
-    color: whitesmoke;
-    padding: 20px;
-    border-radius: 25px;
+.income-detail-body {
+    list-style: none;
+    padding: 10px;
 }
-.income-detail-box-header {
-    color: whitesmoke;
-    font-weight: bolder;
-    font-size:xx-large;    
+.income-detail-header {
+    display: flex;
+    justify-content: center;
+    background: $purple;
+    border-radius: $border-radius-medium $border-radius-medium 0 0;
+    color: $white;
+    font-size: $font-size-xxlarge;
+    font-weight: $font-weight-bold;
+    padding: 10px;
+    &.inactive {
+        color: $light-purple;
+        background: $dark-gray;
+    }
+}
+.income-detail-footer {
+    display: flex;
+    justify-content: center;
+    font-size: $font-size-large;
+    font-weight: $font-weight-bolder;
+    text-transform: uppercase;
+    padding: 10px;
+}
+.close-details-button {
+    --icon-stroke: #{$dark-gray};
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 20px;
+    > div {
+        border: 2px solid $dark-gray;
+        border-radius: 100px;
+        padding: 5px;
+        cursor: pointer;
+        &:hover {
+            --icon-stroke: #{$light-gray};
+            background: $dark-gray;
+        }
+    }
 }
 </style>

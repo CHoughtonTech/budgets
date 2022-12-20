@@ -83,55 +83,69 @@ export default defineComponent({
 })
 </script>
 <template>
-    <div class='dashboard-view'>
-        <h1 style="color:lightgrey;">{{ userName }} Budget</h1>
-        <div class='summary-group'>
-            <div class='summary-group-header'>
-                <div class="select is-rounded is-medium">
-                    <select v-model="selectedSummary">
-                        <option value="1">Monthly</option>
-                        <option value="3">Quarterly</option>
-                        <option value="6">Semi-Annual</option>
-                        <option value="12">Annual</option>
-                    </select>
-                </div>
+    <div :class="$style['main-content']">
+        <!-- <h1>{{ userName }} Budget</h1> -->
+        <p :class="$style['dashboard-title']">{{ userName }} Budget</p>
+        <div :class="$style['summary-group']">
+            <div :class="$style['summary-group-header']">
+                <select v-model="selectedSummary">
+                    <option value="1">Monthly</option>
+                    <option value="3">Quarterly</option>
+                    <option value="6">Semi-Annual</option>
+                    <option value="12">Annual</option>
+                </select>
             </div>
-            <div class='base-summaries'>
+            <div :class="$style['base-summaries']">
                 <BaseSummary :summaryName='"Net Income"' :amount='toCurrency(incomeTotal)' :summaryLink='"income"'></BaseSummary>
                 <BaseSummary :summaryName='"Bills"' :amount='toCurrency(expensesTotal)' :summaryLink='"bills"'></BaseSummary>
                 <BaseSummary :summaryName='"Remaining"' :amount='toCurrency(remainingTotal)'></BaseSummary>
             </div>
         </div>
-        <br/>
     </div>
 </template>
-<style scoped>
-.dashboard-view {
-    width: 50%;
-    min-width: 400px;
+<style lang="scss" module>
+.dashboard-title {
+    font: $h1-font-full;
+    color: $heading-font-color;
+    align-self: center;
+    @media (min-width: 320px) and (max-width: 768px){
+        font: $h2-font-full;
+    }
+}
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 .base-summaries {
-    display: inline-flex;
-    flex-wrap: wrap;
+    display: flex;
+    @media (min-width: 320px) and (max-width: 768px){
+        flex-direction: column;
+    }
+    padding: 10px 5px;
+    border: 0;
+    gap: 10px;
 }
 .summary-group {
-    margin-top: 25px;
-    text-align:center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     border-radius: 10px;
-    color:whitesmoke;
-    font-size:xx-large;
-    background-color:#8834B3;
+    color: $white;
+    font-size: $font-size-xlarge;
+    background-color: $purple;
 }
 .summary-group-header {
-    background-color:#411159;
+    display: flex;
+    justify-content: center;
+    background-color: $dark-purple;
     border-radius: 10px 10px 0 0;
-    font-weight: bolder;
+    font-weight: $font-weight-bolder;
 }
 select {
-    background-color: #411159;
-    color:whitesmoke;
-    border:#411159;
-    font-weight:bold;
-    text-align: center;
+    background-color: $dark-purple;
+    color:$white;
+    border:0;
+    font-weight: $font-weight-bold;
 }
 </style>

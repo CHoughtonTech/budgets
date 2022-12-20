@@ -20,69 +20,100 @@ export default defineComponent({
         },
         summaries: Object
     },
+    computed: {
+        isNegativeAmount() {
+            return this.amount <= 0;
+        },
+    },
 })
 </script>
 <template>
-    <div class='base-summary'>
+    <div :class="$style['base-summary']">
         <div v-if='summaries === undefined'>
-            <div v-if='summaryLink === null' class='base-summary-header'>{{summaryName}}</div>
-            <div v-else class='base-summary-header'>{{summaryName}} &nbsp;<router-link :to="{ name: summaryLink }"><BaseIcon :name='"arrow-right-circle"'></BaseIcon></router-link></div>
-            <div :class='{"base-summary-body": amount > 0, "base-summary-body-neg": amount <= 0}'>{{ amount }}</div>
+            <div
+                v-if='summaryLink === null'
+                :class="$style['base-summary-header']"
+            >
+                {{summaryName}}
+            </div>
+            <div
+                v-else
+                :class="$style['base-summary-header']"
+            >
+                {{summaryName}}
+                <router-link :to="{ name: summaryLink }">
+                    <BaseIcon :name='"arrow-right-circle"' />
+                </router-link>
+            </div>
+            <div
+                :class="[$style['base-summary-body'], isNegativeAmount && $style['is-negative']]"
+            >
+                {{ amount }}
+            </div>
         </div>
         <div v-else>
-            <div class='base-summary-header'>{{summaries.name}}</div>
-            <ul v-for="summary in summaries.items" :key="summary.name">
-                <li class='base-summary-body-list'>
-                    <span class='base-summary-body-list-label'>{{summary.name}}:</span>&nbsp; 
-                    <span :class='{"base-summary-body-list-amount": summary.amount > 0, "base-summary-body-list-amount-neg": summary.amount <= 0}'>{{ summary.amount }}</span>
+            <div :class="$style['base-summary-header']">{{summaries.name}}</div>
+            <ul
+                v-for="summary in summaries.items"
+                :class="$style['base-summary-body-list']"
+                :key="summary.name"
+            >
+                <li :class="$style['base-summary-body-list-label']">
+                    {{summary.name}}
+                </li>
+                <li :class="[
+                        $style['base-summary-body-list-amount'],
+                        summary.amount <= 0 && $style['is-negative']
+                    ]"
+                >
+                    {{ summary.amount }}
                 </li>
             </ul>
         </div>
     </div>
 </template>
-<style scoped>
+<style lang="scss" module>
 .base-summary {
-    width: 25%;
-    flex: content;
-    margin:5px;
-    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
     border-radius: 10px;
-    border: 1px solid #A755C2;
-    color: lightgrey;
-    background-color:#2D3033;
+    border: 2px solid $light-purple;
+    border: 0;
+    color: $light-gray;
+    background-color: $primary-bg-color;
 }
 .base-summary-header {
-    background-color: #411159;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: $dark-purple;
     border-radius: 10px 10px 0 0;
-    text-align: center;
-    font-size: x-large;
-    font-weight: bolder;
-    color: whitesmoke;
+    font-size: $font-size-large;
+    font-weight: $font-weight-bold;
+    color: $white;
 }
 .base-summary-body {
-    text-align:center;
-    font-size: xx-large;
-}
-.base-summary-body-neg {
-    text-align: center;
-    font-size: xx-large;
-    color:crimson;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: $font-size-large;
+    &.is-negative {
+        color: $red;
+    }
 }
 .base-summary-body-list-label {
-    color: whitesmoke;
-    font-weight: bold;
+    display: flex;
+    color: $white;
+    font-weight: $font-weight-bold;
     padding-left: 5px;
 }
 .base-summary-body-list-amount {
-    color: #9C50B6;
-    font-weight: bold;
-    font-size: medium;
+    color: $purple;
+    font-weight: $font-weight-bold;
     font-style: italic;
-}
-.base-summary-body-list-amount-neg {
-    color: crimson;
-    font-weight: bold;
-    font-size: medium;
-    font-style: italic;
+    &.is-negative {
+        color: $red;
+    }
 }
 </style>

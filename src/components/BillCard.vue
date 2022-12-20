@@ -1,15 +1,28 @@
 <script>
 import BaseIcon from './BaseIcon.vue';
+import BaseDropdown from './BaseDropdown.vue';
 import { toCurrencyMixin } from '../mixins/GlobalMixin';
 import { defineComponent } from 'vue';
 
 export default defineComponent({    
     components: {
         BaseIcon,
+        BaseDropdown,
     },
     mixins: [toCurrencyMixin],
     props: {
         bill: Object
+    },
+    
+    data() {
+        return {
+            menuItems: [
+                { 
+                    name: 'Details',
+                    icon: 'help-circle'
+                },
+            ]
+        }
     },
     computed: {
         isPaidBill() {
@@ -47,121 +60,168 @@ export default defineComponent({
             this.showMenu = false;
             this.$emit('bill-details', bill);
         },
+        editBill(bill) {
+            this.$router.push({ name: 'edit-bill', params: { billId: bill.id} });
+        },
         payOffBill(bill) {
             this.showMenu = false;
             this.$emit('payoff-bill', bill);
+        },
+        menuItemSelected(item) {
+            switch (item.toLowerCase()) {
+                case 'edit':
+                    this.editBill(this.bill);
+                    break;
+                case 'delete':
+                    this.deleteBill(this.bill);
+                    break;
+                case 'pay off':
+                    this.payOffBill(this.bill);
+                    break;
+                default:
+                    this.showBillDetails(this.bill);
+                    break;
+            }
+        }
+    },
+    mounted() {
+        if (!this.bill.datePaidOff) {
+            this.menuItems.push(
+                {
+                    name: 'Edit',
+                    icon: 'edit'
+                },
+                {
+                    name: 'Delete',
+                    icon: 'x-circle'
+                }
+            )
+            if (this.bill.isRecurring) {
+                this.menuItems.push(
+                    {
+                        name: 'Pay Off',
+                        icon: 'stop-circle'
+                    }
+                );
+            }
         }
     }
 })
 </script>
 <template>
-    <div>
-        <div class="bill-card -shadow" :class="{'paid-bill' : isPaidBill, 'new-bill' : isNewBill, 'existing-bill': !isNewBill && !isPaidBill}">
-            <div class="dropdown is-hoverable">
-                <div class="dropdown-trigger">
-                    <div>
-                        <BaseIcon aria-haspopup="true" v-bind:aria-controls="'dropdown-menu' + bill.id" name="menu"></BaseIcon>
-                    </div>
-                </div>
-                <div class="dropdown-menu" v-bind:id="'dropdown-menu' + bill.id" role="menu">
-                    <div class="dropdown-content">
-                        <div class="dropdown-item" @click="showBillDetails(bill)">
-                            <BaseIcon name="help-circle">Details</BaseIcon>
-                        </div>
-                        <div v-if="bill.datePaidOff === '' || bill.datePaidOff === null" class="dropdown-item">
-                            <router-link :to="{ name: 'edit-bill', params: { billId: bill.id } }"><BaseIcon name="edit">Edit</BaseIcon></router-link>
-                        </div>
-                        <div v-if="bill.datePaidOff === '' || bill.datePaidOff === null" class="dropdown-item">
-                            <span @click="deleteBill(bill)"><BaseIcon name="x-circle">Delete</BaseIcon></span>
-                        </div>
-                        <div v-if="(bill.datePaidOff === '' || bill.datePaidOff === null) && bill.isRecurring" class="dropdown-item">
-                            <span @click="payOffBill(bill)"><BaseIcon name="stop-circle">Pay Off</BaseIcon></span>
-                        </div>
-                    </div>
-                </div>
+    <div :class="$style['bill-card']">
+        <div
+            :class="[
+                $style['card-header'], 
+                isPastDue && $style['is-past-due'],
+                isPaidBill && $style['is-paid']
+            ]"
+        >
+            <div :class="$style['card-header-left']">
+                <BaseDropdown
+                    :menu-items="menuItems"
+                    @menu-item-selected="menuItemSelected"
+                />
+                <p>{{bill.name}}</p>
             </div>
-            <span style="color:lightgrey;">{{bill.name}}</span>
-            <span class="paid-button" v-if="!bill.paid" @click="paidBill(bill)" ><BaseIcon name="check-circle"></BaseIcon></span>
-            <span class="undo-button" v-if="bill.paid && (bill.datePaidOff === null || bill.datePaidOff === '')" @click="undoBillPaid(bill)"><BaseIcon name="rotate-ccw"></BaseIcon></span>
-            <div class="paid-status" v-if="bill.paid"><BaseIcon name="check">{{new Date(bill.datePaid).toLocaleDateString('en-US', {timeZone: 'UTC'})}} &nbsp;</BaseIcon></div>
-            <hr/>
-            <div v-if="bill.dueDate" :class="{'bill-past-due' : isPastDue, 'bill-still-due' : !isPastDue}">Due: {{bill.dueDate}}</div>
-            <div :class="{'bill-amount': !bill.paid, 'bill-amount-paid': bill.paid}">Amount {{bill.paid ? 'Paid' : 'Due'}}: {{ toCurrency(bill.amount) }}</div><br/>
+            <div
+                v-if="!bill.paid"
+                :class="$style['icon-button']"
+                @click="paidBill(bill)"
+            >
+                <BaseIcon name="check-circle"></BaseIcon>
+            </div>
+            <div v-if="bill.paid && !bill.datePaidOff" :class="$style['icon-button']" @click="undoBillPaid(bill)">
+                <BaseIcon name="rotate-ccw"></BaseIcon>
+            </div>
+        </div>
+        <div
+            :class="[
+                $style['card-footer'],
+                isPastDue && $style['is-past-due'],
+                isPaidBill && $style['is-paid']
+            ]"
+        >
+            <p v-if="!bill.paid">
+                {{bill.dueDate}}
+            </p>
+            <div v-if="bill.paid">
+                <BaseIcon name="check">
+                    {{new Date(bill.datePaid).toLocaleDateString('en-US', {timeZone: 'UTC'}) }}
+                </BaseIcon>
+            </div>
+            <p>
+                <i>
+                    {{toCurrency(bill.amount)}}
+                </i>
+            </p>
         </div>
     </div>
 </template>
-<style scoped>
+<style lang="scss" module>
 .bill-card {
-  padding: 20px;
-  margin-bottom: 24px;
-  transition: all 0.2s linear;
-  cursor: pointer;
-  border-radius:10px;
+    border-radius: $border-radius-light;
+    background: $purple;
+    padding: 0;
 }
-.bill-card:hover {
-  background-color: #C15EF2;
-  box-shadow: 0 3px 12px 0 rgba(0, 0, 0, 0.2), 0 1px 15px 0 rgba(0, 0, 0, 0.19);
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 10px 10px 0 0;
+    border-bottom: 0;
+    padding: 15px;
 }
-.bill-card > .title {
-  margin: 0;
+.card-header-left {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
-.bill-link {
-  color: black;
-  text-decoration: none;
-  font-weight: 100;
+.card-footer {
+    display: flex;
+    border-radius: 0 0 10px 10px;
+    background: $light-gray;
+    color: $dark-purple;
+    font-weight: $font-weight-bold;
+    border-top: 0;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
 }
-.existing-bill {
-    border: 3px solid #A755C2;
+.icon-button {
+    cursor: pointer;
 }
-.new-bill {
-    border: 3px solid #C15EF2;
+.is-past-due {
+    background: $error-bg-color;
+    color: $error-bg-color-light;
+    font-weight: $font-weight-bolder;
+    --icon-stroke: #{$error-font-color};
+    --menu-font-color: #{$error-font-color};
+    --menu-font-highlight-color: #{$error-bg-color-light};
+    --menu-icon-stroke-highlight: #{$error-bg-color-light};
+    --menu-icon-stroke: #{$error-font-color};
+    --menu-bg-color: #{$error-bg-color-light};
+    --menu-bg-color-highlight: #{$error-bg-color-dark};
+    &:last-child {
+        background: $error-bg-color-light;
+        color: $error-bg-color-dark;
+    }
 }
-.paid-bill {
-    background-color: #A755C2;
-}
-.paid-status {
-    float:inherit;
-}
-.paid-button, .delete-button, .undo-button, .edit-button {
-    float: right;
-    padding: 0px;
-}
-.bill-amount {
-    color: lightgrey;
-    font-style:italic;
-    float:right;
-}
-.bill-amount-paid {
-    color:white;
-    font-style: italic;
-    float:right;
-}
-.bill-menu {
-    position: relative;
-    padding: 0px;
-    display: inline-block;
-    transition: all 0.2s linear;
-}
-.bill-menu-item {
-    margin:0px;
-    background-color:#411159;
-    min-width: 100px;
-    z-index: 1;
-}
-.dropdown-menu, .dropdown-content {
-    background-color: #2D3033;
-    color: lightgrey;
-}
-.dropdown-item:hover {
-    background-color: #9C50B6;
-}
-.bill-past-due {
-    color:crimson;
-    font-weight: bolder;
-    float: left;
-}
-.bill-still-due {
-    float: left;
-    color: lightgrey;
+.is-paid {
+    background: $success-bg-color;
+    color: $success-bg-color-light;
+    font-weight: $font-weight-bolder;
+    font-size: 1.2rem;
+    --icon-stroke: #{$success-font-color};
+    --menu-font-color: #{$success-font-color};
+    --menu-font-highlight-color: #{$success-bg-color-light};
+    --menu-icon-stroke-highlight: #{$success-bg-color-light};
+    --menu-icon-stroke: #{$success-font-color};
+    --menu-bg-color: #{$success-bg-color-light};
+    --menu-bg-color-highlight: #{$success-bg-color-dark};
+    &:last-child {
+        background: $success-bg-color-light;
+        color: $success-bg-color-dark;
+    }
 }
 </style>

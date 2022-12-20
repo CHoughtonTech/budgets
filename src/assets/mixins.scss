@@ -1,0 +1,43 @@
+@use './variables.scss' as *;
+
+@mixin generate-headings($from: 1, $to: 6, $mobile: false) {
+    $font-vars: $h1-font-full, $h2-font-full, $h3-font-full, $h4-font-full, $h5-font-full, $h6-font-full;
+    @for $j from $from through $to {
+        h#{$j} {
+            display: flex;
+            align-items: center;
+            letter-spacing: $heading-letter-spacing;
+            color: $heading-font-color;
+            font: nth($font-vars, $j);
+        }
+    }
+}
+
+@mixin context-text() {
+    .context {
+        padding: 10px;
+        margin: 0;
+        font-weight: $font-weight-semi-bold;
+        border-radius: 10px;
+        &.-success {
+            color: $success-font-color;
+            background: $success-bg-color-light;
+            border: 2px solid $success-bg-color-dark
+        }
+        &.-info {
+            color: $info-font-color;
+            background: $info-bg-color-light;
+            border: 2px solid $info-bg-color-dark;
+        }
+        &.-warning {
+            color: $warning-font-color;
+            background: $warning-bg-color-light;
+            border: 2px solid $warning-bg-color-dark;
+        }
+        &.-error {
+            color: $error-font-color;
+            background: $error-bg-color-light;
+            border: 2px solid $error-bg-color-dark;
+        }
+    }
+}
