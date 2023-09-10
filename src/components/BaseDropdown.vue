@@ -29,10 +29,13 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div :class="[
-        $style['menu-wrapper'],
-        showMenu && $style['show-dropdown']
-    ]">
+    <div
+        :class="[
+            $style['menu-wrapper'],
+            showMenu && $style['show-dropdown']
+        ]"
+        @mouseleave="toggleShowMenu(false)"
+    >
         <BaseIcon :class="$style['menu-button']" name="menu" @mouseenter="toggleShowMenu(true)"/>
         <div :class="$style['menu-content']" @mouseleave="toggleShowMenu(false)">
             <ul :class="$style['menu']">
