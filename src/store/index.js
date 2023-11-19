@@ -21,6 +21,7 @@ const rootState = {
   federalTaxBrackets: [],
   stateTaxBrackets: [],
   ficaRate: [],
+  budgets: [],
   user: null,
 };
 
@@ -94,6 +95,7 @@ const mainStore = defineStore('main', {
       this.user = null;
     },
     clearStore() {
+      this.budgets = [];
       this.bills = [];
       this.income = [];
       this.categories = [];
@@ -204,6 +206,57 @@ const mainStore = defineStore('main', {
         } else {
           reject();
         }
+      });
+    },
+    createBudget(budget) {
+      return new Promise((resolve) => {
+        if (this.getUserId !== DEFAULT_USER_ID)
+          BudgetService.upsertBudget(getDatabase(), this.user.uid, budget);
+        this.budgets.push(budget);
+        resolve();
+      });
+    },
+    updateBudget(budget) {
+      return new Promise((resolve, reject) => {
+        if (this.getUserId !== DEFAULT_USER_ID)
+          BudgetService.upsertBudget(getDatabase(), this.user.uid, budget);
+        const index = this.budgets.findIndex(x => x.id === budget.id);
+        if (index > -1) {
+          this.budgets[index] = budget;
+          resolve();
+        } else {
+          reject();
+        }
+      })
+    },
+    deleteBudget(budgetId) {
+      return new Promise((resolve, reject) => {
+        if (this.getUserId !== DEFAULT_USER_ID)
+          BudgetService.deleteBudget(getDatabase(), this.user.uid, budgetId)
+        const index = this.budgets.findIndex(i => i.id === budgetId);
+        if (index > -1) {
+          this.budgets.splice(index, 1);
+          resolve();
+        } else {
+          reject();
+        }
+      });
+    },
+    getBudgets() {
+      if (!this.user || this.user === null) {
+        this.budgets = [];
+        return;
+      }
+      BudgetService.getBudgets(getDatabase(), this.user.uid)
+        .then((data) => {
+          this.budgets = data && data.length > 0 ? data : [];
+        });
+    },
+    getBudgetById(id) {
+      return new Promise((resolve, reject) => {
+        const budget = this.budgets.find(b => b.id === id);
+        if (budget) resolve(budget);
+        if (!budget) reject({ message: 'Budget not found for Id: ' + id});
       });
     },
     initStore() {
