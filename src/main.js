@@ -40,7 +40,6 @@ initializeApp(firebaseConfig);
 const app = createApp(App);
 registerRouter(app);
 
-app.config.unwrapInjectedRef = true;
 app.use(createPinia());
 app.component('DatePicker', Datepicker);
 app.mount('#app');

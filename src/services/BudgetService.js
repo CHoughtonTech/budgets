@@ -21,6 +21,7 @@ const mapBillsFromRealTimeDatabase = (billToConvert) => {
         subCategoryId: billToConvert.subCategoryId ?? null,
         dueDate: billToConvert.dueDate ?? null,
         recurringCycle: billToConvert.isRecurring ? billToConvert.recurringCycle ?? defaultRecurringCycle : null,
+        budgetId: billToConvert.budgetId ?? null,
     };
     return billToMap;
 };
@@ -42,6 +43,7 @@ const mapIncomeFromRealTimeDatabase = (incomeToConvert) => {
         isActive: incomeToConvert.isActive ?? true,
         isTaxExempt: incomeToConvert.isTaxExempt ?? false,
         deductions: incomeToConvert.deductions ?? [],
+        budgetId: incomeToConvert.budgetId ?? null,
     };
     return incomeToMap;
 };
@@ -88,35 +90,6 @@ export default {
                         data.forEach((bill) => {
                             returnArray.push(mapBillsFromRealTimeDatabase(bill.val()));
                         })
-                        console.error(data.val());
-                        const jsonData = Object.values(data.toJSON());
-                        console.debug({ jsonData });
-                        const mappedArray = Object.entries(data.val()).map((snapshotBill) => {
-                            const bill = Object.values(snapshotBill)[1];
-                            const dateCreated = new Date(bill.dateCreated);
-                            const defaultRecurringCycle = {
-                                date: new Date(dateCreated.getFullYear(), dateCreated.getMonth(), new Date(bill.dueDate).getDate()).toLocaleDateString(),
-                                interval: 1
-                            };
-                            return { 
-                                userId: bill.userId ?? null,
-                                id: bill.id.toString() ?? null,
-                                name: bill.name ?? null,
-                                paid: bill.paid ?? false,
-                                amount: bill.amount ?? 0.0,
-                                datePaid: bill.datePaid ?? null,
-                                dateCreated: bill.dateCreated ?? null,
-                                isRecurring: bill.isRecurring ?? false,
-                                paidCount: bill.paidCount ?? 0,
-                                isFixedAmount: bill.isFixedAmount ?? false,
-                                datePaidOff: bill.datePaidOff ?? null,
-                                subCategoryId: bill.subCategoryId ?? null,
-                                dueDate: bill.dueDate ?? null,
-                                recurringCycle: bill.isRecurring ? bill.recurringCycle ?? defaultRecurringCycle : null,
-                            };
-                        });
-                        console.debug({ bills: returnArray });
-                        console.debug({ mappedBills: mappedArray });
                         resolve(returnArray);
                     } else {
                         resolve([]);

@@ -84,7 +84,6 @@ export default defineComponent({
 </script>
 <template>
     <div :class="$style['main-content']">
-        <!-- <h1>{{ userName }} Budget</h1> -->
         <p :class="$style['dashboard-title']">{{ userName }} Budget</p>
         <div :class="$style['summary-group']">
             <div :class="$style['summary-group-header']">
